@@ -3,7 +3,7 @@
 // For physical device, use your computer's local IP (e.g., 192.168.x.x)
 // For deployed backend, use the production URL
 
-export const BASE_URL = "http://192.168.1.9:3000";
+export const BASE_URL = "http://10.0.2.2:3000";
 
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";
