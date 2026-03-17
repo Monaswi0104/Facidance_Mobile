@@ -201,7 +201,7 @@ export default function ProfileUpload() {
                 const acYearName = typeof acYear === 'object' ? acYear?.name : acYear;
                 return (
                   <View key={c.id} style={styles.courseItem}>
-                     <View>
+                     <View style={{ flex: 1, paddingRight: 10 }}>
                         <Text style={styles.courseName}>{c.name}</Text>
                         <Text style={styles.courseSub}>{c.teacher?.user?.name || c.teacher?.name || "Teacher"} • {c.semester?.name} ({acYearName})</Text>
                      </View>

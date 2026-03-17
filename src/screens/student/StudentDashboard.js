@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator } from "react-native";
-import { getStudentCourses } from "../../api/studentApi";
+import { getStudentCourses, getAttendanceHistory } from "../../api/studentApi";
 import { getUser } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -23,20 +23,17 @@ export default function StudentDashboard({ navigation }) {
       const load = async () => {
         try {
           setIsLoading(true);
-          const [courses, user] = await Promise.all([getStudentCourses(), getUser()]);
+          const [courses, user, historyRes] = await Promise.all([getStudentCourses(), getUser(), getAttendanceHistory()]);
           if (user?.name) setUserName(user.name);
+          
           if (Array.isArray(courses)) {
-            let totalSessions = 0;
-            let attendedSessions = 0;
-            courses.forEach(c => {
-               totalSessions += (c._count?.attendance || 0); // Assuming total sessions
-               attendedSessions += (c._count?.attendance || 0); // Need proper attended count from API or history if available, mocked for now if same
-            });
-            // If the API returns detailed 'attended' and 'total' we should use that. 
-            // For now, let's assume totalSessions and attended are available, or mock attended.
+            const historyList = Array.isArray(historyRes) ? historyRes : (historyRes?.history || []);
+            const totalSessions = historyList.length;
+            const attendedSessions = historyList.filter(r => r.status === true).length;
+            
             setStats({
               courses: courses.length,
-              avgAttendance: totalSessions > 0 ? `${Math.round((attendedSessions / Math.max(totalSessions, 1)) * 100)}%` : "—",
+              avgAttendance: totalSessions > 0 ? `${((attendedSessions / totalSessions) * 100).toFixed(1)}%` : "—",
               attended: attendedSessions,
               totalSessions: totalSessions,
             });

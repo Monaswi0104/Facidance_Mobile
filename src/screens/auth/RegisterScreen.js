@@ -17,6 +17,8 @@ import {
 import { registerTeacher } from "../../api/authApi";
 
 const universityImg = require("../../assets/university.jpg");
+const eyeImg = require("../../assets/eye.png");
+const eyeOffImg = require("../../assets/eye-off.png");
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -80,11 +82,11 @@ export default function RegisterScreen({ navigation }) {
 
           {/* Form Card */}
           <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Teacher Registration 📝</Text>
+            <Text style={styles.formTitle}>Teacher Registration</Text>
             <Text style={styles.formSubtitle}>Create a teacher account below. Students do not need to register.</Text>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>👤  Full Name</Text>
+              <Text style={styles.label}>Full Name</Text>
               <TextInput
                 style={styles.input}
                 placeholder="John Doe"
@@ -96,7 +98,7 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>📧  Email Address</Text>
+              <Text style={styles.label}>Email Address</Text>
               <TextInput
                 style={styles.input}
                 placeholder="your.email@gu.edu"
@@ -110,7 +112,7 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>🔒  Password</Text>
+              <Text style={styles.label}>Password</Text>
               <View style={styles.passwordWrapper}>
                 <TextInput
                   style={styles.passwordInput}
@@ -125,9 +127,11 @@ export default function RegisterScreen({ navigation }) {
                   style={styles.eyeButton}
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                 >
-                  <Text style={styles.eyeText}>
-                    {isPasswordVisible ? "🙈" : "👁️"}
-                  </Text>
+                  <Image 
+                    source={isPasswordVisible ? eyeOffImg : eyeImg} 
+                    style={styles.eyeIcon} 
+                    resizeMode="contain" 
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -192,7 +196,7 @@ const styles = StyleSheet.create({
   passwordWrapper: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderWidth: 1.5, borderColor: "#E2E8F0", borderRadius: 14 },
   passwordInput: { flex: 1, paddingHorizontal: 16, paddingVertical: 15, fontSize: 16, color: "#0F172A" },
   eyeButton: { paddingHorizontal: 16, paddingVertical: 14, justifyContent: "center" },
-  eyeText: { fontSize: 20 },
+  eyeIcon: { width: 22, height: 22, tintColor: "#94A3B8" },
   roleRow: { flexDirection: "row" },
   roleOption: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC", borderWidth: 1.5, borderColor: "#E2E8F0", borderRadius: 14, paddingVertical: 14, marginHorizontal: 4 },
   roleOptionActive: { backgroundColor: "#EEF2FF", borderColor: "#4361EE" },

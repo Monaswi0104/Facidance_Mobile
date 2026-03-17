@@ -99,7 +99,7 @@ export default function MyCourses({ navigation }) {
           {isLoading ? (
              <ActivityIndicator color="#4361EE" style={{ marginVertical: 20 }} />
           ) : (
-             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+             <View style={styles.statsGrid}>
                <StatBox 
                  title="TOTAL COURSES" 
                  value={stats.totalCourses} 
@@ -121,7 +121,7 @@ export default function MyCourses({ navigation }) {
                  badgeColor="#D946EF" 
                  icon="🎓" 
                />
-             </ScrollView>
+             </View>
           )}
         </View>
 
@@ -253,14 +253,19 @@ const styles = StyleSheet.create({
   statsContainer: {
     marginBottom: 16,
   },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   statBox: {
     flexDirection: 'row',
-    width: 220,
+    width: '48%',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginRight: 12,
+    marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'space-between',
   },

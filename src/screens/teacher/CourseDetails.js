@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Dimensions, TextInput
 } from "react-native";
-import { getCourseStudents, getTeacherReports } from "../../api/teacherApi";
+import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -21,41 +21,24 @@ export default function CourseDetails({ route, navigation }) {
     const load = async () => {
       try {
         setIsLoading(true);
-        const [stuData, reportData] = await Promise.all([
-          getCourseStudents(course.id),
-          getTeacherReports(course.id),
-        ]);
+        const detailData = await getCourseDetails(course.id);
+        
+        if (detailData && detailData.students) {
+          const fetchedTotalSessions = detailData._count?.attendance || 0;
+          setTotalSessions(fetchedTotalSessions);
 
-        const stuList = Array.isArray(stuData) ? stuData : [];
-        const reportList = reportData?.students || reportData || [];
-
-        // Create attendance lookup from reports
-        const attMap = {};
-        if (Array.isArray(reportList)) {
-          reportList.forEach((r) => {
-            attMap[r.studentId || r.id] = {
-              attended: r.attendedSessions || r.attended || 0,
-              total: r.totalSessions || r.total || 0,
-            };
-          });
+          setStudents(detailData.students.map((s) => ({
+            id: s.id,
+            name: s.user?.name || "Student",
+            email: s.user?.email || "—",
+            program: s.program?.name || "—",
+            faceRegistered: !!s.faceEmbedding,
+            joinedAt: s.joinedAt,
+            status: s.status || "active",
+            attended: s._count?.attendance || 0,
+            total: fetchedTotalSessions,
+          })));
         }
-
-        // Compute total sessions from report data
-        if (Array.isArray(reportList) && reportList.length > 0) {
-          const maxSessions = Math.max(...reportList.map(r => r.totalSessions || r.total || 0));
-          if (maxSessions > 0) setTotalSessions(maxSessions);
-        }
-
-        setStudents(stuList.map((s) => ({
-          id: s.id,
-          name: s.user?.name || s.name || "Student",
-          email: s.user?.email || s.email || "—",
-          program: s.program?.name || "—",
-          faceRegistered: !!s.faceEmbedding,
-          status: s.status || "active",
-          attended: attMap[s.id]?.attended || s._count?.attendance || 0,
-          total: attMap[s.id]?.total || totalSessions,
-        })));
       } catch (e) { console.log(e); }
       finally { setIsLoading(false); }
     };
@@ -69,8 +52,8 @@ export default function CourseDetails({ route, navigation }) {
   });
 
   const faceRegistered = students.filter(s => s.faceRegistered).length;
-  const avgAttendance = students.length > 0
-    ? Math.round(students.reduce((sum, s) => sum + (s.total > 0 ? (s.attended / s.total) * 100 : 0), 0) / students.length)
+  const avgAttendance = students.length > 0 && totalSessions > 0
+    ? Math.round((students.reduce((sum, s) => sum + s.attended, 0) / (students.length * totalSessions)) * 100)
     : 0;
 
   const exportCSV = async () => {
@@ -168,10 +151,11 @@ export default function CourseDetails({ route, navigation }) {
         <View style={styles.tableCard}>
           {/* Table Header */}
           <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>PROGRAM</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.7 }]}>FACE</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.6 }]}>ATT.</Text>
+            <Text style={[styles.tableHeaderText, { flex: 2.1 }]}>STUDENT</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>PROGRAM</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1 }]}>JOINED</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.6, textAlign: 'center' }]}>FACE</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: 'center' }]}>ATTENDANCE</Text>
           </View>
 
           {filtered.length === 0 ? (
@@ -179,19 +163,24 @@ export default function CourseDetails({ route, navigation }) {
           ) : (
             filtered.map((s, i) => (
               <View key={s.id} style={[styles.tableRow, i < filtered.length - 1 && styles.tableBorder]}>
-                <View style={{ flex: 2 }}>
-                  <Text style={styles.studentName}>{s.name}</Text>
-                  <Text style={styles.studentEmail}>{s.email}</Text>
+                <View style={{ flex: 2.1, paddingRight: 6 }}>
+                  <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
+                  <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
                 </View>
-                <Text style={[styles.cellText, { flex: 1.5 }]} numberOfLines={2}>{s.program}</Text>
-                <View style={{ flex: 0.7, alignItems: "center" }}>
+                <Text style={[styles.cellText, { flex: 1.2, fontSize: 11, paddingRight: 4 }]} numberOfLines={3}>{s.program}</Text>
+                
+                <Text style={[styles.cellText, { flex: 1, fontSize: 10 }]} numberOfLines={1}>
+                   {s.joinedAt ? new Date(s.joinedAt).toLocaleDateString() : '—'}
+                </Text>
+
+                <View style={{ flex: 0.6, alignItems: "center" }}>
                   <View style={[styles.faceBadge, s.faceRegistered ? styles.faceYes : styles.faceNo]}>
                     <Text style={[styles.faceText, s.faceRegistered ? { color: "#059669" } : { color: "#EF4444" }]}>
                       {s.faceRegistered ? "✅" : "—"}
                     </Text>
                   </View>
                 </View>
-                <Text style={[styles.cellText, { flex: 0.6, textAlign: "center", fontWeight: "700" }]}>
+                <Text style={[styles.cellText, { flex: 0.8, textAlign: "center", fontWeight: "700" }]}>
                   {s.attended}/{s.total}
                 </Text>
               </View>

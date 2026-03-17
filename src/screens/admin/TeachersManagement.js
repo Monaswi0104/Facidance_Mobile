@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   SafeAreaView, ScrollView, Alert, ActivityIndicator
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { getTeachers, approveTeacher, deleteTeacher, getDepartments } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -12,6 +13,10 @@ export default function TeachersManagement() {
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+
+  // For inline department assignment
+  const [selectedTeacherForDept, setSelectedTeacherForDept] = useState(null);
+  const [selectedDeptId, setSelectedDeptId] = useState(null);
 
   const loadTeachers = async () => {
     try {
@@ -41,19 +46,31 @@ export default function TeachersManagement() {
   useFocusEffect(useCallback(() => { loadTeachers(); }, []));
 
   const handleApprove = (teacher) => {
-    Alert.alert("Approve Teacher", `Approve ${teacher.name}?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Approve", onPress: async () => {
-          try {
-            const deptId = departments.length > 0 ? departments[0].id : null;
-            await approveTeacher(teacher.userId || teacher.id, deptId);
-            Alert.alert("✅ Approved", `${teacher.name} has been approved.`);
-            loadTeachers();
-          } catch (e) { Alert.alert("Error", "Failed to approve."); }
-        }
-      },
-    ]);
+    // Toggle the expansion
+    if (selectedTeacherForDept === teacher.id) {
+      setSelectedTeacherForDept(null);
+      setSelectedDeptId(null);
+    } else {
+      setSelectedTeacherForDept(teacher.id);
+      setSelectedDeptId(departments.length > 0 ? departments[0].id : null);
+    }
+  };
+
+  const confirmApproval = async (teacher) => {
+    if (!selectedDeptId) {
+      Alert.alert("Missing", "Please select a department first.");
+      return;
+    }
+    
+    try {
+      await approveTeacher(teacher.userId || teacher.id, selectedDeptId);
+      Alert.alert("✅ Approved", `${teacher.name} has been approved and assigned to the department.`);
+      setSelectedTeacherForDept(null);
+      setSelectedDeptId(null);
+      loadTeachers();
+    } catch (e) { 
+      Alert.alert("Error", "Failed to approve."); 
+    }
   };
 
   const handleDelete = (teacher) => {
@@ -122,22 +139,62 @@ export default function TeachersManagement() {
           {pending.length === 0 ? (
             <Text style={styles.emptyText}>No pending teacher registrations right now.</Text>
           ) : (
-            pending.map((t) => (
-              <View key={t.id} style={styles.teacherRow}>
-                <View style={styles.teacherInfo}>
-                  <Text style={styles.teacherName}>{t.name}</Text>
-                  <Text style={styles.teacherEmail}>📧 {t.email}</Text>
+            pending.map((t) => {
+              const isExpanded = selectedTeacherForDept === t.id;
+              
+              return (
+                <View key={t.id} style={[styles.teacherRow, isExpanded && styles.teacherRowExpanded]}>
+                  {/* Main Row */}
+                  <View style={styles.teacherMainRow}>
+                    <View style={styles.teacherInfo}>
+                      <Text style={styles.teacherName}>{t.name}</Text>
+                      <Text style={styles.teacherEmail}>📧 {t.email}</Text>
+                      <Text style={styles.pendingStatusText}>Pending approval</Text>
+                    </View>
+                    <View style={styles.actionBtns}>
+                      <TouchableOpacity 
+                        style={[styles.approveBtn, isExpanded && styles.approveBtnActive]} 
+                        onPress={() => handleApprove(t)}
+                      >
+                        <Text style={[styles.approveBtnText, isExpanded && styles.approveBtnTextActive]}>
+                          {isExpanded ? "Cancel" : "Assign & Approve"}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.rejectBtn} onPress={() => handleDelete(t)}>
+                        <Text style={styles.rejectBtnText}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Expanded Assignment Area */}
+                  {isExpanded && (
+                    <View style={styles.assignmentArea}>
+                      <Text style={styles.assignmentLabel}>ASSIGN DEPARTMENT</Text>
+                      <View style={styles.assignmentControls}>
+                        
+                        <View style={styles.pickerContainer}>
+                          <Picker
+                            selectedValue={selectedDeptId}
+                            onValueChange={(itemValue) => setSelectedDeptId(itemValue)}
+                            style={styles.picker}
+                            mode="dropdown"
+                          >
+                            <Picker.Item label="Select department" value={null} color="#94A3B8" />
+                            {departments.map(d => (
+                              <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />
+                            ))}
+                          </Picker>
+                        </View>
+                        
+                        <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
+                          <Text style={styles.confirmBtnText}>✓ Confirm</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-                <View style={styles.actionBtns}>
-                  <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(t)}>
-                    <Text style={styles.approveBtnText}>✅ Approve</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.rejectBtn} onPress={() => handleDelete(t)}>
-                    <Text style={styles.rejectBtnText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
+              );
+            })
           )}
         </View>
 
@@ -195,16 +252,30 @@ const styles = StyleSheet.create({
   sectionCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   sectionSubtitle: { fontSize: 13, color: "#94A3B8", marginBottom: 14 },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
-  teacherRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  teacherRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  teacherRowExpanded: { backgroundColor: "#F8FAFC", paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 12, borderBottomWidth: 0, marginBottom: 8 },
+  teacherMainRow: { flexDirection: "row", alignItems: "flex-start" },
   teacherInfo: { flex: 1 },
-  teacherName: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  teacherEmail: { fontSize: 12, color: "#64748B", marginBottom: 2 },
-  teacherDept: { fontSize: 12, color: "#64748B" },
-  actionBtns: { flexDirection: "row", alignItems: "center" },
-  approveBtn: { backgroundColor: "#D1FAE5", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, marginRight: 6 },
-  approveBtnText: { fontSize: 12, fontWeight: "700", color: "#059669" },
-  rejectBtn: { backgroundColor: "#FEE2E2", width: 32, height: 32, borderRadius: 10, justifyContent: "center", alignItems: "center" },
-  rejectBtnText: { fontSize: 14, fontWeight: "700", color: "#EF4444" },
+  teacherName: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
+  teacherEmail: { fontSize: 13, color: "#64748B", marginBottom: 4 },
+  teacherDept: { fontSize: 13, color: "#64748B" },
+  pendingStatusText: { fontSize: 12, fontWeight: "600", color: "#D97706" },
+  actionBtns: { flexDirection: "row", alignItems: "center", marginTop: 4 },
+  approveBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
+  approveBtnActive: { backgroundColor: "#F1F5F9", borderColor: "#CBD5E1" },
+  approveBtnText: { fontSize: 12, fontWeight: "700", color: "#0F172A" },
+  approveBtnTextActive: { color: "#64748B" },
+  rejectBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#FEE2E2", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  rejectBtnText: { fontSize: 12, fontWeight: "700", color: "#EF4444" },
   deleteBtn: { backgroundColor: "#FEE2E2", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   deleteBtnText: { fontSize: 12, fontWeight: "700", color: "#EF4444" },
+  
+  // Assignment Expansion Styles
+  assignmentArea: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#E2E8F0" },
+  assignmentLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" },
+  assignmentControls: { flexDirection: "row", alignItems: "center" },
+  pickerContainer: { flex: 1, height: 44, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, marginRight: 12, justifyContent: "center", backgroundColor: "#FFF" },
+  picker: { width: "100%", color: "#0F172A" },
+  confirmBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", height: 44, paddingHorizontal: 16, borderRadius: 22, justifyContent: "center" },
+  confirmBtnText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
 });

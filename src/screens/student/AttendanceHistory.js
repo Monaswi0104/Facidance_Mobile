@@ -264,7 +264,7 @@ export default function AttendanceHistory() {
              <View style={styles.headerIconBox}>
                <Text style={{ fontSize: 20 }}>📅</Text>
              </View>
-             <View>
+             <View style={{ flex: 1, paddingRight: 10 }}>
                <Text style={styles.title}>Attendance History</Text>
                <Text style={styles.subtitle}>Review and analyze your attendance across all courses.</Text>
              </View>
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 20,
     paddingTop: 10,
     flexWrap: 'wrap',

@@ -24,6 +24,12 @@ export async function getCourseStudents(courseId) {
   return await res.json();
 }
 
+// Full course details including aggregated attendance
+export async function getCourseDetails(courseId) {
+  const res = await apiFetch(`/api/teacher/courses/${courseId}`);
+  return await res.json();
+}
+
 // Attendance for a course
 export async function getCourseAttendance(courseId) {
   const res = await apiFetch(`/api/teacher/attendance?courseId=${courseId}`);

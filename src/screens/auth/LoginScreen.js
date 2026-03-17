@@ -17,6 +17,8 @@ import {
 import { loginUser } from "../../api/authApi";
 
 const universityImg = require("../../assets/university.jpg");
+const eyeImg = require("../../assets/eye.png");
+const eyeOffImg = require("../../assets/eye-off.png");
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -87,7 +89,7 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.formSubtitle}>Sign in to continue to your dashboard</Text>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>📧  Email Address</Text>
+              <Text style={styles.label}>Email Address</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
@@ -101,7 +103,7 @@ export default function LoginScreen({ navigation }) {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>🔒  Password</Text>
+              <Text style={styles.label}>Password</Text>
               <View style={styles.passwordWrapper}>
                 <TextInput
                   style={styles.passwordInput}
@@ -116,9 +118,11 @@ export default function LoginScreen({ navigation }) {
                   style={styles.eyeButton}
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                 >
-                  <Text style={styles.eyeText}>
-                    {isPasswordVisible ? "🙈" : "👁️"}
-                  </Text>
+                  <Image 
+                    source={isPasswordVisible ? eyeOffImg : eyeImg} 
+                    style={styles.eyeIcon} 
+                    resizeMode="contain" 
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -274,8 +278,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     justifyContent: "center",
   },
-  eyeText: {
-    fontSize: 20,
+  eyeIcon: {
+    width: 22,
+    height: 22,
+    tintColor: "#94A3B8",
   },
   forgotBtn: {
     alignSelf: "flex-end",
