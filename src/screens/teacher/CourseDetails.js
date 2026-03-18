@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, ActivityIndicator, Dimensions, TextInput
+  ScrollView, ActivityIndicator, Dimensions, TextInput, Modal
 } from "react-native";
 import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,6 +16,7 @@ export default function CourseDetails({ route, navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [totalSessions, setTotalSessions] = useState(course.sessions || 0);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useFocusEffect(useCallback(() => {
     const load = async () => {
@@ -162,7 +163,7 @@ export default function CourseDetails({ route, navigation }) {
             <Text style={styles.emptyText}>No students found.</Text>
           ) : (
             filtered.map((s, i) => (
-              <View key={s.id} style={[styles.tableRow, i < filtered.length - 1 && styles.tableBorder]}>
+              <TouchableOpacity key={s.id} style={[styles.tableRow, i < filtered.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>
                 <View style={{ flex: 2.1, paddingRight: 6 }}>
                   <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
                   <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
@@ -183,12 +184,67 @@ export default function CourseDetails({ route, navigation }) {
                 <Text style={[styles.cellText, { flex: 0.8, textAlign: "center", fontWeight: "700" }]}>
                   {s.attended}/{s.total}
                 </Text>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
 
       </ScrollView>
+
+      {/* Student Details Modal */}
+      <Modal visible={!!selectedStudent} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              {selectedStudent && (
+                <>
+                  <View style={styles.modalHeader}>
+                    <View style={styles.modalAvatar}>
+                      <Text style={styles.modalAvatarText}>{selectedStudent.name.charAt(0)}</Text>
+                    </View>
+                    <View style={styles.modalHeaderInfo}>
+                      <Text style={styles.modalName}>{selectedStudent.name}</Text>
+                      <Text style={styles.modalEmail}>{selectedStudent.email}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Program:</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.program}</Text>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Status:</Text>
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : "#4361EE" }]}>
+                       {selectedStudent.status.toUpperCase()}
+                    </Text>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Joined Date:</Text>
+                    <Text style={styles.modalDetailValue}>
+                      {selectedStudent.joinedAt ? new Date(selectedStudent.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Face Registered:</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.faceRegistered ? "Yes ✅" : "No ❌"}</Text>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Attendance:</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} Sessions ({totalSessions > 0 ? Math.round((selectedStudent.attended / totalSessions) * 100) : 0}%)</Text>
+                  </View>
+
+                  <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelectedStudent(null)}>
+                    <Text style={styles.modalCloseBtnText}>Close</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -235,4 +291,19 @@ const styles = StyleSheet.create({
   faceNo: { backgroundColor: "#FEE2E2" },
   faceText: { fontSize: 11, fontWeight: "600" },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
+  
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modalCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  modalHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
+  modalAvatarText: { fontSize: 20, fontWeight: "800", color: "#4361EE" },
+  modalHeaderInfo: { flex: 1 },
+  modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
+  modalEmail: { fontSize: 13, color: "#64748B" },
+  modalDetailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
+  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: "#94A3B8", flex: 0.4 },
+  modalDetailValue: { fontSize: 14, fontWeight: "700", color: "#1E293B", flex: 0.6, textAlign: "right" },
+  modalCloseBtn: { backgroundColor: "#F1F5F9", paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  modalCloseBtnText: { fontSize: 15, fontWeight: "700", color: "#475569" },
 });

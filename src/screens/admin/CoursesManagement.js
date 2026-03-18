@@ -56,8 +56,8 @@ export default function CoursesManagement() {
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
-  const uniquePrograms = new Set(courses.map(c => c.program).filter(Boolean));
-  const uniqueTeachers = new Set(courses.map(c => c.teacher).filter(t => t !== "—"));
+  // We no longer need to calculate uniquePrograms and uniqueTeachers for the stats
+  // since the website just shows total programs and total teachers.
 
   const handleDelete = (course) => {
     Alert.alert("Delete Course", `Remove "${course.name}"?`, [
@@ -128,13 +128,13 @@ export default function CoursesManagement() {
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>PROGRAMS</Text>
-              <View style={styles.statBottom}><Text style={styles.statNumber}>{uniquePrograms.size}</Text>
+              <View style={styles.statBottom}><Text style={styles.statNumber}>{programs.length}</Text>
                 <View style={[styles.statIconBg, { backgroundColor: "#8B5CF6" }]}><Text style={styles.statIcon}>📋</Text></View>
               </View>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>FACULTY</Text>
-              <View style={styles.statBottom}><Text style={styles.statNumber}>{uniqueTeachers.size}</Text>
+              <View style={styles.statBottom}><Text style={styles.statNumber}>{teachers.length}</Text>
                 <View style={[styles.statIconBg, { backgroundColor: "#3B82F6" }]}><Text style={styles.statIcon}>👨‍🏫</Text></View>
               </View>
             </View>
