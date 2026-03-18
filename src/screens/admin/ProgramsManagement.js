@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStats } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -27,7 +28,6 @@ export default function ProgramsManagement() {
       const progList = progData.programs || progData || [];
       const deptList = deptData.departments || deptData || [];
       setDepartments(deptList);
-      if (deptList.length > 0 && !selectedDeptId) setSelectedDeptId(deptList[0].id);
 
       // Build a department lookup map
       const deptMap = {};
@@ -153,13 +153,19 @@ export default function ProgramsManagement() {
             <Text style={styles.modalTitle}>Add Program</Text>
             <TextInput style={styles.modalInput} placeholder="Program name (e.g. B.Tech CSE)" placeholderTextColor="#94A3B8" value={newName} onChangeText={setNewName} />
             <Text style={styles.modalFieldLabel}>Select Department</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-              {departments.map((d) => (
-                <TouchableOpacity key={d.id} style={[styles.deptChip, selectedDeptId === d.id && styles.deptChipActive]} onPress={() => setSelectedDeptId(d.id)}>
-                  <Text style={[styles.deptChipText, selectedDeptId === d.id && styles.deptChipTextActive]}>{d.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={selectedDeptId}
+                onValueChange={(itemValue) => setSelectedDeptId(itemValue)}
+                style={styles.picker}
+                mode="dropdown"
+              >
+                <Picker.Item label="Select Department" value={null} color="#94A3B8" />
+                {departments.map((d) => (
+                  <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />
+                ))}
+              </Picker>
+            </View>
             <View style={styles.modalBtns}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => { setShowAddModal(false); setNewName(""); }}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
@@ -213,10 +219,8 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginBottom: 16 },
   modalInput: { backgroundColor: "#F8FAFC", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: "#1E293B", borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
   modalFieldLabel: { fontSize: 13, fontWeight: "600", color: "#64748B", marginBottom: 8 },
-  deptChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#F1F5F9", marginRight: 8 },
-  deptChipActive: { backgroundColor: "#4361EE" },
-  deptChipText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
-  deptChipTextActive: { color: "#FFF" },
+  pickerWrapper: { height: 48, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, justifyContent: "center", overflow: "hidden", backgroundColor: "#F8FAFC", marginBottom: 20 },
+  picker: { width: "100%", color: "#0F172A" },
   modalBtns: { flexDirection: "row", justifyContent: "flex-end" },
   modalCancel: { paddingHorizontal: 16, paddingVertical: 10, marginRight: 10 },
   modalCancelText: { fontSize: 14, fontWeight: "600", color: "#64748B" },

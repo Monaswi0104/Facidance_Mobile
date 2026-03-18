@@ -78,6 +78,14 @@ export async function getCourses() {
   return await res.json();
 }
 
+export async function createCourse(data) {
+  const res = await apiFetch("/api/admin/courses", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return await res.json();
+}
+
 export async function deleteCourse(id) {
   const res = await apiFetch("/api/admin/courses", {
     method: "DELETE",

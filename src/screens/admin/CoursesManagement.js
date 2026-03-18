@@ -1,22 +1,42 @@
 import React, { useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, Alert, ActivityIndicator, Dimensions
+  ScrollView, Alert, ActivityIndicator, Dimensions, TextInput
 } from "react-native";
-import { getCourses, deleteCourse } from "../../api/adminApi";
+import { Picker } from "@react-native-picker/picker";
+import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [isAddingCourse, setIsAddingCourse] = useState(false);
+  const [form, setForm] = useState({
+    departmentId: null,
+    teacherId: null,
+    programId: null,
+    academicYear: "",
+    semesterNumber: null,
+    name: ""
+  });
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await getCourses();
-      const list = data.courses || data || [];
+      const [coursesData, deptsData, progsData, teachersData] = await Promise.all([
+        getCourses(),
+        getDepartments(),
+        getPrograms(),
+        getTeachers()
+      ]);
+
+      const list = coursesData.courses || coursesData || [];
       setCourses(list.map((c) => ({
         id: c.id, name: c.name, code: c.code || "—",
         teacher: c.teacher?.user?.name || c.teacher?.name || "—",
@@ -24,6 +44,12 @@ export default function CoursesManagement() {
         year: c.semester?.academicYear?.name || "",
         program: c.semester?.academicYear?.program?.name || "",
       })));
+
+      setDepartments(deptsData.departments || deptsData || []);
+      setPrograms(progsData.programs || progsData || []);
+      
+      const allTeachers = teachersData.teachers || teachersData || [];
+      setTeachers(allTeachers.filter(t => t.id && !t.isPending));
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
   };
@@ -45,7 +71,26 @@ export default function CoursesManagement() {
     ]);
   };
 
+  const handleCreateCourse = async () => {
+    const { teacherId, programId, academicYear, semesterNumber, name } = form;
+    if (!teacherId || !programId || !academicYear || !semesterNumber || !name) {
+      Alert.alert("Missing Fields", "Please fill out all required fields.");
+      return;
+    }
+
+    try {
+      await createCourse({ name, teacherId, programId, academicYear, semesterNumber });
+      Alert.alert("Success", "Course added successfully!");
+      setIsAddingCourse(false);
+      setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
+      loadData();
+    } catch (e) {
+      Alert.alert("Error", "Failed to create course.");
+    }
+  };
+
   const colors = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444"];
+  const filteredPrograms = form.departmentId ? programs.filter(p => p.departmentId === form.departmentId) : programs;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -62,6 +107,12 @@ export default function CoursesManagement() {
               <Text style={styles.subtitle}>Manage academic courses and their teachers, programs & semesters.</Text>
             </View>
           </View>
+          <TouchableOpacity 
+            style={styles.addBtnHeader} 
+            onPress={() => setIsAddingCourse(!isAddingCourse)}
+          >
+            <Text style={styles.addBtnHeaderText}>{isAddingCourse ? "✕ Close" : "⊕ Add Course"}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stats */}
@@ -86,6 +137,113 @@ export default function CoursesManagement() {
               <View style={styles.statBottom}><Text style={styles.statNumber}>{uniqueTeachers.size}</Text>
                 <View style={[styles.statIconBg, { backgroundColor: "#3B82F6" }]}><Text style={styles.statIcon}>👨‍🏫</Text></View>
               </View>
+            </View>
+          </View>
+        )}
+
+        {/* Add Course Form UI */}
+        {isAddingCourse && (
+          <View style={styles.formCard}>
+            <View style={styles.formHeader}>
+              <Text style={styles.formTitle}>📖 Add New Course</Text>
+              <TouchableOpacity onPress={() => setIsAddingCourse(false)}>
+                <Text style={styles.closeBtn}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.formRow}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Department</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={form.departmentId}
+                    onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="All Departments" value={null} color="#94A3B8" />
+                    {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />)}
+                  </Picker>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Teacher</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={form.teacherId}
+                    onValueChange={(v) => setForm({ ...form, teacherId: v })}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select Teacher" value={null} color="#94A3B8" />
+                    {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color="#1E293B" />)}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.formRow}>
+              <View style={styles.inputGroupFull}>
+                <Text style={styles.inputLabel}>Program</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={form.programId}
+                    onValueChange={(v) => setForm({ ...form, programId: v })}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select Program" value={null} color="#94A3B8" />
+                    {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color="#1E293B" />)}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.formRow}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Academic Year</Text>
+                <TextInput 
+                  style={styles.textInput} 
+                  placeholder="e.g., 2024-2025" 
+                  placeholderTextColor="#94A3B8"
+                  value={form.academicYear}
+                  onChangeText={(text) => setForm({ ...form, academicYear: text })}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Semester</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={form.semesterNumber}
+                    onValueChange={(v) => setForm({ ...form, semesterNumber: v })}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select Semester" value={null} color="#94A3B8" />
+                    {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color="#1E293B" />)}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.formRow}>
+              <View style={styles.inputGroupFull}>
+                <Text style={styles.inputLabel}>Course Name</Text>
+                <TextInput 
+                  style={styles.textInput} 
+                  placeholder="e.g., Data Structures and Algorithms" 
+                  placeholderTextColor="#94A3B8"
+                  value={form.name}
+                  onChangeText={(text) => setForm({ ...form, name: text })}
+                />
+              </View>
+            </View>
+
+            <View style={styles.formActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAddingCourse(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.submitBtn} onPress={handleCreateCourse}>
+                <Text style={styles.submitBtnText}>Add Course</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -127,12 +285,16 @@ export default function CoursesManagement() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16, marginTop: 8 },
-  headerLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, marginTop: 8 },
+  headerLeft: { flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 10 },
   badge: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginRight: 12 },
   badgeText: { color: "#FFF", fontSize: 16, fontWeight: "800" },
   title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
   subtitle: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  
+  addBtnHeader: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  addBtnHeaderText: { fontSize: 12, fontWeight: "700", color: "#0F172A" },
+
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 3, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 8 },
@@ -155,4 +317,22 @@ const styles = StyleSheet.create({
   itemMeta: { fontSize: 12, color: "#64748B", marginBottom: 1 },
   deleteBtn: { backgroundColor: "#FEE2E2", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   deleteBtnText: { fontSize: 12, fontWeight: "600", color: "#EF4444" },
+  
+  // Form Styles
+  formCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: "#F1F5F9" },
+  formHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  formTitle: { fontSize: 15, fontWeight: "700", color: "#10B981" },
+  closeBtn: { fontSize: 18, color: "#94A3B8", fontWeight: "600" },
+  formRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
+  inputGroup: { flex: 0.48 },
+  inputGroupFull: { flex: 1 },
+  inputLabel: { fontSize: 11, fontWeight: "600", color: "#475569", marginBottom: 6 },
+  pickerWrapper: { height: 44, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, justifyContent: "center", overflow: "hidden", backgroundColor: "#F8FAFC" },
+  picker: { width: "100%", color: "#0F172A" },
+  textInput: { height: 44, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 12, fontSize: 14, color: "#0F172A", backgroundColor: "#F8FAFC" },
+  formActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  cancelBtn: { paddingHorizontal: 16, paddingVertical: 10, marginRight: 12 },
+  cancelBtnText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
+  submitBtn: { backgroundColor: "#10B981", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
+  submitBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
 });
