@@ -190,10 +190,10 @@ export default function MyCourses({ navigation }) {
                      <Text style={styles.btnOutlineText}>View details</Text>
                    </TouchableOpacity>
                    <TouchableOpacity 
-                     style={styles.btnTextOnly}
+                     style={styles.btnFilled}
                      onPress={() => navigation.navigate("CourseAttendance", { course: item, tab: 'Attendance' })}
                    >
-                     <Text style={styles.btnTextOnlyText}>Attendance</Text>
+                     <Text style={styles.btnFilledText}>Attendance</Text>
                    </TouchableOpacity>
                  </View>
 
@@ -410,27 +410,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 12,
+    borderRadius: 10,
     marginRight: 10,
   },
   btnOutlineText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#1E293B",
   },
-  btnTextOnly: {
+  btnFilled: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    backgroundColor: '#0F172A',
+    paddingVertical: 12,
+    borderRadius: 10,
   },
-  btnTextOnlyText: {
+  btnFilledText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#0F172A",
+    fontWeight: "700",
+    color: "#FFFFFF",
   }
 });

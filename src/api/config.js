@@ -1,9 +1,11 @@
-// Base URL for the GUAttend backend
-// For Android emulator accessing localhost, use 10.0.2.2
-// For physical device, use your computer's local IP (e.g., 192.168.x.x)
-// For deployed backend, use the production URL
+// Auto-detect: emulator uses 10.0.2.2, physical device uses localhost via adb reverse
+import { Platform } from "react-native";
+import DeviceInfo from "react-native-device-info";
 
-export const BASE_URL = "http://10.0.2.2:3000";
+const isEmulator = DeviceInfo.isEmulatorSync();
+export const BASE_URL = isEmulator
+  ? "http://10.0.2.2:3000"
+  : "http://localhost:3000";
 
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";
