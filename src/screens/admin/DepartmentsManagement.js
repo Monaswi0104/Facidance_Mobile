@@ -12,6 +12,7 @@ export default function DepartmentsManagement() {
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedDept, setSelectedDept] = useState(null);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
@@ -24,6 +25,17 @@ export default function DepartmentsManagement() {
         id: d.id, name: d.name,
         programs: d.programs?.length || d._count?.programs || 0,
         teachers: d.teachers?.length || d._count?.teachers || 0,
+        programsList: d.programs || [],
+        teachersList: (d.teachers || []).map(t => {
+          const progs = new Set();
+          if (t.courses) {
+            t.courses.forEach(c => {
+               const pName = c?.semester?.academicYear?.program?.name;
+               if (pName) progs.add(pName);
+            });
+          }
+          return { ...t, allottedPrograms: Array.from(progs).join(" • ") };
+        }),
       })));
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
@@ -122,7 +134,7 @@ export default function DepartmentsManagement() {
             <Text style={styles.emptyText}>No departments created yet.</Text>
           ) : (
             departments.map((d, i) => (
-              <View key={d.id} style={[styles.itemRow, i < departments.length - 1 && styles.itemBorder]}>
+              <TouchableOpacity key={d.id} style={[styles.itemRow, i < departments.length - 1 && styles.itemBorder]} onPress={() => setSelectedDept(d)}>
                 <View style={[styles.itemDot, { backgroundColor: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"][i % 5] }]} />
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName}>{d.name}</Text>
@@ -131,7 +143,7 @@ export default function DepartmentsManagement() {
                 <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(d)}>
                   <Text style={styles.deleteBtnText}>🗑 Delete</Text>
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -158,6 +170,64 @@ export default function DepartmentsManagement() {
                 <Text style={styles.modalConfirmText}>{isCreating ? "Creating..." : "Add"}</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal visible={!!selectedDept} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.detailHeader}>
+              <View style={[styles.badge, { backgroundColor: "#3B82F6", width: 44, height: 44, borderRadius: 12 }]}>
+                <Text style={[styles.badgeText, { fontSize: 20 }]}>{selectedDept?.name?.charAt(0)}</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={[styles.modalTitle, { marginBottom: 2 }]}>{selectedDept?.name}</Text>
+                <Text style={styles.subtitle}>{selectedDept?.programs} Programs • {selectedDept?.teachers} Teachers</Text>
+              </View>
+            </View>
+
+            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.5 }} showsVerticalScrollIndicator={false}>
+              
+              <Text style={styles.sectionHeader}>Programs</Text>
+              {selectedDept?.programsList?.length > 0 ? (
+                selectedDept.programsList.map((p, idx) => (
+                  <View key={p.id || idx} style={styles.subItem}>
+                    <Text style={styles.subItemIcon}>📋</Text>
+                    <Text style={styles.subItemText}>{p.name}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptySubItem}>No programs available.</Text>
+              )}
+
+              <Text style={[styles.sectionHeader, { marginTop: 16 }]}>Teachers</Text>
+              {selectedDept?.teachersList?.length > 0 ? (
+                selectedDept.teachersList.map((t, idx) => (
+                  <View key={t.id || idx} style={styles.subItem}>
+                    <View style={styles.teacherAvatar}>
+                      <Text style={styles.teacherAvatarText}>{t.user?.name?.charAt(0) || "T"}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.subItemText}>{t.user?.name || "Unknown Teacher"}</Text>
+                      <Text style={styles.subItemSubText}>{t.user?.email || ""}</Text>
+                      {!!t.allottedPrograms && (
+                        <Text style={[styles.subItemSubText, { color: "#3B82F6", fontWeight: "600", marginTop: 4 }]}>
+                          📚 {t.allottedPrograms}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptySubItem}>No teachers assigned.</Text>
+              )}
+            </ScrollView>
+
+            <TouchableOpacity style={[styles.modalCancel, { marginTop: 20, backgroundColor: "#F1F5F9", borderRadius: 10, paddingVertical: 14, alignItems: "center" }]} onPress={() => setSelectedDept(null)}>
+              <Text style={[styles.modalCancelText, { marginRight: 0 }]}>Close Details</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -207,4 +277,13 @@ const styles = StyleSheet.create({
   modalCancelText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
   modalConfirm: { backgroundColor: "#4361EE", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   modalConfirmText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+  detailHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  sectionHeader: { fontSize: 13, fontWeight: "800", color: "#64748B", marginBottom: 12, textTransform: "uppercase", letterSpacing: 0.5 },
+  subItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  subItemIcon: { fontSize: 18, marginRight: 12 },
+  subItemText: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
+  subItemSubText: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  emptySubItem: { fontSize: 13, color: "#94A3B8", fontStyle: "italic", marginBottom: 8 },
+  teacherAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 12 },
+  teacherAvatarText: { fontSize: 14, fontWeight: "800", color: "#4361EE" }
 });

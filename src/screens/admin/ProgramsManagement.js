@@ -17,6 +17,7 @@ export default function ProgramsManagement() {
   const [newName, setNewName] = useState("");
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState(null);
 
   const [adminStudents, setAdminStudents] = useState(0);
 
@@ -33,12 +34,35 @@ export default function ProgramsManagement() {
       const deptMap = {};
       deptList.forEach((d) => { deptMap[d.id] = d.name; });
 
-      setPrograms(progList.map((p) => ({
-        id: p.id, name: p.name,
-        departmentId: p.departmentId,
-        dept: p.department?.name || deptMap[p.departmentId] || "—",
-        students: p._count?.students || p.students?.length || 0,
-      })));
+      setPrograms(progList.map((p) => {
+        // Flatten all courses from all semesters of all academic years
+        const allCourses = [];
+        const teacherSet = new Set();
+        (p.academicYears || []).forEach(ay => {
+          (ay.semesters || []).forEach(sem => {
+            (sem.courses || []).forEach(c => {
+              allCourses.push({
+                id: c.id, name: c.name, code: c.code,
+                teacher: c.teacher?.user?.name || "—",
+                teacherEmail: c.teacher?.user?.email || "",
+                semester: sem.name,
+                academicYear: ay.name,
+                students: c._count?.students || 0,
+              });
+              if (c.teacher?.user?.name) teacherSet.add(c.teacher.user.name);
+            });
+          });
+        });
+        return {
+          id: p.id, name: p.name,
+          departmentId: p.departmentId,
+          dept: p.department?.name || deptMap[p.departmentId] || "—",
+          students: p._count?.students || 0,
+          courses: allCourses,
+          teachers: Array.from(teacherSet),
+          academicYears: (p.academicYears || []).map(ay => ay.name),
+        };
+      }));
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
   };
@@ -131,16 +155,17 @@ export default function ProgramsManagement() {
             <Text style={styles.emptyText}>No programs created yet.</Text>
           ) : (
             programs.map((p, i) => (
-              <View key={p.id} style={[styles.itemRow, i < programs.length - 1 && styles.itemBorder]}>
+              <TouchableOpacity key={p.id} style={[styles.itemRow, i < programs.length - 1 && styles.itemBorder]} activeOpacity={0.7} onPress={() => setSelectedProgram(p)}>
                 <View style={[styles.itemDot, { backgroundColor: ["#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"][i % 5] }]} />
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName}>{p.name}</Text>
-                  <Text style={styles.itemMeta}>🏢 {p.dept}</Text>
+                  <Text style={styles.itemMeta}>🏢 {p.dept}  <Text style={{ color: "#94A3B8" }}>ID: {p.id.slice(0, 7)}…</Text></Text>
+                  <Text style={{ fontSize: 11, color: "#94A3B8", marginTop: 3 }}>Tap to view details →</Text>
                 </View>
                 <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(p)}>
                   <Text style={styles.deleteBtnText}>🗑 Delete</Text>
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -174,6 +199,94 @@ export default function ProgramsManagement() {
                 <Text style={styles.modalConfirmText}>{isCreating ? "Creating..." : "Add"}</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Program Detail Modal */}
+      <Modal visible={!!selectedProgram} transparent animationType="slide">
+        <View style={styles.detailOverlay}>
+          <View style={styles.detailCard}>
+            {/* Header */}
+            <View style={styles.detailProfileSection}>
+              <View style={styles.detailAvatar}>
+                <Text style={styles.detailAvatarText}>📚</Text>
+              </View>
+              <Text style={styles.detailName}>{selectedProgram?.name}</Text>
+              <View style={styles.codeBadge}>
+                <Text style={styles.codeBadgeText}>ID: {selectedProgram?.id?.slice(0, 7)}…</Text>
+              </View>
+            </View>
+
+            {/* Info Items */}
+            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.45 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.detailInfoList}>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>🏢</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Department</Text>
+                    <Text style={styles.detailInfoItemValue}>{selectedProgram?.dept}</Text>
+                  </View>
+                </View>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>🔑</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Full Program ID</Text>
+                    <Text style={[styles.detailInfoItemValue, { fontSize: 12, letterSpacing: 0.5 }]}>{selectedProgram?.id}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Stats Row */}
+              <View style={styles.detailStatsRow}>
+                <View style={styles.detailStatBox}>
+                  <Text style={styles.detailStatNumber}>{selectedProgram?.students || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Students</Text>
+                </View>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
+                  <Text style={styles.detailStatNumber}>{selectedProgram?.courses?.length || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Courses</Text>
+                </View>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
+                  <Text style={styles.detailStatNumber}>{selectedProgram?.teachers?.length || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Faculty</Text>
+                </View>
+              </View>
+
+              {/* Courses */}
+              {selectedProgram?.courses?.length > 0 && (
+                <>
+                  <Text style={styles.detailSectionTitle}>Courses</Text>
+                  {selectedProgram.courses.map((c, idx) => (
+                    <View key={c.id || idx} style={styles.courseItem}>
+                      <View style={styles.courseItemLeft}>
+                        <Text style={styles.courseItemEmoji}>📖</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.courseItemName}>{c.name}</Text>
+                        <Text style={styles.courseItemCode}>{c.code}</Text>
+                        <View style={styles.courseItemTagsRow}>
+                          <View style={[styles.courseTag, { backgroundColor: "#EEF2FF" }]}>
+                            <Text style={[styles.courseTagText, { color: "#4361EE" }]}>{c.semester}</Text>
+                          </View>
+                          <View style={[styles.courseTag, { backgroundColor: "#FEF3C7" }]}>
+                            <Text style={[styles.courseTagText, { color: "#D97706" }]}>👨‍🏫 {c.teacher}</Text>
+                          </View>
+                          <View style={[styles.courseTag, { backgroundColor: "#F0FDF4" }]}>
+                            <Text style={[styles.courseTagText, { color: "#10B981" }]}>👥 {c.students}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </>
+              )}
+            </ScrollView>
+
+            {/* Close */}
+            <TouchableOpacity style={styles.detailCloseBtn} activeOpacity={0.7} onPress={() => setSelectedProgram(null)}>
+              <Text style={styles.detailCloseBtnText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -226,4 +339,34 @@ const styles = StyleSheet.create({
   modalCancelText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
   modalConfirm: { backgroundColor: "#4361EE", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   modalConfirmText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+
+  // Detail Modal
+  detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+  detailCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 24, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
+  detailProfileSection: { alignItems: "center", marginBottom: 20, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  detailAvatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F5F3FF", justifyContent: "center", alignItems: "center", marginBottom: 12 },
+  detailAvatarText: { fontSize: 28 },
+  detailName: { fontSize: 20, fontWeight: "800", color: "#0F172A", textAlign: "center", marginBottom: 8 },
+  codeBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 },
+  codeBadgeText: { fontSize: 12, fontWeight: "700", color: "#4361EE" },
+  detailInfoList: { marginBottom: 16 },
+  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailInfoIcon: { fontSize: 18, marginRight: 14, width: 24, textAlign: "center" },
+  detailInfoItemLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  detailInfoItemValue: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
+  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 16 },
+  detailStatNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
+  detailStatLabel: { fontSize: 11, fontWeight: "600", color: "#94A3B8" },
+  detailSectionTitle: { fontSize: 13, fontWeight: "800", color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 },
+  courseItem: { flexDirection: "row", backgroundColor: "#FFF", padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  courseItemLeft: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#F0F9FF", justifyContent: "center", alignItems: "center", marginRight: 12 },
+  courseItemEmoji: { fontSize: 16 },
+  courseItemName: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
+  courseItemCode: { fontSize: 12, fontWeight: "600", color: "#4361EE", marginBottom: 6 },
+  courseItemTagsRow: { flexDirection: "row", flexWrap: "wrap" },
+  courseTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginRight: 6, marginBottom: 4 },
+  courseTagText: { fontSize: 10, fontWeight: "700" },
+  detailCloseBtn: { marginTop: 16, backgroundColor: "#0F172A", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  detailCloseBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
 });
