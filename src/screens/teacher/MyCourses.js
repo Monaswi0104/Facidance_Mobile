@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", paddingVertical: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyText: { fontSize: 16, fontWeight: "600", color: "#94A3B8" },
-  courseCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  courseCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   courseTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
   courseName: { fontSize: 17, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
   courseProgram: { fontSize: 12, fontWeight: "600", color: "#4361EE", textTransform: "uppercase" },

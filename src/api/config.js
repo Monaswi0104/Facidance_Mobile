@@ -24,15 +24,28 @@ export async function apiFetch(endpoint, options = {}) {
     delete headers["Content-Type"];
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  // If unauthorized, could trigger logout
-  if (response.status === 401) {
-    throw new Error("UNAUTHORIZED");
+    console.log(`[API ${options.method || 'GET'} ${endpoint}] Status:`, response.status);
+
+    if (response.status === 401) {
+      throw new Error("UNAUTHORIZED");
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.log(`[API FAIL] Response text:`, text.substring(0, 200));
+      // Re-construct the response so it can still be parsed if someone calls res.json()
+      return new Response(text, { status: response.status, headers: response.headers });
+    }
+
+    return response;
+  } catch (err) {
+    console.error(`[API NETWORK ERROR] ${options.method || 'GET'} ${endpoint} failed:`, err.message);
+    throw err;
   }
-
-  return response;
 }

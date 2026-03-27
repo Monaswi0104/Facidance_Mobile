@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
   subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
 
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 20, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
+  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 20, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
   importHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
   importIconBadge: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#6366F1", justifyContent: "center", alignItems: "center", marginRight: 12 },
   importTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
@@ -394,13 +394,13 @@ const styles = StyleSheet.create({
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: "#1E293B", fontSize: 13, fontWeight: "700" },
 
-  filterCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", flexDirection: "row", alignItems: "center" },
+  filterCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", flexDirection: "row", alignItems: "center" },
   searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 16 },
   searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
   filterWrapper: { width: 140 },
   filterLabel: { fontSize: 10, fontWeight: "600", color: "#64748B", marginBottom: 4, paddingLeft: 2 },
 
-  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 20 },
+  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 20 },
   tableTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 14 },
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
   tableHeaderText: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   modalCloseText: { fontSize: 15, fontWeight: "600", color: "#64748B" },
 
   // Student Details Modal Styles
-  modalDetailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  modalDetailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalAvatarText: { fontSize: 20, fontWeight: "800", color: "#4361EE" },

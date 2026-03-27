@@ -69,7 +69,11 @@ export async function deleteProgram(id) {
     method: "DELETE",
     body: JSON.stringify({ id }),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to delete program");
+  }
+  return json;
 }
 
 // Courses
@@ -83,7 +87,11 @@ export async function createCourse(data) {
     method: "POST",
     body: JSON.stringify(data),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || json.hint || "Failed to create course");
+  }
+  return json;
 }
 
 export async function deleteCourse(id) {
@@ -91,7 +99,11 @@ export async function deleteCourse(id) {
     method: "DELETE",
     body: JSON.stringify({ id }),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to delete course");
+  }
+  return json;
 }
 
 // Students

@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   backBtn: { backgroundColor: "#F1F5F9", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
   backBtnText: { fontSize: 12, fontWeight: "700", color: "#64748B" },
 
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   sectionHeaderText: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginLeft: 8 },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 10 },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 24, fontWeight: "800" },
   statIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
 
-  actionsCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 6, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  actionsCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 6, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   actionRow: { flexDirection: "row", alignItems: "center", padding: 14 },
   actionDot: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center", marginRight: 14 },
   actionInfo: { flex: 1 },

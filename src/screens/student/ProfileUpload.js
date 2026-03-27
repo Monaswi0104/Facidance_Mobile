@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
-import { uploadFacePhotos, getStudentMe, getStudentCourses, getAttendanceHistory } from "../../api/studentApi";
+import { uploadFacePhotos, getStudentMe, getStudentCourses } from "../../api/studentApi";
 
 const uploadSteps = [
   { key: "front", label: "Front View", desc: "Look straight at the camera" },
@@ -17,6 +17,7 @@ export default function ProfileUpload() {
   
   const [studentInfo, setStudentInfo] = useState(null);
   const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -200,13 +201,16 @@ export default function ProfileUpload() {
                 const acYear = c.semester?.academicYear;
                 const acYearName = typeof acYear === 'object' ? acYear?.name : acYear;
                 return (
-                  <View key={c.id} style={styles.courseItem}>
+                  <TouchableOpacity key={c.id} style={styles.courseItem} activeOpacity={0.7} onPress={() => setSelectedCourse({ ...c, acYearName })}>
                      <View style={{ flex: 1, paddingRight: 10 }}>
                         <Text style={styles.courseName}>{c.name}</Text>
                         <Text style={styles.courseSub}>{c.teacher?.user?.name || c.teacher?.name || "Teacher"} • {c.semester?.name} ({acYearName})</Text>
                      </View>
-                     <Text style={styles.courseCode}>{c.entryCode || c.code}</Text>
-                  </View>
+                     <View style={{ alignItems: "flex-end" }}>
+                        <Text style={styles.courseCode}>{c.entryCode || c.code}</Text>
+                        <Text style={{ fontSize: 10, color: "#94A3B8", marginTop: 4 }}>Tap to view →</Text>
+                     </View>
+                  </TouchableOpacity>
                 );
              })}
           </View>
@@ -305,6 +309,77 @@ export default function ProfileUpload() {
         </View>
 
       </ScrollView>
+
+      {/* Course Detail Modal */}
+      <Modal visible={!!selectedCourse} transparent animationType="slide">
+        <View style={styles.detailOverlay}>
+          <View style={styles.detailCard}>
+            {/* Header */}
+            <View style={styles.detailProfileSection}>
+              <View style={styles.detailAvatar}>
+                <Text style={styles.detailAvatarText}>📚</Text>
+              </View>
+              <Text style={styles.detailName}>{selectedCourse?.name}</Text>
+              <View style={styles.codeBadge}>
+                <Text style={styles.codeBadgeText}>{selectedCourse?.code}</Text>
+              </View>
+            </View>
+
+            {/* Info Items */}
+            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.45 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.detailInfoList}>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>👨‍🏫</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Teacher</Text>
+                    <Text style={styles.detailInfoItemValue}>{selectedCourse?.teacher?.user?.name || "—"}</Text>
+                    {!!selectedCourse?.teacher?.user?.email && <Text style={styles.detailInfoItemSub}>{selectedCourse.teacher.user.email}</Text>}
+                  </View>
+                </View>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>📚</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Program</Text>
+                    <Text style={styles.detailInfoItemValue}>{selectedCourse?.semester?.academicYear?.program?.name || "—"}</Text>
+                  </View>
+                </View>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>📅</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Academic Year & Semester</Text>
+                    <Text style={styles.detailInfoItemValue}>{selectedCourse?.acYearName || "—"} • {selectedCourse?.semester?.name || "—"}</Text>
+                  </View>
+                </View>
+                <View style={styles.detailInfoItem}>
+                  <Text style={styles.detailInfoIcon}>🔑</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.detailInfoItemLabel}>Entry Code</Text>
+                    <Text style={[styles.detailInfoItemValue, { color: "#10B981", letterSpacing: 2 }]}>{selectedCourse?.entryCode || "—"}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Stats Row */}
+              <View style={styles.detailStatsRow}>
+                <View style={styles.detailStatBox}>
+                  <Text style={styles.detailStatNumber}>{selectedCourse?._count?.students || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Students</Text>
+                </View>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
+                  <Text style={styles.detailStatNumber}>{selectedCourse?._count?.attendance || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Sessions</Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Close */}
+            <TouchableOpacity style={styles.detailCloseBtn} activeOpacity={0.7} onPress={() => setSelectedCourse(null)}>
+              <Text style={styles.detailCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -319,7 +394,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     padding: 24,
     marginBottom: 16,
-    shadowColor: "#000",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -533,5 +608,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     color: "#94A3B8",
-  }
+  },
+  
+  // Detail Modal Styles
+  detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+  detailCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 24, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
+  detailProfileSection: { alignItems: "center", marginBottom: 20, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  detailAvatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F0FDF4", justifyContent: "center", alignItems: "center", marginBottom: 12 },
+  detailAvatarText: { fontSize: 28 },
+  detailName: { fontSize: 20, fontWeight: "800", color: "#0F172A", textAlign: "center", marginBottom: 8 },
+  codeBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 16, paddingVertical: 5, borderRadius: 20 },
+  codeBadgeText: { fontSize: 13, fontWeight: "700", color: "#4361EE", letterSpacing: 1 },
+  detailInfoList: { marginBottom: 16 },
+  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailInfoIcon: { fontSize: 18, marginRight: 14, width: 24, textAlign: "center" },
+  detailInfoItemLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  detailInfoItemValue: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
+  detailInfoItemSub: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 16 },
+  detailStatNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
+  detailStatLabel: { fontSize: 11, fontWeight: "600", color: "#94A3B8" },
+  detailCloseBtn: { marginTop: 16, backgroundColor: "#0F172A", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  detailCloseBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
 });

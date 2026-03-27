@@ -72,7 +72,10 @@ export default function CoursesManagement() {
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try { await deleteCourse(course.id); loadData(); }
-          catch (e) { Alert.alert("Error", "Failed to delete."); }
+          catch (e) {
+            console.log("Delete error:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);
@@ -86,13 +89,20 @@ export default function CoursesManagement() {
     }
 
     try {
-      await createCourse({ name, teacherId, programId, academicYear, semesterNumber });
+      console.log("Creating course with data:", { name, teacherId, programId, academicYear, semesterNumber });
+      const result = await createCourse({ name, teacherId, programId, academicYear, semesterNumber });
+      console.log("Create course result:", result);
+      if (result.error) {
+        Alert.alert("Error", result.error + (result.hint ? `\n\n${result.hint}` : ""));
+        return;
+      }
       Alert.alert("Success", "Course added successfully!");
       setIsAddingCourse(false);
       setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
       loadData();
     } catch (e) {
-      Alert.alert("Error", "Failed to create course.");
+      console.log("Create course error:", e);
+      Alert.alert("Error", e.message || "Failed to create course.");
     }
   };
 
@@ -134,7 +144,7 @@ export default function CoursesManagement() {
               </View>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statLabel}>PROGRAMS</Text>
+              <Text style={styles.statLabel}>PROGRAMS COVERED</Text>
               <View style={styles.statBottom}><Text style={styles.statNumber}>{programs.length}</Text>
                 <View style={[styles.statIconBg, { backgroundColor: "#8B5CF6" }]}><Text style={styles.statIcon}>📋</Text></View>
               </View>
@@ -381,7 +391,7 @@ const styles = StyleSheet.create({
   addBtnHeaderText: { fontSize: 12, fontWeight: "700", color: "#0F172A" },
 
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 3, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 3, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 8 },
   statBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   statNumber: { fontSize: 24, fontWeight: "800", color: "#1E293B" },
@@ -392,7 +402,7 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", flex: 1 },
   listCountBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   listCountText: { fontSize: 11, fontWeight: "700", color: "#4361EE" },
-  listCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  listCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 24 },
   itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 14 },
   itemBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },

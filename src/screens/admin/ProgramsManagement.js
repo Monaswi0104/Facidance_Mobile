@@ -92,7 +92,10 @@ export default function ProgramsManagement() {
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try { await deleteProgram(prog.id); loadData(); }
-          catch (e) { Alert.alert("Error", "Failed to delete."); }
+          catch (e) {
+            console.log("Delete error:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);
@@ -306,7 +309,7 @@ const styles = StyleSheet.create({
   addBtn: { backgroundColor: "#0F172A", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
   addBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 3, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 3, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 8 },
   statBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   statNumber: { fontSize: 24, fontWeight: "800", color: "#1E293B" },
@@ -317,7 +320,7 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", flex: 1 },
   listCountBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   listCountText: { fontSize: 11, fontWeight: "700", color: "#4361EE" },
-  listCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  listCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 24 },
   itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 14 },
   itemBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },

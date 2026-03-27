@@ -55,7 +55,7 @@ export default function TeachersManagement() {
       setSelectedDeptId(null);
     } else {
       setSelectedTeacherForDept(teacher.id);
-      setSelectedDeptId(departments.length > 0 ? departments[0].id : null);
+      setSelectedDeptId(null);
     }
   };
 
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
   subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  miniStat: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  miniStat: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 4, alignItems: "center", borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   miniLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 4 },
   miniValue: { fontSize: 22, fontWeight: "800", color: "#1E293B" },
   miniSub: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 17, fontWeight: "700", color: "#1E293B", flex: 1 },
   countBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
   countText: { fontSize: 12, fontWeight: "700" },
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  sectionCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   sectionSubtitle: { fontSize: 13, color: "#94A3B8", marginBottom: 14 },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
   teacherRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
