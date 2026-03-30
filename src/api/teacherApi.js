@@ -45,8 +45,28 @@ export async function getTeacherReports(courseId, startDate, endDate) {
   return await res.json();
 }
 
+// Get all programs (for student import)
+export async function getAllPrograms() {
+  const res = await apiFetch("/api/admin/programs");
+  const data = await res.json();
+  return data.programs || [];
+}
+
 // Hierarchy (departments > programs > semesters)
 export async function getHierarchy() {
   const res = await apiFetch("/api/teacher/hierarchy");
   return await res.json();
+}
+
+// Import students into a course
+export async function importStudentsCsv(courseId, students) {
+  const res = await apiFetch(`/api/teacher/courses/${courseId}/import`, {
+    method: "POST",
+    body: JSON.stringify({ students }),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to import students");
+  }
+  return json;
 }

@@ -3,10 +3,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
   ScrollView, Modal, TextInput, ActivityIndicator, Dimensions
 } from "react-native";
-import { getTeacherCourses, getCourseStudents } from "../../api/teacherApi";
+import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import DocumentPicker from "react-native-document-picker";
 import RNFS from "react-native-fs";
+import XLSX from "xlsx";
 
 const { width } = Dimensions.get("window");
 
@@ -36,13 +37,9 @@ export default function StudentEnrollment() {
         const list = Array.isArray(data) ? data : [];
         setCourses(list);
         
-        // Extract unique programs
-        const progs = new Map();
-        list.forEach(c => {
-          const p = c.semester?.academicYear?.program;
-          if (p && !progs.has(p.id)) progs.set(p.id, p);
-        });
-        setPrograms(Array.from(progs.values()));
+        // Fetch all programs from the system
+        const allPrograms = await getAllPrograms();
+        setPrograms(allPrograms);
 
         // Gather students from all courses
         const allStudents = [];
@@ -79,7 +76,7 @@ export default function StudentEnrollment() {
   const pickFile = async () => {
     try {
       const res = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.allFiles],
+        type: [DocumentPicker.types.csv, DocumentPicker.types.xlsx, DocumentPicker.types.xls, DocumentPicker.types.allFiles],
       });
       setFile(res);
     } catch (err) {
@@ -87,29 +84,155 @@ export default function StudentEnrollment() {
     }
   };
 
+  const parseFileToRows = async () => {
+    const fileName = (file.name || "").toLowerCase();
+    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls");
+
+    if (isExcel) {
+      // Read as base64 and parse with SheetJS
+      const base64 = await RNFS.readFile(file.uri, "base64");
+      const workbook = XLSX.read(base64, { type: "base64", cellDates: true });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      // Use raw:false + dateNF to get dates as formatted strings
+      const csvData = XLSX.utils.sheet_to_csv(firstSheet, { rawNumbers: false, dateNF: 'yyyy-mm-dd' });
+      console.log("Parsed CSV from Excel:", csvData);
+      return csvData.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    } else {
+      // CSV — read as plain text
+      const content = await RNFS.readFile(file.uri, "utf8");
+      return content.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    }
+  };
+
+  // Normalize DOB to YYYY-MM-DD format for consistent password hashing
+  const normalizeDob = (raw) => {
+    if (!raw || raw === "2000-01-01") return "2000-01-01";
+    const s = String(raw).trim();
+
+    // If it's a pure number (Excel serial date), convert it
+    if (/^\d{5}$/.test(s)) {
+      // Excel serial date: days since Jan 0, 1900
+      const excelEpoch = new Date(1900, 0, 1);
+      const date = new Date(excelEpoch.getTime() + (parseInt(s) - 2) * 86400000);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // DD-MM-YYYY or DD/MM/YYYY
+    const ddmmyyyy = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (ddmmyyyy) {
+      const [, dd, mm, yyyy] = ddmmyyyy;
+      return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    }
+
+    // YYYY-MM-DD already
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+      return s.substring(0, 10);
+    }
+
+    // Fallback: return as-is, let the backend handle it
+    return s;
+  };
+
   const importStudents = async () => {
     if (!file) return Alert.alert("Required", "Please select a file first.");
     if (!selectedCourse) return Alert.alert("Required", "Please select a course to import into.");
+    if (!selectedProgram) return Alert.alert("Required", "Please select a program.");
 
     setIsImporting(true);
     try {
-      const content = await RNFS.readFile(file.uri, "utf8");
-      const lines = content.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-      let count = 0;
-      // In a real app this would call an API with the parsed data
-      // For now, we simulate success
-      for(let i=1; i<lines.length; i++) {
-         if(lines[i].includes(",")) count++;
-      }
-      setTimeout(() => {
-        Alert.alert("Success", `Successfully imported ${count} students into ${selectedCourse.name}.`);
-        setFile(null);
-        setSelectedProgram(null);
-        setSelectedCourse(null);
+      const lines = await parseFileToRows();
+      if (lines.length < 2) {
+        Alert.alert("Error", "File is empty or has no data rows.");
         setIsImporting(false);
-      }, 800);
+        return;
+      }
+
+      // Parse header to find column indices
+      const header = lines[0].split(",").map(h => h.trim().toLowerCase());
+      const nameIdx = header.findIndex(h => h.includes("name"));
+      const emailIdx = header.findIndex(h => h.includes("email"));
+      const dobIdx = header.findIndex(h => h.includes("dob") || h.includes("date") || h.includes("birth"));
+
+      if (nameIdx === -1 || emailIdx === -1) {
+        Alert.alert("Error", "Could not find 'Name' and 'Email' columns in the file. Please check the header row.");
+        setIsImporting(false);
+        return;
+      }
+
+      // Parse data rows
+      const studentRows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(",").map(c => c.trim());
+        const name = cols[nameIdx] || "";
+        const email = cols[emailIdx] || "";
+        const rawDob = dobIdx !== -1 ? (cols[dobIdx] || "") : "";
+        const dob = normalizeDob(rawDob);
+        console.log(`Row ${i}: name="${name}", email="${email}", rawDob="${rawDob}", normalizedDob="${dob}"`);
+        if (name && email) {
+          studentRows.push({
+            name,
+            email,
+            dob,
+            programId: selectedProgram.id,
+          });
+        }
+      }
+
+      if (studentRows.length === 0) {
+        Alert.alert("Error", "No valid student rows found in the file.");
+        setIsImporting(false);
+        return;
+      }
+
+      // Call the real API
+      const result = await importStudentsCsv(selectedCourse.id, studentRows);
+      const r = result.results || {};
+      const successCount = (r.successful || []).length;
+      const existingCount = (r.existing || []).length;
+      const failedCount = (r.failed || []).length;
+
+      let msg = `✅ ${successCount} student(s) imported successfully.`;
+      if (existingCount > 0) msg += `\n⚠️ ${existingCount} already enrolled.`;
+      if (failedCount > 0) msg += `\n❌ ${failedCount} failed.`;
+
+      Alert.alert("Import Complete", msg);
+      setFile(null);
+      setSelectedProgram(null);
+      setSelectedCourse(null);
+
+      // Reload student list
+      const allStudents = [];
+      for (const c of courses) {
+        try {
+          const stuData = await getCourseStudents(c.id);
+          const stuList = Array.isArray(stuData) ? stuData : [];
+          stuList.forEach((s) => {
+            if (!allStudents.find((x) => x.id === (s.id || s.userId))) {
+              allStudents.push({
+                id: s.id || s.userId,
+                name: s.user?.name || s.name || "Student",
+                email: s.user?.email || s.email || "—",
+                program: s.program?.name || "—",
+                department: s.program?.department?.name || "—",
+                status: s.status,
+                joinedAt: s.joinedAt,
+                coursesCount: s._count?.courses || 1,
+                attendance: s._count?.attendance || 0,
+                faceRegistered: !!s.faceEmbedding,
+                courseId: c.id
+              });
+            }
+          });
+        } catch (e) {}
+      }
+      setStudents(allStudents);
     } catch (e) {
-      Alert.alert("Error", "Could not read or parse file.");
+      console.log("Import error:", e);
+      Alert.alert("Error", e.message || "Could not read or parse file.");
+    } finally {
       setIsImporting(false);
     }
   };
@@ -144,12 +267,12 @@ export default function StudentEnrollment() {
             </View>
             <View>
               <Text style={styles.importTitle}>Import Students</Text>
-              <Text style={styles.importDesc}>Upload a CSV file to enroll students into a course.</Text>
+              <Text style={styles.importDesc}>Upload a CSV or Excel file to enroll students into a course.</Text>
             </View>
           </View>
 
-          <Text style={styles.labelText}>CSV FILE</Text>
-          <Text style={styles.subLabelText}>Columns: Name, Email, DOB (optional)</Text>
+          <Text style={styles.labelText}>CSV / EXCEL FILE</Text>
+          <Text style={styles.subLabelText}>Columns: Name, Email, DOB (date of birth, optional)</Text>
           
           <View style={styles.fileRow}>
             <TouchableOpacity style={styles.chooseFileBtn} onPress={pickFile}>
@@ -180,9 +303,9 @@ export default function StudentEnrollment() {
           </View>
 
           <View style={styles.importFooter}>
-            <Text style={styles.importInfoText}>Newly imported students will be processed shortly.</Text>
-            <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse) && styles.submitBtnDisabled]}
-              disabled={!file || !selectedCourse || isImporting} onPress={importStudents}>
+            <Text style={styles.importInfoText}>Students will be created with DOB as their password and enrolled into the selected course.</Text>
+            <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
+              disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
               {isImporting ? <ActivityIndicator color="#4361EE" size="small" /> : <Text style={styles.submitBtnText}>Import Students</Text>}
             </TouchableOpacity>
           </View>

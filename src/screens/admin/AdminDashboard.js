@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert
+  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert, Animated
 } from "react-native";
 import { getAdminStats } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
@@ -13,6 +13,16 @@ export default function AdminDashboard({ navigation }) {
   const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0 });
   const [userName, setUserName] = useState("Admin");
   const [isLoading, setIsLoading] = useState(true);
+  const [showReports, setShowReports] = useState(true);
+  const scrollRef = useRef(null);
+  const reportsY = useRef(0);
+
+  const scrollToReports = () => {
+    setShowReports(true);
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: reportsY.current, animated: true });
+    }, 100);
+  };
 
   const loadData = async () => {
     try {
@@ -67,7 +77,7 @@ export default function AdminDashboard({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* Welcome Header */}
         <View style={styles.welcomeCard}>
@@ -79,6 +89,9 @@ export default function AdminDashboard({ navigation }) {
               <Text style={styles.welcomeGreeting}>Welcome back,</Text>
               <Text style={styles.welcomeName}>{userName}</Text>
             </View>
+            <TouchableOpacity style={styles.viewReportsBtn} onPress={scrollToReports} activeOpacity={0.7}>
+              <Text style={styles.viewReportsBtnText}>📊 Reports</Text>
+            </TouchableOpacity>
           </View>
           <Text style={styles.welcomeDesc}>Institution-wide overview of teachers, students, departments, and programs.</Text>
         </View>
@@ -126,6 +139,74 @@ export default function AdminDashboard({ navigation }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Overview Reports */}
+        <View onLayout={(e) => { reportsY.current = e.nativeEvent.layout.y; }} style={styles.reportSectionHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 15, marginRight: 6 }}>📊</Text>
+            <Text style={styles.sectionTitle}>Overview Reports</Text>
+          </View>
+          <TouchableOpacity onPress={() => setShowReports(!showReports)} activeOpacity={0.7}>
+            <Text style={styles.reportToggle}>{showReports ? "Hide" : "Show"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {showReports && !isLoading && (() => {
+          const entities = [
+            { label: "Teachers", value: stats.teachers, color: "#F59E0B", bg: "#FFFBEB" },
+            { label: "Students", value: stats.students, color: "#10B981", bg: "#ECFDF5" },
+            { label: "Departments", value: stats.departments, color: "#3B82F6", bg: "#EFF6FF" },
+            { label: "Programs", value: stats.programs, color: "#8B5CF6", bg: "#F5F3FF" },
+          ];
+          const maxVal = Math.max(...entities.map(e => e.value), 1);
+          const totalUsers = stats.students + stats.teachers;
+          const avgPerProgram = stats.programs > 0 ? (totalUsers / stats.programs).toFixed(1) : "—";
+          const deptProgramRatio = stats.departments > 0 ? (stats.programs / stats.departments).toFixed(1) : "—";
+
+          return (
+            <View style={styles.reportCard}>
+              {/* Entity Distribution */}
+              <Text style={styles.reportSubtitle}>Entity Distribution</Text>
+              {entities.map((e, i) => {
+                const pct = maxVal > 0 ? (e.value / maxVal) * 100 : 0;
+                const pctLabel = `${Math.round(pct)}% of max`;
+                return (
+                  <View key={i} style={styles.barRow}>
+                    <View style={styles.barLabelRow}>
+                      <Text style={styles.barLabel}>{e.label}</Text>
+                      <Text style={styles.barValue}>{e.value} <Text style={styles.barPct}>({pctLabel})</Text></Text>
+                    </View>
+                    <View style={[styles.barTrack, { backgroundColor: e.bg }]}>
+                      <View style={[styles.barFill, { width: `${Math.max(pct, 4)}%`, backgroundColor: e.color }]} />
+                    </View>
+                  </View>
+                );
+              })}
+
+              {/* Divider */}
+              <View style={styles.reportDivider} />
+
+              {/* Summary Stats */}
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>TOTAL USERS</Text>
+                  <Text style={styles.summaryNumber}>{totalUsers}</Text>
+                  <Text style={styles.summaryMeta}>{stats.students} Students · {stats.teachers} Teachers</Text>
+                </View>
+                <View style={[styles.summaryItem, styles.summaryItemBorder]}>
+                  <Text style={styles.summaryLabel}>AVG USERS / PROGRAM</Text>
+                  <Text style={styles.summaryNumber}>{avgPerProgram}</Text>
+                  <Text style={styles.summaryMeta}>Based on current programs</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>DEPT / PROGRAM</Text>
+                  <Text style={styles.summaryNumber}>{deptProgramRatio}</Text>
+                  <Text style={styles.summaryMeta}>Programs per department</Text>
+                </View>
+              </View>
+            </View>
+          );
+        })()}
 
         {/* Setup Guide */}
         <View style={styles.guideCard}>
@@ -189,6 +270,19 @@ const styles = StyleSheet.create({
   welcomeGreeting: { fontSize: 13, color: "#64748B" },
   welcomeName: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginTop: 1 },
   welcomeDesc: { fontSize: 13, color: "#64748B", lineHeight: 19 },
+  viewReportsBtn: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+  },
+  viewReportsBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#4361EE",
+  },
 
   // Stats Grid
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 24 },
@@ -234,6 +328,100 @@ const styles = StyleSheet.create({
   actionTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
   actionDesc: { fontSize: 12, color: "#94A3B8" },
   actionArrow: { fontSize: 22, color: "#CBD5E1", fontWeight: "300" },
+
+  // Overview Reports
+  reportSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  reportToggle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4361EE",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 6,
+    overflow: "hidden",
+  },
+  reportCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reportSubtitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#475569",
+    marginBottom: 14,
+    letterSpacing: 0.3,
+  },
+  barRow: { marginBottom: 14 },
+  barLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  barLabel: { fontSize: 13, fontWeight: "600", color: "#334155" },
+  barValue: { fontSize: 13, fontWeight: "700", color: "#1E293B" },
+  barPct: { fontSize: 11, fontWeight: "500", color: "#94A3B8" },
+  barTrack: {
+    height: 10,
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    borderRadius: 5,
+  },
+  reportDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 16,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  summaryItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  summaryItemBorder: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  summaryLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  summaryNumber: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 2,
+  },
+  summaryMeta: {
+    fontSize: 9,
+    color: "#94A3B8",
+    textAlign: "center",
+  },
 
   // Guide Card
   guideCard: {

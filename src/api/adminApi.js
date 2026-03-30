@@ -25,7 +25,11 @@ export async function deleteTeacher(id) {
     method: "DELETE",
     body: JSON.stringify({ id }),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to delete teacher");
+  }
+  return json;
 }
 
 // Departments
@@ -47,7 +51,11 @@ export async function deleteDepartment(id) {
     method: "DELETE",
     body: JSON.stringify({ id }),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to delete department");
+  }
+  return json;
 }
 
 // Programs
@@ -117,19 +125,31 @@ export async function updateStudent(id, data) {
     method: "PATCH",
     body: JSON.stringify(data),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to update student");
+  }
+  return json;
 }
 
 export async function markStudentGraduated(id) {
   const res = await apiFetch(`/api/admin/students/${id}/graduate`, {
     method: "POST",
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to graduate student");
+  }
+  return json;
 }
 
 export async function deleteStudent(id) {
   const res = await apiFetch(`/api/admin/students/${id}`, {
     method: "DELETE",
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to delete student");
+  }
+  return json;
 }
