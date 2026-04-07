@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 } from "react-native";
-import { getDepartments, createDepartment, deleteDepartment } from "../../api/adminApi";
+import { getDepartments, createDepartment, deleteDepartment, getPrograms, getTeachers } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
@@ -19,24 +19,39 @@ export default function DepartmentsManagement() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await getDepartments();
+      const [data, progsData, teachersData] = await Promise.all([
+        getDepartments(),
+        getPrograms(),
+        getTeachers()
+      ]);
+
       const list = data.departments || data || [];
-      setDepartments(list.map((d) => ({
-        id: d.id, name: d.name,
-        programs: d.programs?.length || d._count?.programs || 0,
-        teachers: d.teachers?.length || d._count?.teachers || 0,
-        programsList: d.programs || [],
-        teachersList: (d.teachers || []).map(t => {
-          const progs = new Set();
-          if (t.courses) {
-            t.courses.forEach(c => {
-               const pName = c?.semester?.academicYear?.program?.name;
-               if (pName) progs.add(pName);
-            });
-          }
-          return { ...t, allottedPrograms: Array.from(progs).join(" • ") };
-        }),
-      })));
+      const allPrograms = progsData.programs || progsData || [];
+      const allTeachers = teachersData.teachers || teachersData || [];
+
+      setDepartments(list.map((d) => {
+        // Manually filter from cross-fetched lists to guarantee data presence
+        const dPrograms = d.programs && d.programs.length > 0 ? d.programs : allPrograms.filter(p => p.departmentId === d.id);
+        const dTeachers = d.teachers && d.teachers.length > 0 ? d.teachers : allTeachers.filter(t => t.departmentId === d.id || t.department?.id === d.id);
+
+        return {
+          id: d.id, 
+          name: d.name,
+          programs: d._count?.programs || dPrograms.length || 0,
+          teachers: d._count?.teachers || dTeachers.length || 0,
+          programsList: dPrograms,
+          teachersList: dTeachers.map(t => {
+            const progs = new Set();
+            if (t.courses) {
+              t.courses.forEach(c => {
+                 const pName = c?.semester?.academicYear?.program?.name || c.program?.name;
+                 if (pName) progs.add(pName);
+              });
+            }
+            return { ...t, allottedPrograms: Array.from(progs).join(" • ") };
+          }),
+        };
+      }));
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
   };
@@ -204,22 +219,26 @@ export default function DepartmentsManagement() {
 
               <Text style={[styles.sectionHeader, { marginTop: 16 }]}>Teachers</Text>
               {selectedDept?.teachersList?.length > 0 ? (
-                selectedDept.teachersList.map((t, idx) => (
-                  <View key={t.id || idx} style={styles.subItem}>
-                    <View style={styles.teacherAvatar}>
-                      <Text style={styles.teacherAvatarText}>{t.user?.name?.charAt(0) || "T"}</Text>
+                selectedDept.teachersList.map((t, idx) => {
+                  const teacherName = t.name || t.user?.name || "Unknown Teacher";
+                  const teacherEmail = t.email || t.user?.email || "";
+                  return (
+                    <View key={t.id || idx} style={styles.subItem}>
+                      <View style={styles.teacherAvatar}>
+                        <Text style={styles.teacherAvatarText}>{teacherName.charAt(0)}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.subItemText}>{teacherName}</Text>
+                        <Text style={styles.subItemSubText}>{teacherEmail}</Text>
+                        {!!t.allottedPrograms && (
+                          <Text style={[styles.subItemSubText, { color: "#3B82F6", fontWeight: "600", marginTop: 4 }]}>
+                            📚 {t.allottedPrograms}
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.subItemText}>{t.user?.name || "Unknown Teacher"}</Text>
-                      <Text style={styles.subItemSubText}>{t.user?.email || ""}</Text>
-                      {!!t.allottedPrograms && (
-                        <Text style={[styles.subItemSubText, { color: "#3B82F6", fontWeight: "600", marginTop: 4 }]}>
-                          📚 {t.allottedPrograms}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text style={styles.emptySubItem}>No teachers assigned.</Text>
               )}

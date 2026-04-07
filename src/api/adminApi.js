@@ -17,7 +17,11 @@ export async function approveTeacher(userId, departmentId) {
     method: "POST",
     body: JSON.stringify({ userId, departmentId }),
   });
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to approve teacher");
+  }
+  return json;
 }
 
 export async function deleteTeacher(id) {

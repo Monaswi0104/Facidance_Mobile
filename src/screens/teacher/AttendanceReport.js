@@ -78,7 +78,7 @@ export default function AttendanceReport() {
           email: studentInfo.user?.email || studentInfo.email || emailMap[s.studentId || s.id] || "—",
           program: studentInfo.program?.name || "—",
           status: studentInfo.status || "active",
-          joinedAt: studentInfo.joinedAt,
+          joinedAt: studentInfo.joinedAt || studentInfo.createdAt || studentInfo.user?.createdAt,
           faceRegistered: !!studentInfo.faceEmbedding,
           attended,
           total,

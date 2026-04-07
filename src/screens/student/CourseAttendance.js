@@ -167,7 +167,7 @@ export default function CourseAttendance({ route, navigation }) {
             <Text style={styles.detailIcon}>🏢</Text>
             <View>
               <Text style={styles.detailLabel}>Department</Text>
-              <Text style={styles.detailText}>{course.teacherDept || "Computer Science"}</Text>
+              <Text style={styles.detailText}>{course.teacherDept || course.department || "—"}</Text>
             </View>
           </View>
 

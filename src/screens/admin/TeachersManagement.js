@@ -4,7 +4,7 @@ import {
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getTeachers, approveTeacher, deleteTeacher, getDepartments } from "../../api/adminApi";
+import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function TeachersManagement() {
@@ -22,17 +22,47 @@ export default function TeachersManagement() {
   const loadTeachers = async () => {
     try {
       setIsLoading(true);
-      const [teacherData, deptData] = await Promise.all([getTeachers(), getDepartments()]);
+      const [teacherData, deptData, coursesData, studentsData] = await Promise.all([getTeachers(), getDepartments(), getCourses(), getStudents()]);
       const all = teacherData.teachers || teacherData || [];
+      const allCourses = coursesData.courses || coursesData || [];
+      const allStudents = studentsData.students || studentsData || [];
       setDepartments(deptData.departments || deptData || []);
 
-      const app = all.filter(t => !t.isPending).map(t => ({
-        id: t.id, userId: t.userId, name: t.name || t.user?.name,
-        email: t.email || t.user?.email || "—",
-        dept: t.departmentName || t.department?.name || "Unassigned",
-        courses: t.courses || [],
-        createdAt: t.createdAt,
-      }));
+      const app = all.filter(t => !t.isPending).map(t => {
+        // Find courses belonging to this teacher
+        const myCourses = allCourses.filter(c => c.teacherId === t.id || c.teacher?.id === t.id);
+        
+        // Prefer full course info from allCourses since it contains proper student counts (_count.students)
+        const coursesToMap = t.courses && t.courses.length > 0 ? t.courses : myCourses;
+        
+        const mappedCourses = coursesToMap.map(c => {
+          const partialCourse = c.course || c;
+          const fullCourse = allCourses.find(ac => ac.id === partialCourse.id) || partialCourse;
+
+          // Manually calculate students enrolled in this course as a robust fallback
+          const enrolledStudentsCount = allStudents.filter(u => {
+            const studentCourses = u.student?.courses || [];
+            return studentCourses.some(sc => sc.id === fullCourse.id);
+          }).length;
+          
+          return {
+            id: fullCourse.id || `${Math.random()}`,
+            name: fullCourse.name || "Unknown Course",
+            code: fullCourse.code || "—",
+            program: fullCourse.program?.name || fullCourse.program || fullCourse.semester?.academicYear?.program?.name || "—",
+            semester: fullCourse.semester?.name || fullCourse.semester || "—",
+            students: fullCourse._count?.students || fullCourse.students?.length || fullCourse.students || enrolledStudentsCount || 0,
+          };
+        });
+
+        return {
+          id: t.id, userId: t.userId, name: t.name || t.user?.name,
+          email: t.email || t.user?.email || "—",
+          dept: t.departmentName || t.department?.name || "Unassigned",
+          courses: mappedCourses,
+          createdAt: t.createdAt,
+        };
+      });
       const pen = all.filter(t => t.isPending).map(t => ({
         id: t.id, userId: t.userId, name: t.name || t.user?.name,
         email: t.email || t.user?.email || "—",
