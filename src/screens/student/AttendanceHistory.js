@@ -4,9 +4,9 @@ import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
-export default function AttendanceHistory() {
+export default function AttendanceHistory({ route }) {
 
-  const [activeTab, setActiveTab] = useState('Overview');
+  const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'Overview');
   const [data, setData] = useState([]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -148,11 +148,9 @@ export default function AttendanceHistory() {
         </View>
 
         <View style={[styles.statCard, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-             <Text style={[styles.statCardLabel, { color: '#0284C7' }]}>Attendance Rate</Text>
-             <Text style={styles.rateValue}>{stats.rate}%</Text>
-           </View>
-           <View style={styles.rateBarBg}>
+           <Text style={[styles.statCardLabel, { color: '#0284C7' }]}>Attendance Rate</Text>
+           <Text style={[styles.statCardValue, { color: '#0284C7' }]}>{stats.rate}%</Text>
+           <View style={[styles.rateBarBg, { marginTop: 8 }]}>
              <View style={[styles.rateBarFill, { width: `${stats.rate}%` }]} />
            </View>
         </View>

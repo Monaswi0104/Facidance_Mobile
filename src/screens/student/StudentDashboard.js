@@ -76,10 +76,9 @@ export default function StudentDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "MY COURSES", value: stats.courses, color: "#3B82F6", bg: "#EFF6FF", icon: "🎓" },
-    { label: "ATTENDANCE %", value: stats.avgAttendance, color: "#10B981", bg: "#ECFDF5", icon: "📊" },
-    { label: "CLASSES ATTENDED", value: stats.attended, color: "#D946EF", bg: "#FAF5FF", icon: "✓" },
-    { label: "TOTAL SESSIONS", value: stats.totalSessions, color: "#F59E0B", bg: "#FFFBEB", icon: "📅" },
+    { label: "MY COURSES", value: stats.courses, color: "#3B82F6", bg: "#EFF6FF", icon: "🎓", screen: "StudentCourses" },
+    { label: "ATTENDANCE %", value: stats.avgAttendance, color: "#10B981", bg: "#ECFDF5", icon: "📊", screen: "AttendanceHistory", params: { initialTab: 'Overview' } },
+    { label: "CLASSES ATTENDED", value: stats.attended, color: "#D946EF", bg: "#FAF5FF", icon: "✓", screen: "AttendanceHistory", params: { initialTab: 'Overview' } },
   ];
 
   return (
@@ -106,7 +105,12 @@ export default function StudentDashboard({ navigation }) {
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (
-              <View key={i} style={[styles.statCard, { backgroundColor: s.bg }]}>
+              <TouchableOpacity
+                key={i}
+                style={[styles.statCard, { backgroundColor: s.bg }]}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate(s.screen, s.params)}
+              >
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>{s.label}</Text>
                   <View style={[styles.statIconBadge, { backgroundColor: s.color }]}>
@@ -114,7 +118,7 @@ export default function StudentDashboard({ navigation }) {
                   </View>
                 </View>
                 <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}

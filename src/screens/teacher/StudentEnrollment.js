@@ -265,9 +265,9 @@ export default function StudentEnrollment() {
             <View style={styles.importIconBadge}>
               <Text style={{ fontSize: 16 }}>↑</Text>
             </View>
-            <View>
+            <View style={{ flex: 1, flexShrink: 1 }}>
               <Text style={styles.importTitle}>Import Students</Text>
-              <Text style={styles.importDesc}>Upload a CSV or Excel file to enroll students into a course.</Text>
+              <Text style={[styles.importDesc, { flexWrap: 'wrap' }]}>Upload a CSV or Excel file to enroll students into a course.</Text>
             </View>
           </View>
 
@@ -303,7 +303,7 @@ export default function StudentEnrollment() {
           </View>
 
           <View style={styles.importFooter}>
-            <Text style={styles.importInfoText}>Students will be created with DOB as their password and enrolled into the selected course.</Text>
+            <Text style={styles.importInfoText}>Students will be registered using their DOB as the default password, and automatically enrolled in the chosen course.</Text>
             <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
               disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
               {isImporting ? <ActivityIndicator color="#4361EE" size="small" /> : <Text style={styles.submitBtnText}>Import Students</Text>}
