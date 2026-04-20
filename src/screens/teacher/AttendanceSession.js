@@ -121,7 +121,24 @@ export default function AttendanceSession({ route, navigation }) {
     try {
       setIsLoadingHistory(true);
       const data = await getCourseAttendance(cid);
-      setAttendanceHistory(data?.attendanceByDate || data || {});
+      console.log("[AttendanceHistory] Raw response:", JSON.stringify(data).substring(0, 500));
+
+      // Backend returns { courseId, attendanceByDate: { "2026-04-17": [...records], ... }, totalRecords }
+      if (data?.attendanceByDate && typeof data.attendanceByDate === "object") {
+        setAttendanceHistory(data.attendanceByDate);
+      } else if (typeof data === "object" && !Array.isArray(data)) {
+        // If the response IS already the attendanceByDate map
+        const keys = Object.keys(data || {});
+        const looksLikeDateMap = keys.length > 0 && keys.every(k => /^\d{4}-\d{2}-\d{2}/.test(k));
+        if (looksLikeDateMap) {
+          setAttendanceHistory(data);
+        } else {
+          console.log("[AttendanceHistory] Unexpected format, keys:", keys);
+          setAttendanceHistory({});
+        }
+      } else {
+        setAttendanceHistory({});
+      }
     } catch (e) { console.log("History error:", e); }
     finally { setIsLoadingHistory(false); }
   }
@@ -374,6 +391,9 @@ export default function AttendanceSession({ route, navigation }) {
             ) : (
               historyDates.map((date) => {
                 const records = attendanceHistory[date] || [];
+                const presentCount = records.filter(r => r.status === "PRESENT" || r.status === true).length;
+                const totalInSession = records.length;
+                const rate = totalInSession > 0 ? ((presentCount / totalInSession) * 100).toFixed(1) : "0.0";
                 return (
                   <View key={date} style={s.historyRow}>
                     <View style={{ flex: 1 }}>
@@ -384,11 +404,14 @@ export default function AttendanceSession({ route, navigation }) {
                       </Text>
                       <Text style={s.historyCourseName}>{course.name}</Text>
                     </View>
-                    <View style={{ alignItems: "flex-end" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                       <Text style={s.historyCount}>
-                        <Text style={{ color: Theme.colors.accent }}>{records.filter(r => r.status === "PRESENT").length}</Text>
-                        {" / "}{records.length || students.length}
+                        <Text style={{ color: "#059669", fontWeight: "800" }}>{presentCount}</Text>
+                        {" / "}{totalInSession}
                       </Text>
+                      <View style={s.historyRateBadge}>
+                        <Text style={s.historyRateText}>{rate}%</Text>
+                      </View>
                     </View>
                   </View>
                 );
@@ -684,6 +707,8 @@ const s = StyleSheet.create({
   historyDate: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
   historyCourseName: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
   historyCount: { fontSize: 13, fontWeight: "600", color: "#475569" },
+  historyRateBadge: { backgroundColor: "rgba(15,164,175,0.1)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  historyRateText: { fontSize: 11, fontWeight: "700", color: Theme.colors.accent },
 
   infoCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
   infoTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
