@@ -1,3 +1,15 @@
+/**
+ * AttendanceSession.js
+ *
+ * Matches the website (frontend/app/teacher/attendance/batches/page.tsx) exactly:
+ * - Live camera feed running continuously
+ * - On "Start 45-Min Session": first capture immediately, then every 2 minutes
+ * - Each capture takes 5 frames with 300ms gaps and sends them all for recognition
+ * - Recognition results are cumulative (once detected, stays marked present)
+ * - Submit sends { course_id, recognition_results: { recognizedStudents }, date }
+ * - Attendance history uses /teacher/attendance/history?course_id=...
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
@@ -5,241 +17,294 @@ import {
 } from "react-native";
 import { Camera } from "react-native-camera-kit";
 import { Theme } from "../../theme/Theme";
-import { recognizeFaces, submitAttendance, getCourseAttendance } from "../../api/teacherApi";
 import {
-  Users, ScanFace, Play, Square, Send,
-  Clock, CheckCircle, Camera as CameraIcon, Info, History
+  getAttendanceStudents, recognizeFaces,
+  submitSessionAttendance, getCourseAttendance
+} from "../../api/teacherApi";
+import {
+  Users, ScanFace, Play, Pause, Square, Send,
+  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap
 } from "lucide-react-native";
 
-const SESSION_DURATION = 45 * 60; // 45 minutes in seconds
-const CAPTURE_INTERVAL = 2 * 60 * 1000; // 2 minutes in ms
+const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
+const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
 
 export default function AttendanceSession({ route, navigation }) {
   const { course, studentCount, trainedCount, notTrainedCount } = route.params;
 
   const cameraRef = useRef(null);
 
-  // Session state
+  // Students (loaded from attendance API, like the website)
+  const [students, setStudents] = useState([]);
+
+  // Session state (mirrors website state variables)
   const [hasPermission, setHasPermission] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(SESSION_DURATION);
-  const [batchId, setBatchId] = useState(null);
-  const [captureCount, setCaptureCount] = useState(0);
+  const [sessionPaused, setSessionPaused] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(SESSION_DURATION);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Recognition results (cumulative)
-  const [recognizedStudents, setRecognizedStudents] = useState(new Map());
-  const [lastCaptureTime, setLastCaptureTime] = useState(null);
+  // Recognition state (matches website exactly)
+  const [allRecognizedStudents, setAllRecognizedStudents] = useState(new Set());
+  const [sessionRecognitions, setSessionRecognitions] = useState([]);
+  const [currentRecognition, setCurrentRecognition] = useState(null);
 
   // History
   const [showHistory, setShowHistory] = useState(false);
-  const [history, setHistory] = useState([]);
+  const [attendanceHistory, setAttendanceHistory] = useState({});
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Refs for intervals
+  // Refs
   const captureIntervalRef = useRef(null);
-  const timerRef = useRef(null);
-  const sessionActiveRef = useRef(false);
-  const isCapturingRef = useRef(false);
+  const sessionTimerRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
+  const sessionPausedRef = useRef(false);
 
-  // Keep refs in sync
-  useEffect(() => {
-    sessionActiveRef.current = sessionActive;
-  }, [sessionActive]);
-  useEffect(() => {
-    isCapturingRef.current = isCapturing;
-  }, [isCapturing]);
+  useEffect(() => { sessionPausedRef.current = sessionPaused; }, [sessionPaused]);
 
-  // Request camera permission
+  // Request permission + load students on mount
   useEffect(() => {
     (async () => {
       if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: "Camera Permission",
-            message: "Facidance needs camera access to capture attendance.",
-            buttonPositive: "OK",
-          }
-        );
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
         setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
       } else {
         setHasPermission(true);
       }
+      // Load students with face data status (like website's fetchStudents)
+      try {
+        const data = await getAttendanceStudents(course.id);
+        const list = Array.isArray(data) ? data : (data?.students || []);
+        setStudents(list.map((s) => ({
+          id: s.id,
+          name: s.name || s.user?.name || "Student",
+          email: s.email || s.user?.email || "",
+          hasFaceData: s.has_face_data || s.hasFaceData || false,
+        })));
+      } catch (e) { console.log("Failed to load students:", e); }
+      // Load history
+      fetchAttendanceHistory(course.id);
     })();
-  }, []);
+  }, [course.id]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => cleanup();
   }, []);
 
-  // Session countdown timer
+  // Countdown timer (matches website: calculates from sessionStartTime)
   useEffect(() => {
-    if (sessionActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            clearInterval(captureIntervalRef.current);
-            setSessionActive(false);
-            Alert.alert("Session Ended", "The 45-minute session has ended. Review and submit attendance.");
-            return 0;
-          }
-          return prev - 1;
-        });
+    if (sessionActive && !sessionPaused && sessionStartTime) {
+      countdownIntervalRef.current = setInterval(() => {
+        const remaining = Math.max(0, SESSION_DURATION - (Date.now() - sessionStartTime));
+        setTimeRemaining(remaining);
+        if (remaining === 0) endSession();
       }, 1000);
-      return () => clearInterval(timerRef.current);
+      return () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); };
     }
-  }, [sessionActive]);
+  }, [sessionActive, sessionPaused, sessionStartTime]);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  function cleanup() {
+    if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
+    if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+  }
 
-  // Capture a frame from the live camera and send for recognition
-  const captureAndRecognize = async () => {
-    if (isCapturingRef.current || !cameraRef.current) return;
+  function formatTime(ms) {
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  }
+
+  async function fetchAttendanceHistory(cid) {
+    try {
+      setIsLoadingHistory(true);
+      const data = await getCourseAttendance(cid);
+      setAttendanceHistory(data?.attendanceByDate || data || {});
+    } catch (e) { console.log("History error:", e); }
+    finally { setIsLoadingHistory(false); }
+  }
+
+  // ─── Core: Capture 5 frames + recognize (matches website exactly) ───
+  async function captureAndRecognize() {
+    if (!cameraRef.current || isCapturing) return;
 
     try {
       setIsCapturing(true);
 
-      // Capture frame from live camera preview
-      const image = await cameraRef.current.capture();
-      if (!image?.uri) {
-        console.log("No frame captured");
+      // Website captures 5 frames with 300ms gaps
+      const frames = [];
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 300));
+        try {
+          const image = await cameraRef.current.capture();
+          if (image?.uri) {
+            frames.push({
+              uri: image.uri,
+              type: "image/jpeg",
+              name: `frame_${i}.jpg`,
+            });
+          }
+        } catch (e) { console.log(`Frame ${i} capture failed:`, e); }
+      }
+
+      if (frames.length === 0) {
+        console.log("No frames captured");
         return;
       }
 
-      // Send frame to backend for face recognition
+      // Send to backend
       const result = await recognizeFaces(
         course.id,
-        [{ uri: image.uri, type: "image/jpeg", name: `frame_${captureCount}.jpg` }],
-        batchId
+        frames,
+        `batch_${Date.now()}`
       );
 
-      // Update batch ID
-      if (result?.batchId && !batchId) {
-        setBatchId(result.batchId);
-      }
+      // Normalize results (matches website's normalizeResult function)
+      const normalized = normalizeResult(result || {});
+      setCurrentRecognition(normalized);
 
-      // Accumulate recognized students (cumulative — once detected, stays present)
-      if (result?.recognized && Array.isArray(result.recognized)) {
-        setRecognizedStudents((prev) => {
-          const updated = new Map(prev);
-          result.recognized.forEach((student) => {
-            const sid = student.studentId || student.id;
-            if (sid && !updated.has(sid)) {
-              updated.set(sid, {
-                name: student.name || student.studentName || "Unknown",
-                email: student.email || "",
-                firstSeen: new Date().toLocaleTimeString(),
-                confidence: student.confidence || 0,
-              });
-            }
-          });
-          return updated;
-        });
-      }
+      // Add to session recognitions log
+      setSessionRecognitions((prev) => [...prev, {
+        timestamp: new Date().toISOString(),
+        recognizedStudents: normalized.recognizedStudents,
+        totalFaces: normalized.totalFaces,
+        averageConfidence: normalized.averageConfidence,
+      }]);
 
-      setCaptureCount((prev) => prev + 1);
-      setLastCaptureTime(new Date().toLocaleTimeString());
+      // Accumulate recognized student IDs (cumulative, like website)
+      setAllRecognizedStudents((prev) => {
+        const next = new Set(prev);
+        normalized.recognizedStudents.forEach((s) => next.add(s.id));
+        return next;
+      });
+
     } catch (e) {
       console.log("Capture/recognize error:", e);
     } finally {
       setIsCapturing(false);
     }
-  };
+  }
 
-  // Start the 45-minute session
-  const startSession = () => {
+  // Normalize recognition result (matches website's normalizeResult exactly)
+  function normalizeResult(result) {
+    const rawRec = result.recognizedStudents || result.recognized || [];
+    const normalized = rawRec.map((item) => {
+      if (!item) return null;
+      if (typeof item === "string") {
+        const found = students.find((s) => s.id === item || s.name.toLowerCase() === item.toLowerCase());
+        return found ? { id: found.id, name: found.name, email: found.email } : { id: item, name: item, email: "" };
+      }
+      // Object: try to match by id, studentId, or name
+      for (const cand of [item.id, item.studentId, item.name].filter(Boolean)) {
+        const found = students.find((s) => s.id === String(cand) || s.name.toLowerCase() === String(cand).toLowerCase());
+        if (found) return { id: found.id, name: found.name, email: found.email };
+      }
+      return { id: String(item.id || ""), name: String(item.name || item.id || ""), email: String(item.email || "") };
+    }).filter(Boolean);
+
+    return {
+      totalFaces: Number(result.totalFaces ?? normalized.length),
+      recognizedStudents: normalized,
+      averageConfidence: typeof result.averageConfidence === "number" ? result.averageConfidence : 0,
+    };
+  }
+
+  // ─── Session controls (matches website) ─────────────────
+  async function startSession() {
+    const trainedStudents = students.filter((s) => s.hasFaceData);
+    if (trainedStudents.length === 0) {
+      Alert.alert("No Trained Students", "Please train the recognition model first.");
+      return;
+    }
+
     setSessionActive(true);
-    setTimeLeft(SESSION_DURATION);
-    setRecognizedStudents(new Map());
-    setCaptureCount(0);
-    setBatchId(null);
-    setLastCaptureTime(null);
+    setSessionPaused(false);
+    setSessionStartTime(Date.now());
+    setTimeRemaining(SESSION_DURATION);
+    setSessionRecognitions([]);
+    setAllRecognizedStudents(new Set());
+    setCurrentRecognition(null);
 
-    // First capture after a short delay (camera needs a moment)
-    setTimeout(() => captureAndRecognize(), 2000);
+    // First capture after 1s delay (camera init)
+    setTimeout(() => captureAndRecognize(), 1000);
 
     // Auto-capture every 2 minutes
     captureIntervalRef.current = setInterval(() => {
-      if (sessionActiveRef.current) {
-        captureAndRecognize();
-      }
+      if (!sessionPausedRef.current) captureAndRecognize();
     }, CAPTURE_INTERVAL);
-  };
 
-  // Stop session
-  const stopSession = () => {
-    Alert.alert(
-      "Stop Session",
-      "Are you sure you want to stop the session?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Stop",
-          style: "destructive",
-          onPress: () => {
-            clearInterval(captureIntervalRef.current);
-            clearInterval(timerRef.current);
-            setSessionActive(false);
-          },
-        },
-      ]
-    );
-  };
+    // Session timeout
+    sessionTimerRef.current = setTimeout(() => endSession(), SESSION_DURATION);
+  }
 
-  // Submit attendance
-  const handleSubmit = async () => {
-    if (recognizedStudents.size === 0) {
-      Alert.alert("No Students", "No students were recognized in this session.");
+  function pauseSession() {
+    setSessionPaused(true);
+    if (captureIntervalRef.current) { clearInterval(captureIntervalRef.current); captureIntervalRef.current = null; }
+  }
+
+  function resumeSession() {
+    setSessionPaused(false);
+    captureIntervalRef.current = setInterval(() => captureAndRecognize(), CAPTURE_INTERVAL);
+  }
+
+  function endSession() {
+    cleanup();
+    setSessionActive(false);
+    setSessionPaused(false);
+    if (allRecognizedStudents.size > 0) {
+      Alert.alert("Session Ended", `${allRecognizedStudents.size} student(s) recognized. Submit to save.`);
+    } else {
+      Alert.alert("Session Ended", "No students were recognized.");
+    }
+  }
+
+  // ─── Submit (matches website: sends recognizedStudents array) ───
+  async function handleSubmit() {
+    if (allRecognizedStudents.size === 0) {
+      Alert.alert("Cannot Submit", "No students recognized.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const presentIds = Array.from(recognizedStudents.keys());
-      await submitAttendance(course.id, batchId, presentIds);
-      Alert.alert(
-        "Attendance Submitted",
-        `${recognizedStudents.size} student(s) marked present.`,
-        [{ text: "OK", onPress: () => navigation.goBack() }]
-      );
+      // Build recognizedStudents array (matches website exactly)
+      const finalRec = Array.from(allRecognizedStudents)
+        .map((sid) => {
+          const s = students.find((st) => st.id === sid);
+          return s ? { id: s.id, name: s.name, email: s.email } : null;
+        })
+        .filter(Boolean);
+
+      const result = await submitSessionAttendance(course.id, finalRec, new Date().toISOString());
+
+      const stats = result?.statistics;
+      const msg = stats
+        ? `Present: ${stats.present}, Absent: ${stats.absent}, Rate: ${stats.attendanceRate}%`
+        : `${allRecognizedStudents.size} student(s) marked present.`;
+
+      Alert.alert("Submitted!", msg, [{ text: "OK", onPress: () => {
+        setSessionRecognitions([]);
+        setAllRecognizedStudents(new Set());
+        setCurrentRecognition(null);
+        fetchAttendanceHistory(course.id);
+      }}]);
     } catch (e) {
       console.log("Submit error:", e);
-      Alert.alert("Error", e.message || "Failed to submit attendance.");
+      Alert.alert("Submission Failed", e.message || "Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
-  // Load history
-  const loadHistory = async () => {
-    try {
-      setIsLoadingHistory(true);
-      const data = await getCourseAttendance(course.id);
-      setHistory(Array.isArray(data) ? data : (data?.sessions || data?.history || []));
-    } catch (e) {
-      console.log("History error:", e);
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
+  // Computed values (matches website)
+  const localTrainedCount = students.filter((s) => s.hasFaceData).length;
+  const localUntrainedCount = students.length - localTrainedCount;
+  const recognizedCount = allRecognizedStudents.size;
+  const attendanceRate = students.length > 0 ? ((recognizedCount / students.length) * 100).toFixed(1) : "0.0";
 
-  const toggleHistory = () => {
-    if (!showHistory) loadHistory();
-    setShowHistory(!showHistory);
-  };
-
-  // Permission not granted
+  // Permission screen
   if (!hasPermission) {
     return (
       <SafeAreaView style={s.safeArea}>
@@ -252,6 +317,8 @@ export default function AttendanceSession({ route, navigation }) {
     );
   }
 
+  const historyDates = Object.keys(attendanceHistory).sort().reverse();
+
   return (
     <SafeAreaView style={s.safeArea}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
@@ -262,25 +329,33 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.title}>AI Attendance Session</Text>
             <Text style={s.subtitle}>{course.name}</Text>
           </View>
-          <TouchableOpacity style={s.historyBtn} onPress={toggleHistory} activeOpacity={0.7}>
+          <TouchableOpacity style={s.historyBtn} onPress={() => setShowHistory(!showHistory)} activeOpacity={0.7}>
             <History size={14} color="#475569" style={{ marginRight: 4 }} />
             <Text style={s.historyBtnText}>{showHistory ? "Hide" : "View"} History</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Time Remaining (when session active) */}
+        {sessionActive && (
+          <View style={s.timerCard}>
+            <Text style={s.timerLabel}>Time Remaining</Text>
+            <Text style={s.timerValue}>{formatTime(timeRemaining)}</Text>
+          </View>
+        )}
+
         {/* Stats Row */}
         <View style={s.statsRow}>
           <View style={s.statCard}>
+            <Text style={s.statNumber}>{students.length || studentCount}</Text>
             <Text style={s.statLabel}>TOTAL STUDENTS</Text>
-            <Text style={s.statNumber}>{studentCount}</Text>
           </View>
           <View style={s.statCard}>
-            <Text style={s.statLabel}>TRAINED STUDENTS</Text>
-            <Text style={[s.statNumber, { color: Theme.colors.accent }]}>{trainedCount}</Text>
+            <Text style={[s.statNumber, { color: Theme.colors.accent }]}>{localTrainedCount || trainedCount}</Text>
+            <Text style={s.statLabel}>TRAINED</Text>
           </View>
           <View style={s.statCard}>
+            <Text style={[s.statNumber, { color: "#EF4444" }]}>{localUntrainedCount}</Text>
             <Text style={s.statLabel}>NOT TRAINED</Text>
-            <Text style={[s.statNumber, { color: "#EF4444" }]}>{notTrainedCount}</Text>
           </View>
         </View>
 
@@ -291,34 +366,33 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.historySubtitle}>Past sessions for this course</Text>
             {isLoadingHistory ? (
               <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
-            ) : history.length === 0 ? (
-              <Text style={s.emptyText}>No past sessions found.</Text>
+            ) : historyDates.length === 0 ? (
+              <View style={s.emptyResultsContainer}>
+                <Text style={s.emptyResultsTitle}>No attendance history yet</Text>
+                <Text style={s.emptyResultsSubtitle}>Run your first session to see records here.</Text>
+              </View>
             ) : (
-              history.map((session, i) => (
-                <View key={i} style={s.historyRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.historyDate}>
-                      {new Date(session.date || session.createdAt).toLocaleDateString("en-US", {
-                        weekday: "long", year: "numeric", month: "long", day: "numeric",
-                      })}
-                    </Text>
-                    <Text style={s.historyCourseName}>{course.name}</Text>
+              historyDates.map((date) => {
+                const records = attendanceHistory[date] || [];
+                return (
+                  <View key={date} style={s.historyRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.historyDate}>
+                        {new Date(date).toLocaleDateString("en-US", {
+                          weekday: "long", year: "numeric", month: "long", day: "numeric",
+                        })}
+                      </Text>
+                      <Text style={s.historyCourseName}>{course.name}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={s.historyCount}>
+                        <Text style={{ color: Theme.colors.accent }}>{records.filter(r => r.status === "PRESENT").length}</Text>
+                        {" / "}{records.length || students.length}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={s.historyCount}>
-                      <Text style={{ color: Theme.colors.accent }}>{session.presentCount || session.present || 0}</Text>
-                      {" / "}{session.totalCount || session.total || studentCount}
-                    </Text>
-                    {(session.percentage || session.rate) ? (
-                      <View style={s.historyPercentBadge}>
-                        <Text style={s.historyPercentText}>
-                          {session.percentage || session.rate}%
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-              ))
+                );
+              })
             )}
           </View>
         )}
@@ -338,7 +412,6 @@ export default function AttendanceSession({ route, navigation }) {
             )}
           </View>
 
-          {/* Camera Preview */}
           <View style={s.cameraContainer}>
             <Camera
               ref={cameraRef}
@@ -347,54 +420,71 @@ export default function AttendanceSession({ route, navigation }) {
               flashMode="off"
             />
 
-            {/* Overlay: Timer + Status */}
-            <View style={s.cameraOverlayTop}>
-              {sessionActive && (
-                <View style={s.timerBadge}>
-                  <Clock size={12} color="#FFF" style={{ marginRight: 4 }} />
-                  <Text style={s.timerText}>{formatTime(timeLeft)}</Text>
-                </View>
-              )}
-              {isCapturing && (
+            {/* Overlays */}
+            {isCapturing && (
+              <View style={s.cameraOverlayTop}>
                 <View style={s.capturingBadge}>
                   <ActivityIndicator size="small" color="#FFF" />
-                  <Text style={s.capturingText}>Recognizing...</Text>
+                  <Text style={s.capturingText}>Recognizing faces...</Text>
                 </View>
-              )}
-            </View>
+              </View>
+            )}
 
-            {/* Capture count overlay bottom */}
-            {sessionActive && (
+            {currentRecognition && sessionActive && (
               <View style={s.cameraOverlayBottom}>
                 <Text style={s.captureCountText}>
-                  Captures: {captureCount} {lastCaptureTime ? `· Last: ${lastCaptureTime}` : ""}
+                  Last scan: {currentRecognition.totalFaces} faces · {currentRecognition.recognizedStudents.length} recognized
                 </Text>
               </View>
             )}
 
-            {/* "Start" overlay when not active */}
-            {!sessionActive && captureCount === 0 && (
+            {/* "Ready" overlay */}
+            {!sessionActive && allRecognizedStudents.size === 0 && (
               <View style={s.startOverlay}>
                 <CameraIcon size={28} color="#FFF" />
                 <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
                 <Text style={s.startOverlaySubtitle}>
                   45-minute session · auto-capture every 2 min{"\n"}· cumulative recognition
                 </Text>
+                {localTrainedCount === 0 && (
+                  <Text style={s.warningText}>⚠️ No trained students. Train the model first.</Text>
+                )}
               </View>
             )}
           </View>
 
-          {/* Session Controls */}
+          {/* Controls */}
           {!sessionActive ? (
-            <TouchableOpacity style={s.startBtn} onPress={startSession} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={[s.startBtn, localTrainedCount === 0 && { opacity: 0.5 }]}
+              onPress={startSession}
+              disabled={localTrainedCount === 0}
+              activeOpacity={0.8}
+            >
               <Play size={16} color="#FFF" style={{ marginRight: 8 }} />
               <Text style={s.startBtnText}>Start 45-Min Session</Text>
             </TouchableOpacity>
           ) : (
             <View style={s.activeControlsRow}>
-              <TouchableOpacity style={s.stopBtn} onPress={stopSession} activeOpacity={0.8}>
-                <Square size={14} color="#FFF" style={{ marginRight: 6 }} />
-                <Text style={s.stopBtnText}>Stop</Text>
+              {!sessionPaused ? (
+                <TouchableOpacity style={s.pauseBtn} onPress={pauseSession} activeOpacity={0.8}>
+                  <Pause size={14} color="#B45309" style={{ marginRight: 6 }} />
+                  <Text style={s.pauseBtnText}>Pause</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={s.resumeBtn} onPress={resumeSession} activeOpacity={0.8}>
+                  <Play size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <Text style={s.resumeBtnText}>Resume</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={s.stopBtn} onPress={() => {
+                Alert.alert("End Session?", "This will stop the session.", [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "End", style: "destructive", onPress: endSession },
+                ]);
+              }} activeOpacity={0.8}>
+                <Square size={14} color="#DC2626" style={{ marginRight: 6 }} />
+                <Text style={s.stopBtnText}>End</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[s.manualCaptureBtn, isCapturing && { opacity: 0.6 }]}
@@ -402,19 +492,39 @@ export default function AttendanceSession({ route, navigation }) {
                 disabled={isCapturing}
                 activeOpacity={0.8}
               >
-                <CameraIcon size={14} color="#FFF" style={{ marginRight: 6 }} />
-                <Text style={s.manualCaptureBtnText}>{isCapturing ? "Capturing..." : "Manual Capture"}</Text>
+                <Zap size={14} color="#FFF" style={{ marginRight: 6 }} />
+                <Text style={s.manualCaptureBtnText}>{isCapturing ? "Scanning..." : "Scan Now"}</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {/* Session Attendance (recognized students) */}
+        {/* Session Attendance */}
         <View style={s.resultsCard}>
-          <Text style={s.resultsTitle}>Session Attendance</Text>
-          <Text style={s.resultsSubtitle}>Cumulative recognized students</Text>
+          <View style={s.resultsHeader}>
+            <View>
+              <Text style={s.resultsTitle}>Session Attendance</Text>
+              <Text style={s.resultsSubtitle}>
+                {currentRecognition
+                  ? `Recognized students · Last scan: ${currentRecognition.totalFaces} faces`
+                  : "Cumulative recognized students"}
+              </Text>
+            </View>
+            {recognizedCount > 0 && (
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <View style={s.presentBadge}>
+                  <Text style={s.presentBadgeLabel}>Present</Text>
+                  <Text style={s.presentBadgeValue}>{recognizedCount}</Text>
+                </View>
+                <View style={s.absentBadge}>
+                  <Text style={s.absentBadgeLabel}>Absent</Text>
+                  <Text style={s.absentBadgeValue}>{students.length - recognizedCount}</Text>
+                </View>
+              </View>
+            )}
+          </View>
 
-          {recognizedStudents.size === 0 ? (
+          {recognizedCount === 0 ? (
             <View style={s.emptyResultsContainer}>
               <ScanFace size={32} color="#CBD5E1" />
               <Text style={s.emptyResultsTitle}>No recognitions yet</Text>
@@ -422,43 +532,46 @@ export default function AttendanceSession({ route, navigation }) {
             </View>
           ) : (
             <>
-              <View style={s.recognizedHeader}>
-                <Text style={s.recognizedCount}>
-                  {recognizedStudents.size} / {studentCount} present
-                </Text>
-              </View>
-              {Array.from(recognizedStudents.entries()).map(([id, student]) => (
-                <View key={id} style={s.recognizedRow}>
-                  <View style={s.recognizedAvatar}>
-                    <CheckCircle size={16} color="#10B981" />
+              {Array.from(allRecognizedStudents).map((sid) => {
+                const student = students.find((st) => st.id === sid);
+                if (!student) return null;
+                return (
+                  <View key={sid} style={s.recognizedRow}>
+                    <View style={s.recognizedAvatar}>
+                      <CheckCircle size={16} color="#10B981" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.recognizedName}>{student.name}</Text>
+                      <Text style={s.recognizedEmail}>{student.email}</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.recognizedName}>{student.name}</Text>
-                    {student.email ? <Text style={s.recognizedEmail}>{student.email}</Text> : null}
-                  </View>
-                  <Text style={s.recognizedTime}>@ {student.firstSeen}</Text>
-                </View>
-              ))}
+                );
+              })}
             </>
           )}
 
-          {/* Submit button */}
-          {recognizedStudents.size > 0 && !sessionActive && (
-            <TouchableOpacity
-              style={[s.submitBtn, isSubmitting && { opacity: 0.6 }]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-              activeOpacity={0.8}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <>
-                  <Send size={14} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={s.submitBtnText}>Submit Attendance ({recognizedStudents.size} present)</Text>
-                </>
-              )}
-            </TouchableOpacity>
+          {/* Submit hint + button */}
+          {recognizedCount > 0 && (
+            <View style={{ marginTop: 12 }}>
+              <Text style={s.submitHint}>💡 You can submit now or wait until the session ends</Text>
+              <TouchableOpacity
+                style={[s.submitBtn, isSubmitting && { opacity: 0.6 }]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                activeOpacity={0.8}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <Send size={14} color="#FFF" style={{ marginRight: 8 }} />
+                    <Text style={s.submitBtnText}>
+                      Submit Attendance · {recognizedCount}/{students.length} ({attendanceRate}%)
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 
@@ -468,13 +581,17 @@ export default function AttendanceSession({ route, navigation }) {
             <Info size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
             <Text style={s.infoTitle}>How cumulative attendance works</Text>
           </View>
-          <Text style={s.infoStep}>• Click "Start" → camera activates automatically</Text>
-          <Text style={s.infoStep}>• First face capture runs immediately</Text>
-          <Text style={s.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
-          <Text style={s.infoStep}>• Once recognized, students stay marked present</Text>
-          <Text style={s.infoStep}>• Submit at end to save the session record</Text>
+          {[
+            'Click "Start" → camera activates automatically',
+            "First face capture runs immediately",
+            "Auto-captures every 2 minutes thereafter",
+            "Once recognized, students stay marked present",
+            "Submit at end to save the session record",
+          ].map((step, i) => (
+            <Text key={i} style={s.infoStep}>{i + 1}. {step}</Text>
+          ))}
           <View style={s.infoHighlight}>
-            <Text style={s.infoHighlightText}>Students only need to be detected once — no need to stay in frame!</Text>
+            <Text style={s.infoHighlightText}>✨ Students only need to be detected once — no need to stay in frame!</Text>
           </View>
         </View>
 
@@ -487,20 +604,21 @@ const s = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
 
-  // Header
   header: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, marginTop: 8 },
   title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
   subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
   historyBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#E2E8F0" },
   historyBtnText: { fontSize: 11, fontWeight: "600", color: "#475569" },
 
-  // Stats
-  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16, gap: 8 },
-  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E2E8F0" },
-  statLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 6 },
-  statNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
+  timerCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, alignItems: "center", borderWidth: 1, borderColor: "#E2E8F0" },
+  timerLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  timerValue: { fontSize: 32, fontWeight: "900", color: "#0F172A", marginTop: 4, fontVariant: ["tabular-nums"] },
 
-  // Camera
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16, gap: 8 },
+  statCard: { flex: 1, backgroundColor: "#FFF", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#E2E8F0", alignItems: "center" },
+  statLabel: { fontSize: 8, fontWeight: "600", color: "#64748B", letterSpacing: 0.3, marginTop: 4 },
+  statNumber: { fontSize: 22, fontWeight: "900", color: "#0F172A", letterSpacing: -0.5 },
+
   cameraCard: { backgroundColor: "#1E293B", borderRadius: 16, padding: 16, marginBottom: 16 },
   cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   cameraTitle: { fontSize: 16, fontWeight: "700", color: "#FFF" },
@@ -512,51 +630,53 @@ const s = StyleSheet.create({
   cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: "#0F172A", marginBottom: 16, position: "relative" },
   camera: { width: "100%", height: "100%" },
 
-  // Camera overlays
-  cameraOverlayTop: { position: "absolute", top: 10, left: 10, right: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", zIndex: 10 },
-  timerBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  timerText: { color: "#FFF", fontSize: 14, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  cameraOverlayTop: { position: "absolute", top: 10, right: 10, zIndex: 10 },
   capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.85)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
   capturingText: { color: "#FFF", fontSize: 11, fontWeight: "600", marginLeft: 6 },
-
   cameraOverlayBottom: { position: "absolute", bottom: 10, left: 10, right: 10, alignItems: "center", zIndex: 10 },
   captureCountText: { color: "#FFF", fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
 
   startOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(15,23,42,0.75)", zIndex: 5 },
   startOverlayTitle: { color: "#FFF", fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
   startOverlaySubtitle: { color: "#94A3B8", fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 4 },
+  warningText: { color: "#FCD34D", fontSize: 11, fontWeight: "600", marginTop: 10 },
 
-  // Controls
   startBtn: { flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   startBtnText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
-  activeControlsRow: { flexDirection: "row", gap: 10 },
-  stopBtn: { flex: 1, flexDirection: "row", backgroundColor: "#EF4444", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  stopBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
-  manualCaptureBtn: { flex: 2, flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  manualCaptureBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  activeControlsRow: { flexDirection: "row", gap: 8 },
+  pauseBtn: { flex: 1, flexDirection: "row", backgroundColor: "#FFFBEB", paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(245,158,11,0.3)" },
+  pauseBtnText: { color: "#B45309", fontSize: 12, fontWeight: "700" },
+  resumeBtn: { flex: 1, flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  resumeBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  stopBtn: { flex: 1, flexDirection: "row", backgroundColor: "#FFF", paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(239,68,68,0.3)" },
+  stopBtnText: { color: "#DC2626", fontSize: 12, fontWeight: "700" },
+  manualCaptureBtn: { flex: 2, flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  manualCaptureBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
 
-  // Results
   resultsCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0" },
+  resultsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   resultsTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
-  resultsSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
+  resultsSubtitle: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
+  presentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
+  presentBadgeLabel: { fontSize: 8, fontWeight: "600", color: "#10B981" },
+  presentBadgeValue: { fontSize: 16, fontWeight: "800", color: "#10B981" },
+  absentBadge: { backgroundColor: "#FEF2F2", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
+  absentBadgeLabel: { fontSize: 8, fontWeight: "600", color: "#EF4444" },
+  absentBadgeValue: { fontSize: 16, fontWeight: "800", color: "#EF4444" },
 
   emptyResultsContainer: { alignItems: "center", paddingVertical: 30 },
   emptyResultsTitle: { fontSize: 15, fontWeight: "700", color: "#64748B", marginTop: 10 },
   emptyResultsSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 4 },
 
-  recognizedHeader: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9", paddingBottom: 10, marginBottom: 6 },
-  recognizedCount: { fontSize: 13, fontWeight: "700", color: "#475569" },
-
   recognizedRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
   recognizedAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDF4", justifyContent: "center", alignItems: "center", marginRight: 10 },
   recognizedName: { fontSize: 13, fontWeight: "700", color: "#1E293B" },
   recognizedEmail: { fontSize: 10, color: "#94A3B8", marginTop: 1 },
-  recognizedTime: { fontSize: 10, color: "#94A3B8", fontWeight: "600" },
 
-  submitBtn: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: 14 },
-  submitBtnText: { color: "#FFF", fontSize: 14, fontWeight: "700" },
+  submitHint: { fontSize: 11, color: "#64748B", textAlign: "center", marginBottom: 10 },
+  submitBtn: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  submitBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
 
-  // History
   historyCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0" },
   historyTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
   historySubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
@@ -564,20 +684,14 @@ const s = StyleSheet.create({
   historyDate: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
   historyCourseName: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
   historyCount: { fontSize: 13, fontWeight: "600", color: "#475569" },
-  historyPercentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginTop: 4 },
-  historyPercentText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
 
-  // Info
   infoCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
   infoTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  infoStep: { fontSize: 12, color: "#64748B", lineHeight: 20, marginBottom: 2 },
+  infoStep: { fontSize: 12, color: "#64748B", lineHeight: 22, marginBottom: 2 },
   infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
   infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
 
-  // Permission
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 30 },
   permTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginTop: 16 },
   permSubtitle: { fontSize: 13, color: "#64748B", textAlign: "center", marginTop: 6 },
-
-  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 16 },
 });

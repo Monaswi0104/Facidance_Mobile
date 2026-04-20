@@ -82,13 +82,13 @@ export async function importStudentsCsv(courseId, students) {
   return json;
 }
 
-// ─── Attendance APIs ───────────────────────────────────────
+// ─── Attendance APIs (matches website frontend exactly) ────
 
-// Get students for attendance marking (with training status)
+// Get students for attendance marking (with training/face status)
 export async function getAttendanceStudents(courseId) {
   const res = await apiFetch("/teacher/attendance/get-students", {
     method: "POST",
-    body: JSON.stringify({ courseId }),
+    body: JSON.stringify({ course_id: courseId }),
   }, TEACHER_URL);
   return await res.json();
 }
@@ -97,7 +97,7 @@ export async function getAttendanceStudents(courseId) {
 export async function trainModel(courseId) {
   const res = await apiFetch("/teacher/attendance/run-training", {
     method: "POST",
-    body: JSON.stringify({ courseId }),
+    body: JSON.stringify({ course_id: courseId }),
   }, TEACHER_URL);
   return await res.json();
 }
@@ -108,7 +108,7 @@ export async function recognizeFaces(courseId, frames, batchId = null, autoSubmi
   const formData = new FormData();
   formData.append("course_id", courseId);
   if (batchId) formData.append("batch_id", batchId);
-  formData.append("auto_submit", autoSubmit.toString());
+  formData.append("auto_submit", String(autoSubmit));
 
   frames.forEach((frame, i) => {
     formData.append("frames", {
@@ -125,17 +125,17 @@ export async function recognizeFaces(courseId, frames, batchId = null, autoSubmi
   return await res.json();
 }
 
-// Submit final attendance for a session
-export async function submitAttendance(courseId, batchId, presentStudentIds, date = null) {
+// Submit final attendance — matches website: sends recognizedStudents array, not IDs
+export async function submitSessionAttendance(courseId, recognizedStudents, date = null) {
   const res = await apiFetch("/teacher/attendance/submit", {
     method: "POST",
     body: JSON.stringify({
-      courseId,
-      batchId,
-      presentStudentIds,
+      course_id: courseId,
+      recognition_results: { recognizedStudents },
       date: date || new Date().toISOString(),
     }),
   }, TEACHER_URL);
   return await res.json();
 }
+
 
