@@ -5,12 +5,13 @@ import DeviceInfo from "react-native-device-info";
 const isEmulator = DeviceInfo.isEmulatorSync();
 const HOST = isEmulator ? "10.0.2.2" : "localhost";
 
-// Service-specific base URLs (matching Facidance .env)
-export const BASE_URL = `http://${HOST}:8000`;        // Auth service
-export const AUTH_URL = `http://${HOST}:8000`;         // NEXT_PUBLIC_AUTH_URL
-export const ADMIN_URL = `http://${HOST}:8001`;        // NEXT_PUBLIC_ADMIN_API_URL
-export const TEACHER_URL = `http://${HOST}:8002`;      // NEXT_PUBLIC_TEACHER_API_URL
-export const STUDENT_URL = `http://${HOST}:8003`;      // NEXT_PUBLIC_STUDENT_API_URL
+// Service-specific base URLs (matching Facidance deployed backend)
+const PROD_URL = "https://facidance.online";
+export const BASE_URL = PROD_URL;
+export const AUTH_URL = PROD_URL;
+export const ADMIN_URL = PROD_URL;
+export const TEACHER_URL = PROD_URL;
+export const STUDENT_URL = PROD_URL;
 
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";
