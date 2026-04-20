@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, TextInput, Dimensions } from "react-native";
-import { getStudentCourses } from "../../api/studentApi";
+import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Search, BookOpen, User, Calendar, Hash, ChevronRight } from "lucide-react-native";
 
 const { width } = Dimensions.get('window');
 
@@ -14,22 +16,21 @@ export default function MyCourses({ navigation }) {
     useCallback(() => {
       const load = async () => {
         try {
-          setIsLoading(true);
           const data = await getStudentCourses();
-          const list = Array.isArray(data) ? data : [];
+          const list = Array.isArray(data) ? data : (data?.courses || []);
           setCourses(list.map(c => ({
             id: c.id,
             name: c.name,
-            code: c.code || "—",
-            teacher: c.teacher?.user?.name || c.teacher?.name || "Teacher",
-            teacherEmail: c.teacher?.user?.email || c.teacher?.email || "",
-            teacherDept: c.teacher?.department?.name || "Teacher Department",
-            semester: c.semester?.name || "—",
-            year: c.semester?.academicYear?.name || "—",
-            students: c._count?.students || 0, // This is not strictly correct since students array might not be counted here, but we'll try
-            sessions: c._count?.attendance || 0,
-            program: c.semester?.academicYear?.program?.name || "",
-            department: c.semester?.academicYear?.program?.department?.name || "",
+            code: c.entry_code || c.code || "—",
+            teacher: c.teacher_name || c.teacher?.user?.name || c.teacher?.name || "Teacher",
+            teacherEmail: c.teacher_email || c.teacher?.user?.email || c.teacher?.email || "",
+            teacherDept: c.department_name || c.teacher?.department?.name || "Teacher Department",
+            semester: c.semester_name || c.semester?.name || "—",
+            year: c.academic_year || c.academic_year_name || c.semester?.academicYear?.name || "—",
+            students: c.students_count || c.student_count || c._count?.students || 0,
+            sessions: c.total_sessions || c._count?.attendance || 0,
+            program: c.program_name || c.semester?.academicYear?.program?.name || "",
+            department: c.department_name || c.semester?.academicYear?.program?.department?.name || "",
           })));
         } catch (e) {
           console.log(e);
@@ -51,156 +52,91 @@ export default function MyCourses({ navigation }) {
     );
   }, [courses, search]);
 
-  const stats = useMemo(() => {
-    let totalCourses = courses.length;
-    let totalSessions = 0;
-    // Just find the most frequent semester or the latest one, for simplicity, use the first course's semester
-    let activeSemester = "—";
-    
-    if (courses.length > 0) {
-      activeSemester = courses[0].semester;
-      courses.forEach(c => {
-        totalSessions += c.sessions;
-      });
-    }
-
-    return { totalCourses, activeSemester, totalSessions };
-  }, [courses]);
-
-  const StatBox = ({ title, value, color, badgeColor, icon }) => (
-    <View style={[styles.statBox, { backgroundColor: color }]}>
-       <View style={{ flex: 1, paddingRight: 10 }}>
-        <Text style={styles.statLabel}>{title}</Text>
-        <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
-       </View>
-       <View style={[styles.statIconBadge, { backgroundColor: badgeColor }]}>
-         <Text style={{ fontSize: 16 }}>{icon}</Text>
-       </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Header Title */}
+        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerIconBox}>
-            <Text style={{ fontSize: 18 }}>📖</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>My Courses</Text>
-            <Text style={styles.subtitle}>View your enrolled courses and keep track of active sessions.</Text>
-          </View>
+          <Text style={styles.title}>My Courses</Text>
+          <Text style={styles.subtitle}>{courses.length} course{courses.length !== 1 ? "s" : ""} enrolled</Text>
         </View>
 
-        {/* Stats Grid */}
-        <View style={styles.statsContainer}>
-          {isLoading ? (
-             <ActivityIndicator color="#4361EE" style={{ marginVertical: 20 }} />
-          ) : (
-             <View style={styles.statsGrid}>
-               <StatBox 
-                 title="TOTAL COURSES" 
-                 value={stats.totalCourses} 
-                 color="#F0F9FF" 
-                 badgeColor="#3B82F6" 
-                 icon="📖" 
-               />
-               <StatBox 
-                 title="ACTIVE SEMESTER" 
-                 value={stats.activeSemester} 
-                 color="#ECFDF5" 
-                 badgeColor="#10B981" 
-                 icon="📅" 
-               />
-               <StatBox 
-                 title="TOTAL SESSIONS" 
-                 value={stats.totalSessions} 
-                 color="#FAF5FF" 
-                 badgeColor="#D946EF" 
-                 icon="🎓" 
-               />
-             </View>
-          )}
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+        {/* Search */}
+        <View style={styles.searchBar}>
+          <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by course name, course code, teacher..."
+            placeholder="Search by course name, code or teacher..."
             placeholderTextColor="#94A3B8"
             value={search}
             onChangeText={setSearch}
           />
         </View>
 
-        {/* Courses List */}
-        <View style={styles.listContainer}>
-          {isLoading ? null : filtered.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={{ fontSize: 30, marginBottom: 12 }}>📭</Text>
-              <Text style={styles.emptyStateTitle}>No Courses Found</Text>
-              <Text style={styles.emptyStateText}>You don't have any enrolled courses matching your criteria.</Text>
-            </View>
-          ) : (
-            filtered.map((item) => (
-              <View key={item.id} style={styles.courseCard}>
-                 
-                 {/* Card Header row */}
-                 <View style={styles.cardHeader}>
-                   <View style={styles.cardHeaderIcon}>
-                     <Text style={{ fontSize: 14 }}>📖</Text>
-                   </View>
-                   <View style={styles.semesterBadge}>
-                     <Text style={styles.semesterBadgeText}>{item.semester}</Text>
-                   </View>
-                 </View>
-
-                 {/* Card Content */}
-                 <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
-
-                 <View style={styles.cardDetails}>
-                   <View style={styles.detailRow}>
-                     <Text style={styles.detailIcon}>👤</Text>
-                     <Text style={styles.detailText}>{item.teacher}</Text>
-                   </View>
-                   <View style={styles.detailRow}>
-                     <Text style={styles.detailIcon}>#</Text>
-                     <Text style={styles.detailText}>{item.code}</Text>
-                   </View>
-                   <View style={styles.detailRow}>
-                     <Text style={styles.detailIcon}>🗓</Text>
-                     <Text style={styles.detailText}>{item.year} • {item.semester}</Text>
-                   </View>
-                   <View style={styles.detailRow}>
-                     <Text style={styles.detailIcon}>👥</Text>
-                     <Text style={styles.detailText}>{item.students} students enrolled</Text>
-                   </View>
-                 </View>
-
-                 {/* Action Buttons */}
-                 <View style={styles.cardActions}>
-                   <TouchableOpacity 
-                     style={styles.btnOutline} 
-                     onPress={() => navigation.navigate("CourseAttendance", { course: item })}
-                   >
-                     <Text style={styles.btnOutlineText}>View details</Text>
-                   </TouchableOpacity>
-                   <TouchableOpacity 
-                     style={styles.btnFilled}
-                     onPress={() => navigation.navigate("CourseAttendance", { course: item, tab: 'Attendance' })}
-                   >
-                     <Text style={styles.btnFilledText}>Attendance</Text>
-                   </TouchableOpacity>
-                 </View>
-
+        {/* Course Cards */}
+        {isLoading ? (
+          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
+        ) : filtered.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No Courses Found</Text>
+            <Text style={styles.emptyText}>You don't have any enrolled courses matching your criteria.</Text>
+          </View>
+        ) : (
+          filtered.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.courseCard}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate("CourseAttendance", { course: item })}
+            >
+              {/* Card Top Row */}
+              <View style={styles.cardTopRow}>
+                <View style={styles.cardIconBg}>
+                  <BookOpen size={16} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
+                  <View style={styles.badgeRow}>
+                    <View style={styles.activeBadge}>
+                      <Text style={styles.activeBadgeText}>Active</Text>
+                    </View>
+                    <View style={styles.codeBadge}>
+                      <Text style={styles.codeBadgeText}>{item.code}</Text>
+                    </View>
+                  </View>
+                </View>
+                <ChevronRight size={18} color="#94A3B8" />
               </View>
-            ))
-          )}
-        </View>
+
+              {/* Details */}
+              <View style={styles.detailsList}>
+                <View style={styles.detailRow}>
+                  <User size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Text style={styles.detailText}>{item.teacher}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Calendar size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Text style={styles.detailText}>{item.semester} · {item.year}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <BookOpen size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Text style={styles.detailText}>{item.program}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Hash size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Text style={styles.detailText}>{item.code}</Text>
+                </View>
+              </View>
+
+              {/* View Details Footer */}
+              <View style={styles.cardFooter}>
+                <Text style={styles.viewDetailsText}>View details</Text>
+                <ChevronRight size={14} color="#94A3B8" />
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -208,232 +144,60 @@ export default function MyCourses({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
+  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  container: { padding: 20, paddingBottom: 40 },
+
+  // Header
+  header: { marginBottom: 16, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+
+  // Search
+  searchBar: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFF", borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 10,
+    borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 18,
   },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  headerIconBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 2,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#64748B",
-  },
-  statsContainer: {
-    marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statBox: {
-    flexDirection: 'row',
-    width: '48%',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#64748B",
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  statIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    marginBottom: 20,
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 10,
-    opacity: 0.5,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#0F172A",
-  },
-  listContainer: {
-    // marginBottom: 20,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderStyle: 'dashed',
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: "#64748B",
-    textAlign: "center",
-  },
+  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+
+  // Empty
+  emptyState: { alignItems: "center", padding: 40, backgroundColor: "#FFF", borderRadius: 14, borderWidth: 1, borderColor: "#E2E8F0" },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 6 },
+  emptyText: { fontSize: 13, color: "#64748B", textAlign: "center" },
+
+  // Course Card
   courseCard: {
     backgroundColor: "#FFF",
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 1,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  cardTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
+  cardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  courseName: { fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 6 },
+  badgeRow: { flexDirection: "row", alignItems: "center" },
+  activeBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 6 },
+  activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  codeBadge: { backgroundColor: "#F1F5F9", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: "#E2E8F0" },
+  codeBadgeText: { fontSize: 10, fontWeight: "600", color: "#475569" },
+
+  // Details
+  detailsList: { marginBottom: 12, paddingLeft: 2 },
+  detailRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  detailText: { fontSize: 12, color: "#64748B" },
+
+  // Footer
+  cardFooter: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    borderTopWidth: 1, borderTopColor: "#F1F5F9", paddingTop: 12,
   },
-  cardHeaderIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#F0F9FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  semesterBadge: {
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-  semesterBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#10B981",
-  },
-  courseName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 16,
-  },
-  cardDetails: {
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailIcon: {
-    fontSize: 14,
-    marginRight: 10,
-    width: 16,
-    color: '#94A3B8',
-    textAlign: 'center',
-  },
-  detailText: {
-    fontSize: 13,
-    color: "#475569",
-    flex: 1,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  btnOutline: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#F8FAFC',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  btnOutlineText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1E293B",
-  },
-  btnFilled: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F172A',
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  btnFilledText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  }
+  viewDetailsText: { fontSize: 13, color: "#64748B" },
 });

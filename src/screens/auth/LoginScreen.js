@@ -1,42 +1,32 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  ActivityIndicator,
-  Alert
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
+  KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
+  StatusBar, ActivityIndicator, Alert,
 } from "react-native";
 import { loginUser } from "../../api/authApi";
+import { Theme } from "../../theme/Theme";
+import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3 } from "lucide-react-native";
 
 const universityImg = require("../../assets/university.jpg");
-const eyeImg = require("../../assets/eye.png");
-const eyeOffImg = require("../../assets/eye-off.png");
+const logoImg = require("../../assets/logo.png");
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
-
     setIsLoading(true);
     try {
       const data = await loginUser(email.trim(), password);
-
-      // Navigate based on role from backend
       if (data.role === "ADMIN") {
         navigation.reset({ index: 0, routes: [{ name: "AdminTabs" }] });
       } else if (data.role === "TEACHER") {
@@ -52,294 +42,359 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.screenWrapper}>
+      <StatusBar barStyle="light-content" backgroundColor="#003135" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero */}
+        <View style={styles.hero}>
+          <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
+          <View style={styles.heroOverlay} />
 
-          {/* Hero Image */}
-          <View style={styles.header}>
-            <Image
-              source={universityImg}
-              style={styles.headerImage}
-              resizeMode="cover"
-            />
-            <View style={styles.overlay} />
-            <View style={styles.headerContent}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>📍 Gauhati University</Text>
+          <SafeAreaView style={styles.heroInner}>
+            {/* Brand */}
+            <View style={styles.brandRow}>
+              <Image source={logoImg} style={styles.brandLogo} resizeMode="contain" />
+              <View>
+                <Text style={styles.brandName}>Facidance</Text>
+                <Text style={styles.brandSub}>Department of Information Technology</Text>
               </View>
-              <Text style={styles.title}>GUAttend</Text>
-              <Text style={styles.subtitle}>Smart Attendance System</Text>
             </View>
-          </View>
 
-          {/* Form Card */}
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Welcome Back 👋</Text>
-            <Text style={styles.formSubtitle}>Sign in to continue to your dashboard</Text>
+            {/* AI Badge */}
+            <View style={styles.aiBadge}>
+              <Sparkles size={10} color="#10B981" style={{ marginRight: 4 }} />
+              <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
+            </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email Address</Text>
+            {/* Title */}
+            <Text style={styles.heroTitle}>Gauhati University</Text>
+            <Text style={styles.heroSubtitle}>Smart face recognition attendance — built for the{"\n"}Department of Information Technology.</Text>
+
+            {/* Features */}
+            <View style={styles.featureList}>
+              <View style={styles.featureItem}>
+                <Sparkles size={10} color="#10B981" />
+                <Text style={styles.featureText}>AI face recognition attendance</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Shield size={10} color="#10B981" />
+                <Text style={styles.featureText}>Role-based secure access</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <BarChart3 size={10} color="#10B981" />
+                <Text style={styles.featureText}>Smart analytics & reporting</Text>
+              </View>
+            </View>
+
+            {/* Stats */}
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>1500+</Text>
+                <Text style={styles.statLabel}>Students</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>98.2%</Text>
+                <Text style={styles.statLabel}>Accuracy</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>10+</Text>
+                <Text style={styles.statLabel}>Courses</Text>
+              </View>
+            </View>
+          </SafeAreaView>
+        </View>
+
+        {/* Form */}
+        <View style={styles.formSection}>
+          <Text style={styles.formTitle}>Welcome back 👋</Text>
+          <Text style={styles.formSubtitle}>Sign in to access your Facidance portal.</Text>
+
+          {/* Email */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
+            <View style={[styles.inputWrap, emailFocused && styles.inputWrapFocused]}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
+                placeholder="you@gauhati.ac.in"
+                placeholderTextColor="#94a3b8"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
               />
             </View>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordWrapper}>
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry={!isPasswordVisible}
-                  value={password}
-                  onChangeText={setPassword}
-                  editable={!isLoading}
-                />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                >
-                  <Image 
-                    source={isPasswordVisible ? eyeOffImg : eyeImg} 
-                    style={styles.eyeIcon} 
-                    resizeMode="contain" 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              activeOpacity={0.8}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Log In  →</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-                <Text style={styles.registerLink}>Create Account</Text>
+          {/* Password */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>PASSWORD</Text>
+            <View style={[styles.inputWrap, passwordFocused && styles.inputWrapFocused]}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Enter your password"
+                placeholderTextColor="#94a3b8"
+                secureTextEntry={!isPasswordVisible}
+                value={password}
+                onChangeText={setPassword}
+                editable={!isLoading}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+              />
+              <TouchableOpacity
+                style={styles.eyeBtn}
+                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              >
+                {isPasswordVisible ? (
+                  <EyeOff size={18} color="#94A3B8" />
+                ) : (
+                  <Eye size={18} color="#94A3B8" />
+                )}
               </TouchableOpacity>
             </View>
           </View>
 
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          {/* Sign In Button */}
+          <TouchableOpacity
+            style={[styles.signInBtn, isLoading && styles.signInBtnDisabled]}
+            onPress={handleLogin}
+            activeOpacity={0.85}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={styles.signInText}>Sign in</Text>
+                <ArrowRight size={16} color="#FFF" style={{ marginLeft: 6 }} />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Register CTA */}
+          <View style={styles.ctaBox}>
+            <Text style={styles.ctaText}>
+              New faculty member?{" "}
+              <Text style={styles.ctaLink} onPress={() => navigation.navigate("Register")}>
+                Register here
+              </Text>
+            </Text>
+            <Text style={styles.ctaHint}>Account pending admin approval after registration.</Text>
+          </View>
+
+          {/* Terms */}
+          <Text style={styles.termsText}>
+            By signing in you agree to the Department's{"\n"}terms of use and privacy policy.
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    height: 320,
+  screenWrapper: { flex: 1, backgroundColor: "#003135" },
+  scrollContent: { flexGrow: 1 },
+
+  // Hero
+  hero: {
+    minHeight: 460,
     width: "100%",
     position: "relative",
-    backgroundColor: "#0F172A",
   },
-  headerImage: {
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
   },
-  overlay: {
+  heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    backgroundColor: "rgba(0,49,53,0.80)",
   },
-  headerContent: {
-    position: "absolute",
-    bottom: 40,
-    left: 24,
-    right: 24,
+  heroInner: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
-  badge: {
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 20,
+  },
+  brandLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+  },
+  brandName: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  brandSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500" },
+
+  // AI Badge
+  aiBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(16,185,129,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
     marginBottom: 14,
   },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  title: {
-    fontSize: 42,
+  aiBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+
+  heroTitle: {
+    fontSize: 24,
     fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 1,
+    color: "#fff",
+    letterSpacing: -0.5,
     marginBottom: 6,
   },
-  subtitle: {
-    fontSize: 17,
-    color: "#CBD5E1",
-    fontWeight: "500",
-    letterSpacing: 0.5,
+  heroSubtitle: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.5)",
+    lineHeight: 17,
+    marginBottom: 20,
   },
-  formContainer: {
+
+  // Features
+  featureList: { marginBottom: 24 },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  featureText: { fontSize: 11, color: "rgba(255,255,255,0.65)", marginLeft: 8 },
+
+  // Stats
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.10)",
+  },
+  statItem: { alignItems: "center" },
+  statValue: { fontSize: 18, fontWeight: "800", color: "#10B981" },
+  statLabel: { fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 1 },
+
+  // Form
+  formSection: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    marginTop: -24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -16,
     paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
+    paddingTop: 28,
+    paddingBottom: 36,
   },
   formTitle: {
     fontSize: 24,
     fontWeight: "800",
     color: "#0F172A",
-    marginBottom: 6,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   formSubtitle: {
-    fontSize: 15,
-    color: "#64748B",
-    marginBottom: 28,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#334155",
-    marginBottom: 8,
+    color: "#64748B",
+    marginBottom: 26,
+  },
+  fieldGroup: { marginBottom: 18 },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#475569",
+    letterSpacing: 0.8,
+    marginBottom: 7,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  inputWrapFocused: {
+    borderColor: Theme.colors.accent,
+    shadowColor: Theme.colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
   },
   input: {
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    fontSize: 16,
-    color: "#0F172A",
-  },
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    borderRadius: 14,
-  },
-  passwordInput: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    fontSize: 16,
-    color: "#0F172A",
-  },
-  eyeButton: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    justifyContent: "center",
+    fontSize: 15,
+    color: "#0F172A",
   },
-  eyeIcon: {
-    width: 22,
-    height: 22,
-    tintColor: "#94A3B8",
-  },
-  forgotBtn: {
-    alignSelf: "flex-end",
-    marginBottom: 28,
-  },
-  forgotText: {
-    color: "#4361EE",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  button: {
-    backgroundColor: "#4361EE",
-    borderRadius: 14,
-    paddingVertical: 17,
+  eyeBtn: { paddingHorizontal: 14, paddingVertical: 12 },
+
+  // Button
+  signInBtn: {
+    borderRadius: 10,
+    marginTop: 6,
+    backgroundColor: Theme.colors.primaryDark,
+    paddingVertical: 16,
     alignItems: "center",
-    shadowColor: "#4361EE",
+    justifyContent: "center",
+    shadowColor: Theme.colors.primaryDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 4,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E2E8F0",
-  },
-  dividerText: {
-    paddingHorizontal: 16,
-    color: "#94A3B8",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+  signInBtnDisabled: { opacity: 0.7 },
+  signInText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+
+  // Divider
+  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 20 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#E2E8F0" },
+  dividerText: { paddingHorizontal: 16, color: "#94A3B8", fontSize: 13 },
+
+  // CTA Box
+  ctaBox: {
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
     alignItems: "center",
   },
-  registerText: {
-    color: "#64748B",
-    fontSize: 15,
-  },
-  registerLink: {
-    color: "#4361EE",
-    fontSize: 15,
-    fontWeight: "bold",
+  ctaText: { fontSize: 14, color: "#475569", textAlign: "center" },
+  ctaLink: { color: Theme.colors.accent, fontWeight: "700" },
+  ctaHint: { fontSize: 12, color: "#94A3B8", marginTop: 3, textAlign: "center" },
+
+  // Terms
+  termsText: {
+    fontSize: 12, color: "#94A3B8",
+    textAlign: "center", marginTop: 22, lineHeight: 18,
   },
 });

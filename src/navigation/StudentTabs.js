@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Alert, TouchableOpacity, Text, View, StyleSheet } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image } from "react-native";
 import { clearAuth } from "../api/authStorage";
 
 import StudentDashboard from "../screens/student/StudentDashboard";
@@ -58,8 +58,13 @@ export default function StudentTabs({ navigation }) {
         name="StudentDashboard"
         component={StudentDashboard}
         options={{
-          title: "Student Panel",
-          headerLeft: () => null,
+          headerTitle: "",
+          headerLeft: () => (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image source={require("../assets/logo.png")} style={{ width: 35, height: 35, resizeMode: "contain", marginRight: 8 }} />
+              <Text style={{ fontSize: 19, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
+            </View>
+          ),
           headerBackVisible: false,
           gestureEnabled: false,
         }}

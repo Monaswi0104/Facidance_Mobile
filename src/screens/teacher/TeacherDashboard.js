@@ -3,9 +3,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert
 } from "react-native";
-import { getTeacherCourses } from "../../api/teacherApi";
+import { getTeacherCourses, getTeacherStats } from "../../api/teacherApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { BookOpen, Users, Calendar, CheckCircle, ScanLine, BookMarked, BarChart2, UserPlus, Settings, FileDown } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -18,15 +20,35 @@ export default function TeacherDashboard({ navigation }) {
     const load = async () => {
       try {
         setIsLoading(true);
-        const [courses, user] = await Promise.all([getTeacherCourses(), getUser()]);
+        const [coursesData, statsData, user] = await Promise.all([
+          getTeacherCourses(),
+          getTeacherStats().catch(() => null),
+          getUser(),
+        ]);
+        console.log("[TeacherDashboard] coursesData:", JSON.stringify(coursesData));
+        console.log("[TeacherDashboard] statsData:", JSON.stringify(statsData));
+        console.log("[TeacherDashboard] statsData keys:", statsData ? Object.keys(statsData) : "null");
+        const tempCourses = Array.isArray(coursesData) ? coursesData : (coursesData?.courses || []);
+        if (tempCourses.length > 0) console.log("[TeacherDashboard] first course keys:", Object.keys(tempCourses[0]));
         if (user?.name) setUserName(user.name);
-        if (Array.isArray(courses)) {
-          const totalStudents = courses.reduce((sum, c) => sum + (c._count?.students || 0), 0);
-          const totalAttendance = courses.reduce((sum, c) => sum + (c._count?.attendance || 0), 0);
-          const semesters = new Set(courses.map(c => c.semester?.id).filter(Boolean));
-          setStats({ courses: courses.length, students: totalStudents, semesters: semesters.size, attendance: totalAttendance });
-        }
-      } catch (e) { console.log(e); }
+
+        // Handle both array response and {courses: [...]} response
+        const courses = Array.isArray(coursesData) ? coursesData : (coursesData?.courses || []);
+        const courseCount = Array.isArray(courses) ? courses.length : 0;
+
+        // Use stats endpoint data if available, with course-derived fallbacks
+        const totalStudents = statsData?.total_students ?? statsData?.totalStudents ?? statsData?.students ??
+          courses.reduce((sum, c) => sum + (c._count?.students || c.studentCount || c.student_count || 0), 0);
+        const totalAttendance = statsData?.total_attendance ?? statsData?.totalAttendance ?? statsData?.attendance ?? 0;
+        const activeSemesters = statsData?.total_semesters ?? statsData?.active_semesters ?? statsData?.activeSemesters ?? statsData?.semesters ?? 0;
+
+        setStats({
+          courses: statsData?.total_courses ?? statsData?.totalCourses ?? courseCount,
+          students: totalStudents,
+          semesters: activeSemesters,
+          attendance: totalAttendance,
+        });
+      } catch (e) { console.log("[TeacherDashboard] Error:", e); }
       finally { setIsLoading(false); }
     };
     load();
@@ -57,17 +79,17 @@ export default function TeacherDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "MY COURSES", value: stats.courses, color: "#F59E0B", bg: "#FFFBEB", icon: "📚" },
-    { label: "TOTAL STUDENTS", value: stats.students, color: "#10B981", bg: "#ECFDF5", icon: "👨‍🎓" },
-    { label: "ACTIVE SEMESTERS", value: stats.semesters, color: "#3B82F6", bg: "#EFF6FF", icon: "📅" },
-    { label: "TOTAL ATTENDANCE", value: stats.attendance, color: "#8B5CF6", bg: "#F5F3FF", icon: "✅" },
+    { label: "MY COURSES", value: stats.courses, icon: <BookOpen size={18} color="#FFF" />, sub: stats.semesters ? `${stats.semesters} semester${stats.semesters > 1 ? "s" : ""}` : "" },
+    { label: "TOTAL\nSTUDENTS", value: stats.students, icon: <Users size={18} color="#FFF" />, sub: stats.students > 0 ? "enrolled" : "" },
+    { label: "ACTIVE\nSEMESTERS", value: stats.semesters, icon: <Calendar size={18} color="#FFF" />, sub: "" },
+    { label: "TOTAL\nATTENDANCE", value: stats.attendance, icon: <CheckCircle size={18} color="#FFF" />, sub: stats.attendance > 0 ? "records" : "" },
   ];
 
   const quickActions = [
-    { title: "Create Attendance Batch", desc: "Start a new attendance session", screen: "AttendanceCamera", icon: "📸", color: "#4361EE" },
-    { title: "View My Courses", desc: "Manage courses and enrolled students", screen: "MyCourses", icon: "📚", color: "#10B981" },
-    { title: "Attendance Reports", desc: "Analyze and export attendance", screen: "AttendanceReport", icon: "📊", color: "#F59E0B" },
-    { title: "Manage Students", desc: "Import and update student records", screen: "StudentEnrollment", icon: "👨‍🎓", color: "#EF4444" },
+    { title: "Take Attendance", desc: "Start a new batch", screen: "AttendanceCamera", icon: <ScanLine size={22} color={Theme.colors.primaryDark} /> },
+    { title: "My Courses", desc: "Browse & manage", screen: "MyCourses", icon: <BookMarked size={22} color={Theme.colors.primaryDark} /> },
+    { title: "Students", desc: "Import & manage", screen: "StudentEnrollment", icon: <UserPlus size={22} color={Theme.colors.primaryDark} /> },
+    { title: "Reports", desc: "Export & analyze", screen: "AttendanceReport", icon: <BarChart2 size={22} color={Theme.colors.primaryDark} /> },
   ];
 
   return (
@@ -76,54 +98,43 @@ export default function TeacherDashboard({ navigation }) {
 
         {/* Welcome Header */}
         <View style={styles.welcomeCard}>
-          <View style={styles.welcomeRow}>
-            <View style={styles.avatarBadge}>
-              <Text style={styles.avatarText}>T</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.welcomeGreeting}>Welcome back,</Text>
-              <Text style={styles.welcomeName}>{userName}</Text>
-            </View>
-          </View>
-          <Text style={styles.welcomeDesc}>A focused overview of your courses, students, and attendance in one place.</Text>
+          <Text style={styles.welcomeGreeting}>Welcome back 👋</Text>
+          <Text style={styles.welcomeName}>{userName}</Text>
+          <Text style={styles.welcomeDesc}>Here's what's happening across your courses today.</Text>
         </View>
 
         {/* Stats Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (
-              <View key={i} style={[styles.statCard, { backgroundColor: s.bg }]}>
+              <View key={i} style={styles.statCard}>
                 <View style={styles.statTopRow}>
-                  <Text style={styles.statLabel}>{s.label}</Text>
-                  <View style={[styles.statIconBg, { backgroundColor: s.color }]}>
-                    <Text style={styles.statIconText}>{s.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.statLabel}>{s.label}</Text>
+                    <Text style={styles.statNumber}>{s.value}</Text>
+                  </View>
+                  <View style={styles.statIconBg}>
+                    {s.icon}
                   </View>
                 </View>
-                <Text style={[styles.statNumber, { color: s.color }]}>{s.value}</Text>
+                {!!s.sub && <Text style={styles.statSub}>↗ {s.sub}</Text>}
               </View>
             ))}
           </View>
         )}
 
-        {/* Quick Actions */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <Text style={styles.sectionCount}>{quickActions.length} items</Text>
-        </View>
-        <View style={styles.actionsContainer}>
+        {/* Quick Actions — grid layout like the website */}
+        <View style={styles.quickGrid}>
           {quickActions.map((action, i) => (
-            <TouchableOpacity key={i} style={styles.actionCard} activeOpacity={0.7}
+            <TouchableOpacity key={i} style={styles.quickCard} activeOpacity={0.7}
               onPress={() => navigation.navigate(action.screen)}>
-              <View style={[styles.actionIconBg, { backgroundColor: action.color + "12" }]}>
-                <Text style={styles.actionIcon}>{action.icon}</Text>
+              <View style={styles.quickIconBg}>
+                {action.icon}
               </View>
-              <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionDesc}>{action.desc}</Text>
-              </View>
-              <Text style={styles.actionArrow}>›</Text>
+              <Text style={styles.quickTitle}>{action.title}</Text>
+              <Text style={styles.quickDesc}>{action.desc}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -132,7 +143,7 @@ export default function TeacherDashboard({ navigation }) {
         <View style={styles.guideCard}>
           <View style={styles.guideHeader}>
             <View style={styles.guideIconBg}>
-              <Text style={{ fontSize: 16 }}>⚙️</Text>
+              <Settings size={16} color="#475569" />
             </View>
             <Text style={styles.guideHeaderText}>Attendance Workflow</Text>
           </View>
@@ -157,7 +168,7 @@ export default function TeacherDashboard({ navigation }) {
         <View style={[styles.guideCard, { marginTop: 12, marginBottom: 10 }]}>
           <View style={styles.guideHeader}>
             <View style={styles.guideIconBg}>
-              <Text style={{ fontSize: 16 }}>📥</Text>
+              <FileDown size={16} color="#475569" />
             </View>
             <Text style={styles.guideHeaderText}>Student Import Process</Text>
           </View>
@@ -200,65 +211,59 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  welcomeRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  avatarBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#4361EE",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
-  },
-  avatarText: { color: "#FFF", fontSize: 18, fontWeight: "800" },
-  welcomeGreeting: { fontSize: 13, color: "#64748B" },
-  welcomeName: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginTop: 1 },
+  welcomeGreeting: { fontSize: 14, color: "#64748B", marginBottom: 2 },
+  welcomeName: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
   welcomeDesc: { fontSize: 13, color: "#64748B", lineHeight: 19 },
 
   // Stats
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 24 },
   statCard: {
     width: (width - 52) / 2,
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  statLabel: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5 },
-  statNumber: { fontSize: 32, fontWeight: "800" },
-  statIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  statIconText: { fontSize: 16 },
+  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 6 },
+  statNumber: { fontSize: 28, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  statSub: { fontSize: 11, fontWeight: "600", color: "#10B981", marginTop: 6 },
 
-  // Section
-  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#1E293B" },
-  sectionCount: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },
-
-  // Actions
-  actionsContainer: { marginBottom: 24 },
-  actionCard: {
+  // Quick Actions Grid (matching website bottom cards)
+  quickGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 24 },
+  quickCard: {
+    width: (width - 52) / 2,
     backgroundColor: "#FFF",
-    flexDirection: "row",
-    alignItems: "center",
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 14,
-    marginBottom: 8,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 1,
   },
-  actionIconBg: { width: 44, height: 44, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  actionIcon: { fontSize: 22 },
-  actionInfo: { flex: 1 },
-  actionTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  actionDesc: { fontSize: 12, color: "#94A3B8" },
-  actionArrow: { fontSize: 22, color: "#CBD5E1", fontWeight: "300" },
+  quickIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.accentLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  quickTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A", marginBottom: 2 },
+  quickDesc: { fontSize: 11, color: "#94A3B8" },
 
   // Guide
   guideCard: {

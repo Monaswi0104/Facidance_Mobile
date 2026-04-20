@@ -1,32 +1,44 @@
-import { apiFetch } from "./config";
+import { apiFetch, STUDENT_URL } from "./config";
 
 // Student profile
 export async function getStudentMe() {
-  const res = await apiFetch("/api/student/me");
+  const res = await apiFetch("/student/me", {}, STUDENT_URL);
   return await res.json();
 }
 
 // Student stats
 export async function getStudentStats() {
-  const res = await apiFetch("/api/student/stats");
+  const res = await apiFetch("/student/stats", {}, STUDENT_URL);
   return await res.json();
 }
 
 // Student courses
 export async function getStudentCourses() {
-  const res = await apiFetch("/api/student/courses");
+  const res = await apiFetch("/student/courses", {}, STUDENT_URL);
+  return await res.json();
+}
+
+// Single Course Detail
+export async function getCourse(courseId) {
+  const res = await apiFetch(`/student/courses/${courseId}`, {}, STUDENT_URL);
   return await res.json();
 }
 
 // Attendance history
 export async function getAttendanceHistory() {
-  const res = await apiFetch("/api/student/history");
+  const res = await apiFetch("/student/history", {}, STUDENT_URL);
+  return await res.json();
+}
+
+// Course-specific attendance
+export async function getCourseAttendance(courseId) {
+  const res = await apiFetch(`/student/courses/${courseId}/attendance`, {}, STUDENT_URL);
   return await res.json();
 }
 
 // Check if photos are uploaded
 export async function checkPhotos() {
-  const res = await apiFetch("/api/student/check-photos");
+  const res = await apiFetch("/student/check-photos", {}, STUDENT_URL);
   return await res.json();
 }
 
@@ -45,10 +57,10 @@ export async function uploadFacePhotos(images, studentId) {
     }
   });
 
-  const res = await apiFetch("/api/student/upload-photos", {
+  const res = await apiFetch("/student/upload-photos", {
     method: "POST",
     body: formData,
-  });
+  }, STUDENT_URL);
 
   return await res.json();
 }

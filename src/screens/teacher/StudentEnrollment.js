@@ -5,6 +5,8 @@ import {
 } from "react-native";
 import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Users, ScanFace, UserX, Upload, Search, ChevronDown, FileUp, User, CheckCircle, XCircle } from "lucide-react-native";
 import DocumentPicker from "react-native-document-picker";
 import RNFS from "react-native-fs";
 import XLSX from "xlsx";
@@ -34,7 +36,7 @@ export default function StudentEnrollment() {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
-        const list = Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : (data?.courses || []);
         setCourses(list);
         
         // Fetch all programs from the system
@@ -194,9 +196,9 @@ export default function StudentEnrollment() {
       const existingCount = (r.existing || []).length;
       const failedCount = (r.failed || []).length;
 
-      let msg = `✅ ${successCount} student(s) imported successfully.`;
-      if (existingCount > 0) msg += `\n⚠️ ${existingCount} already enrolled.`;
-      if (failedCount > 0) msg += `\n❌ ${failedCount} failed.`;
+      let msg = `${successCount} student(s) imported successfully.`;
+      if (existingCount > 0) msg += `\n${existingCount} already enrolled.`;
+      if (failedCount > 0) msg += `\n${failedCount} failed.`;
 
       Alert.alert("Import Complete", msg);
       setFile(null);
@@ -237,6 +239,9 @@ export default function StudentEnrollment() {
     }
   };
 
+  const faceRegistered = students.filter(s => s.faceRegistered).length;
+  const notRegistered = students.length - faceRegistered;
+
   const filteredStudents = students.filter(s => {
     const q = search.toLowerCase();
     const matchesSearch = !search || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.program.toLowerCase().includes(q);
@@ -250,114 +255,144 @@ export default function StudentEnrollment() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.headerBadge, { backgroundColor: "#0F172A" }]}>
-            <Text style={{ fontSize: 18 }}>👨‍🎓</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Student Management</Text>
-            <Text style={styles.subtitle}>Import, view, and manage your students</Text>
-          </View>
+          <Text style={styles.title}>Student Management</Text>
+          <Text style={styles.subtitle}>Import, view, and manage your students across all courses.</Text>
         </View>
+
+        {/* Stats Row */}
+        {!isLoading && (
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
+              <View style={styles.statBottom}>
+                <Text style={styles.statNumber}>{students.length}</Text>
+                <View style={styles.statIconBg}><Users size={16} color="#FFF" /></View>
+              </View>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>FACE REGISTERED</Text>
+              <View style={styles.statBottom}>
+                <Text style={styles.statNumber}>{faceRegistered}</Text>
+                <View style={styles.statIconBg}><ScanFace size={16} color="#FFF" /></View>
+              </View>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>NOT{"\n"}REGISTERED</Text>
+              <View style={styles.statBottom}>
+                <Text style={styles.statNumber}>{notRegistered}</Text>
+                <View style={styles.statIconBg}><UserX size={16} color="#FFF" /></View>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Import Section */}
         <View style={styles.sectionCard}>
           <View style={styles.importHeader}>
             <View style={styles.importIconBadge}>
-              <Text style={{ fontSize: 16 }}>↑</Text>
+              <Upload size={18} color="#FFF" />
             </View>
             <View style={{ flex: 1, flexShrink: 1 }}>
               <Text style={styles.importTitle}>Import Students</Text>
-              <Text style={[styles.importDesc, { flexWrap: 'wrap' }]}>Upload a CSV or Excel file to enroll students into a course.</Text>
+              <Text style={styles.importDesc}>Upload an Excel file to create accounts and enroll students into a course.</Text>
             </View>
           </View>
 
-          <Text style={styles.labelText}>CSV / EXCEL FILE</Text>
-          <Text style={styles.subLabelText}>Columns: Name, Email, DOB (date of birth, optional)</Text>
+          <Text style={styles.labelText}>EXCEL FILE (.XLSX) — COLUMNS: NAME, DOB (DD/MM/YYYY), EMAIL (OPTIONAL)</Text>
           
           <View style={styles.fileRow}>
             <TouchableOpacity style={styles.chooseFileBtn} onPress={pickFile}>
-              <Text style={styles.chooseFileText}>Choose File</Text>
+              <Text style={styles.chooseFileText}>Choose file</Text>
             </TouchableOpacity>
             <Text style={styles.fileNameText} numberOfLines={1}>{file ? file.name : "No file chosen"}</Text>
           </View>
 
           <View style={styles.dropdownsRow}>
             <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={styles.labelText}>PROGRAM</Text>
+              <Text style={styles.labelText}>PROGRAM *</Text>
               <TouchableOpacity style={styles.dropdown} onPress={() => setShowProgramInfo(true)}>
-                <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder}>
-                  {selectedProgram ? selectedProgram.name : "-- Select Program --"}
+                <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                  {selectedProgram ? selectedProgram.name : "Select program..."}
                 </Text>
-                <Text style={styles.dropdownArrow}>⌄</Text>
+                <ChevronDown size={16} color="#94A3B8" />
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.labelText}>COURSE</Text>
+              <Text style={styles.labelText}>COURSE *</Text>
               <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)}>
-                <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder}>
-                  {selectedCourse ? selectedCourse.name : "-- Select Course --"}
+                <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                  {selectedCourse ? selectedCourse.name : "Select course..."}
                 </Text>
-                <Text style={styles.dropdownArrow}>⌄</Text>
+                <ChevronDown size={16} color="#94A3B8" />
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.importFooter}>
-            <Text style={styles.importInfoText}>Students will be registered using their DOB as the default password, and automatically enrolled in the chosen course.</Text>
+            <Text style={styles.importInfoText}>Newly imported students will receive login credentials via email.</Text>
             <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
               disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
-              {isImporting ? <ActivityIndicator color="#4361EE" size="small" /> : <Text style={styles.submitBtnText}>Import Students</Text>}
+              {isImporting ? <ActivityIndicator color="#FFF" size="small" /> : (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <FileUp size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.submitBtnText}>Import Students</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Search & Filter */}
-        <View style={styles.filterCard}>
+        <View style={styles.searchFilterRow}>
           <View style={styles.searchBar}>
-            <Text style={{ marginRight: 8 }}>🔍</Text>
-            <TextInput style={styles.searchInput} placeholder="Search students by name, email, or program..."
+            <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+            <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
               placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
           </View>
-          <View style={styles.filterWrapper}>
-            <Text style={styles.filterLabel}>Filter by Course</Text>
-            <TouchableOpacity style={styles.dropdown} onPress={() => setShowFilterInfo(true)}>
-              <Text style={styles.dropdownText} numberOfLines={1}>{filterCourse ? filterCourse.name : "All Courses"}</Text>
-              <Text style={styles.dropdownArrow}>⌄</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilterInfo(true)}>
+            <Text style={styles.filterBtnText} numberOfLines={1}>{filterCourse ? filterCourse.name : "All Courses"}</Text>
+            <ChevronDown size={14} color="#64748B" />
+          </TouchableOpacity>
         </View>
 
         {/* Directory Table */}
         <View style={styles.tableCard}>
           <Text style={styles.tableTitle}>Student Directory</Text>
+          <Text style={styles.tableSubtitle}>{students.length} student{students.length !== 1 ? "s" : ""}</Text>
+
           <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderText, { flex: 1.8 }]}>STUDENT</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.2, paddingRight: 4 }]}>PROGRAM</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center", paddingHorizontal: 2 }]}>COURSES</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.2, textAlign: "center", paddingHorizontal: 2 }]}>ATTENDANCE</Text>
+            <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>PROGRAM</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.7, textAlign: "center" }]}>COURSES</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>ATTEND.</Text>
             <Text style={[styles.tableHeaderText, { flex: 1, textAlign: "center" }]}>FACE DATA</Text>
           </View>
 
           {isLoading ? (
-             <ActivityIndicator size="large" color="#4361EE" style={{ marginVertical: 40 }} />
+             <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
           ) : filteredStudents.length === 0 ? (
             <Text style={styles.emptyText}>No students found.</Text>
           ) : (
             filteredStudents.map((s, i) => (
               <TouchableOpacity key={i} style={[styles.tableRow, i < filteredStudents.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>
-                <View style={{ flex: 1.8, paddingRight: 5 }}>
+                <View style={{ flex: 2, paddingRight: 5 }}>
                   <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
-                  <Text style={styles.studentEmail} numberOfLines={2}>{s.email}</Text>
+                  <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
                 </View>
-                <Text style={[styles.cellText, { flex: 1.2, paddingRight: 4 }]} numberOfLines={2}>{s.program}</Text>
-                <Text style={[styles.cellText, { flex: 0.9, textAlign: "center", paddingHorizontal: 2 }]}>{s.coursesCount}</Text>
-                <Text style={[styles.cellText, { flex: 1.2, textAlign: "center", paddingHorizontal: 2 }]}>{s.attendance}</Text>
+                <Text style={[styles.cellText, { flex: 1.5, paddingRight: 4, fontSize: 10 }]} numberOfLines={2}>{s.program}</Text>
+                <Text style={[styles.cellText, { flex: 0.7, textAlign: "center", fontWeight: "700" }]}>{s.coursesCount}</Text>
+                <Text style={[styles.cellText, { flex: 0.9, textAlign: "center", fontWeight: "700" }]}>{s.attendance}</Text>
                 <View style={{ flex: 1, alignItems: "center" }}>
-                  <View style={[styles.faceBadge, s.faceRegistered ? styles.faceYes : styles.faceNo]}>
-                    <Text style={[styles.faceText, s.faceRegistered ? { color: "#059669" } : { color: "#94A3B8" }]}>
-                      {s.faceRegistered ? "✓ Registered" : "Pending"}
-                    </Text>
-                  </View>
+                  {s.faceRegistered ? (
+                    <View style={styles.faceYes}>
+                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
+                      <Text style={[styles.faceText, { color: "#059669" }]}>Registered</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.faceNo}>
+                      <Text style={[styles.faceText, { color: "#94A3B8" }]}>Pending</Text>
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
             ))
@@ -371,11 +406,13 @@ export default function StudentEnrollment() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
              <Text style={styles.modalTitle}>Select Program</Text>
-             {programs.map(p => (
-               <TouchableOpacity key={p.id} style={styles.modalItem} onPress={() => { setSelectedProgram(p); setSelectedCourse(null); setShowProgramInfo(false); }}>
-                 <Text style={styles.modalItemText}>{p.name}</Text>
-               </TouchableOpacity>
-             ))}
+             <ScrollView style={{ maxHeight: 400 }}>
+               {programs.map(p => (
+                 <TouchableOpacity key={p.id} style={styles.modalItem} onPress={() => { setSelectedProgram(p); setSelectedCourse(null); setShowProgramInfo(false); }}>
+                   <Text style={styles.modalItemText}>{p.name}</Text>
+                 </TouchableOpacity>
+               ))}
+             </ScrollView>
              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowProgramInfo(false)}>
                <Text style={styles.modalCloseText}>Cancel</Text>
              </TouchableOpacity>
@@ -388,11 +425,13 @@ export default function StudentEnrollment() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
              <Text style={styles.modalTitle}>Select Course</Text>
-             {courses.filter(c => !selectedProgram || c.semester?.academicYear?.program?.id === selectedProgram.id).map(c => (
-               <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setSelectedCourse(c); setShowCourseInfo(false); }}>
-                 <Text style={styles.modalItemText}>{c.name}</Text>
-               </TouchableOpacity>
-             ))}
+             <ScrollView style={{ maxHeight: 400 }}>
+               {courses.filter(c => !selectedProgram || c.semester?.academicYear?.program?.id === selectedProgram.id).map(c => (
+                 <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setSelectedCourse(c); setShowCourseInfo(false); }}>
+                   <Text style={styles.modalItemText}>{c.name}</Text>
+                 </TouchableOpacity>
+               ))}
+             </ScrollView>
              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowCourseInfo(false)}>
                <Text style={styles.modalCloseText}>Cancel</Text>
              </TouchableOpacity>
@@ -408,11 +447,13 @@ export default function StudentEnrollment() {
              <TouchableOpacity style={styles.modalItem} onPress={() => { setFilterCourse(null); setShowFilterInfo(false); }}>
                  <Text style={styles.modalItemText}>All Courses</Text>
               </TouchableOpacity>
-             {courses.map(c => (
-               <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setFilterCourse(c); setShowFilterInfo(false); }}>
-                 <Text style={styles.modalItemText}>{c.name}</Text>
-               </TouchableOpacity>
-             ))}
+              <ScrollView style={{ maxHeight: 400 }}>
+                {courses.map(c => (
+                  <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setFilterCourse(c); setShowFilterInfo(false); }}>
+                    <Text style={styles.modalItemText}>{c.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowFilterInfo(false)}>
                <Text style={styles.modalCloseText}>Cancel</Text>
              </TouchableOpacity>
@@ -428,7 +469,7 @@ export default function StudentEnrollment() {
                 <>
                   <View style={styles.modalHeaderInfoSection}>
                     <View style={styles.modalAvatar}>
-                      <Text style={styles.modalAvatarText}>{selectedStudent.name.charAt(0)}</Text>
+                      <User size={22} color={Theme.colors.primaryDark} />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -442,22 +483,39 @@ export default function StudentEnrollment() {
                   </View>
 
                   <View style={styles.modalDetailRow}>
+                    <Text style={styles.modalDetailLabel}>Department:</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.department}</Text>
+                  </View>
+
+                  <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : "#4361EE" }]}>
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
                        {(selectedStudent.status || "active").toUpperCase()}
                     </Text>
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Joined Date:</Text>
+                    <Text style={styles.modalDetailLabel}>Joined:</Text>
                     <Text style={styles.modalDetailValue}>
                       {selectedStudent.joinedAt ? new Date(selectedStudent.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                     </Text>
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Face Registered:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.faceRegistered ? "Yes ✅" : "No ❌"}</Text>
+                    <Text style={styles.modalDetailLabel}>Face Data:</Text>
+                    <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
+                      {selectedStudent.faceRegistered ? (
+                        <>
+                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                        </>
+                      )}
+                    </View>
                   </View>
 
                   <View style={styles.modalDetailRow}>
@@ -467,7 +525,7 @@ export default function StudentEnrollment() {
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Attendance:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.attendance} Total Recorded</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.attendance} Total</Text>
                   </View>
 
                   <TouchableOpacity style={styles.modalDetailCloseBtn} onPress={() => setSelectedStudent(null)}>
@@ -486,58 +544,94 @@ export default function StudentEnrollment() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20, marginTop: 8 },
-  headerBadge: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
 
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 20, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
+  // Header
+  header: { marginBottom: 18, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+
+  // Stats Row
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  statLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 8 },
+  statBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  statNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+
+  // Import Section
+  sectionCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
   importHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  importIconBadge: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#6366F1", justifyContent: "center", alignItems: "center", marginRight: 12 },
+  importIconBadge: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
   importTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
   importDesc: { fontSize: 12, color: "#64748B", marginTop: 2 },
   
-  labelText: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 4 },
-  subLabelText: { fontSize: 11, color: "#94A3B8", marginBottom: 10 },
+  labelText: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6 },
   
   fileRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, borderWidth: 1, borderColor: "#E2E8F0", paddingLeft: 4, paddingRight: 14, paddingVertical: 4, marginBottom: 16 },
-  chooseFileBtn: { backgroundColor: "#0F172A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginRight: 12 },
-  chooseFileText: { color: "#FFF", fontSize: 12, fontWeight: "600" },
-  fileNameText: { fontSize: 13, color: "#475569", flex: 1 },
+  chooseFileBtn: { backgroundColor: "#F1F5F9", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginRight: 12, borderWidth: 1, borderColor: "#E2E8F0" },
+  chooseFileText: { color: "#475569", fontSize: 12, fontWeight: "600" },
+  fileNameText: { fontSize: 13, color: "#94A3B8", flex: 1 },
 
   dropdownsRow: { flexDirection: "row", marginBottom: 16 },
   dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E2E8F0" },
-  dropdownPlaceholder: { fontSize: 13, color: "#94A3B8" },
+  dropdownPlaceholder: { fontSize: 13, color: "#94A3B8", flex: 1 },
   dropdownText: { fontSize: 13, color: "#1E293B", flex: 1 },
-  dropdownArrow: { color: "#94A3B8", fontSize: 18, paddingBottom: 6 },
   
   importFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, borderTopWidth: 1, borderTopColor: "#F1F5F9", paddingTop: 16 },
   importInfoText: { fontSize: 11, color: "#94A3B8", flex: 1, paddingRight: 10 },
-  submitBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
-  submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { color: "#1E293B", fontSize: 13, fontWeight: "700" },
+  submitBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  submitBtnDisabled: { opacity: 0.4 },
+  submitBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
 
-  filterCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", flexDirection: "row", alignItems: "center" },
-  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 16 },
+  // Search & Filter
+  searchFilterRow: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
+  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 10 },
   searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
-  filterWrapper: { width: 140 },
-  filterLabel: { fontSize: 10, fontWeight: "600", color: "#64748B", marginBottom: 4, paddingLeft: 2 },
+  filterBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0" },
+  filterBtnText: { fontSize: 12, color: "#1E293B", fontWeight: "600", marginRight: 4, maxWidth: 100 },
 
+  // Table
   tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 20 },
-  tableTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 14 },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
-  tableHeaderText: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  studentName: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
-  studentEmail: { fontSize: 11, color: "#94A3B8" },
-  cellText: { fontSize: 12, color: "#64748B" },
-  faceBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
-  faceYes: { backgroundColor: "#F0FDF4", borderColor: "#DCFCE7" },
-  faceNo: { backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" },
-  faceText: { fontSize: 10, fontWeight: "700" },
+  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: "#94A3B8" },
+  cellText: { fontSize: 11, color: "#64748B" },
+  faceYes: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
+  faceNo: { backgroundColor: "#F8FAFC", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#E2E8F0" },
+  faceText: { fontSize: 9, fontWeight: "700" },
   emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
 
+  // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
   modalContent: { backgroundColor: "#FFF", borderRadius: 16, padding: 20, maxHeight: "80%" },
   modalTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginBottom: 16 },
@@ -546,11 +640,10 @@ const styles = StyleSheet.create({
   modalCloseBtn: { marginTop: 20, backgroundColor: "#F1F5F9", padding: 14, borderRadius: 12, alignItems: "center" },
   modalCloseText: { fontSize: 15, fontWeight: "600", color: "#64748B" },
 
-  // Student Details Modal Styles
+  // Student Details Modal
   modalDetailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
-  modalAvatarText: { fontSize: 20, fontWeight: "800", color: "#4361EE" },
+  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: Theme.colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
   modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
   modalEmail: { fontSize: 13, color: "#64748B" },

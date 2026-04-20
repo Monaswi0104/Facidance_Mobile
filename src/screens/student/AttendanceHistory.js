@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput } from "react-native";
 import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
+import { Theme } from "../../theme/Theme";
+import { Search, Calendar, CheckCircle, XCircle, TrendingUp, Download, Clock } from "lucide-react-native";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -8,27 +10,24 @@ export default function AttendanceHistory({ route }) {
 
   const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'Overview');
   const [data, setData] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [courseSummaries, setCourseSummaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All"); // All, Present, Absent
+  const [filter, setFilter] = useState("All");
 
   useEffect(() => {
     const load = async () => {
       try {
         setIsLoading(true);
-        const [historyRes, coursesRes] = await Promise.all([
-          getAttendanceHistory(),
-          getStudentCourses()
-        ]);
+        const historyRes = await getAttendanceHistory();
         
-        const historyList = Array.isArray(historyRes) ? historyRes : (historyRes.history || []);
+        const historyList = Array.isArray(historyRes) ? historyRes : (historyRes.records || []);
+        const sums = historyRes.summary || [];
         
-        // Sort by date descending
         historyList.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
         
         setData(historyList);
-        setCourses(Array.isArray(coursesRes) ? coursesRes : []);
+        setCourseSummaries(sums);
       } catch (e) {
         console.log("History load error:", e);
       } finally {
@@ -46,41 +45,14 @@ export default function AttendanceHistory({ route }) {
     return { total, present, absent, rate };
   }, [data]);
 
-  const courseStats = useMemo(() => {
-    // Map course ID or code to stats
-    const map = {};
-    
-    // Initialize map using actual courses if available, to ensure we catch courses with ZERO attendance yet.
-    courses.forEach(c => {
-      const key = c.name || c.code; // Use name as primary
-      if(!map[key]) map[key] = { name: c.name, code: c.code, present: 0, total: 0 };
-    });
-
-    data.forEach(r => {
-      const key = r.course?.name || r.course?.code || "Unknown";
-      if (!map[key]) map[key] = { name: r.course?.name || "Unknown", code: r.course?.code || "—", present: 0, total: 0 };
-      map[key].total += 1;
-      if (r.status) map[key].present += 1;
-    });
-
-    return Object.values(map).map(c => {
-      c.rate = c.total > 0 ? (c.present / c.total) * 100 : 0;
-      return c;
-    });
-  }, [data, courses]);
-
   const filteredRecords = useMemo(() => {
     return data.filter(r => {
-      // Status filter
       if (filter === 'Present' && !r.status) return false;
       if (filter === 'Absent' && r.status) return false;
-      
-      // Search filter
       if (search) {
         const q = search.toLowerCase();
-        const courseName = (r.course?.name || "").toLowerCase();
-        const courseCode = (r.course?.code || "").toLowerCase();
-        return courseName.includes(q) || courseCode.includes(q);
+        const courseName = (r.course?.name || r.course_name || "").toLowerCase();
+        return courseName.includes(q);
       }
       return true;
     });
@@ -88,14 +60,12 @@ export default function AttendanceHistory({ route }) {
 
   const exportCSV = async () => {
     try {
-      const header = "Course,Entry Code,Status,Date,Time";
+      const header = "Course,Status,Date";
       const rows = filteredRecords.map((r) => {
-         const dt = formatDateObj(r.timestamp || r.date || r.createdAt);
-         const cName = r.course?.name || "Unknown";
-         const entryCode = r.course?.entryCode || r.course?.code || "—";
+         const dt = formatShort(r.timestamp || r.date || r.createdAt);
+         const cName = r.course?.name || r.course_name || "Unknown";
          const status = r.status ? "Present" : "Absent";
-         // Quote strings to avoid comma issues
-         return `"${cName}","${entryCode}","${status}","${dt.dateStr}","${dt.timeStr}"`;
+         return `"${cName}","${status}","${dt}"`;
       });
       const csv = [header, ...rows].join("\n");
       const path = `${RNFS.DownloadDirectoryPath}/attendance_history_${Date.now()}.csv`;
@@ -106,149 +76,162 @@ export default function AttendanceHistory({ route }) {
     }
   };
 
-  const formatDateObj = (dateString) => {
-    if (!dateString) return { dateStr: "Unknown Date", timeStr: "" };
+  const formatShort = (dateString) => {
+    if (!dateString) return "Unknown";
     const date = new Date(dateString);
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const month = months[date.getMonth()];
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    let hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; 
-    
-    return { 
-      dateStr: `${month} ${day}, ${year}`, 
-      timeStr: `${hours}:${minutes} ${ampm}`
-    };
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
+  const getBarColor = (rate) => rate >= 90 ? "#10B981" : rate >= 75 ? "#0EA5E9" : rate >= 50 ? "#F59E0B" : "#EF4444";
+
+  /* ═══════════════════════════════════════ */
+  /*  Overview Tab                           */
+  /* ═══════════════════════════════════════ */
   const renderOverview = () => (
-    <View style={styles.tabContent}>
-      
-      {/* 4 Stats Cards */}
-      <View style={styles.statsRow}>
+    <View>
+      {/* Stats Row - 2x2 grid */}
+      <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Text style={styles.statCardLabel}>Total Classes</Text>
-          <Text style={styles.statCardValue}>{stats.total}</Text>
+          <View style={styles.statTopRow}>
+            <Text style={styles.statLabel}>TOTAL CLASSES</Text>
+            <View style={styles.statIconBg}><Calendar size={14} color="#FFF" /></View>
+          </View>
+          <Text style={styles.statNumber} numberOfLines={1} adjustsFontSizeToFit>{stats.total}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
-          <Text style={[styles.statCardLabel, { color: '#10B981' }]}>Present</Text>
-          <Text style={[styles.statCardValue, { color: '#10B981' }]}>{stats.present}</Text>
+        <View style={styles.statCard}>
+          <View style={styles.statTopRow}>
+            <Text style={[styles.statLabel, { color: "#10B981" }]}>PRESENT</Text>
+            <View style={styles.statIconBg}><CheckCircle size={14} color="#FFF" /></View>
+          </View>
+          <Text style={[styles.statNumber, { color: "#10B981" }]} numberOfLines={1} adjustsFontSizeToFit>{stats.present}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-          <Text style={[styles.statCardLabel, { color: '#EF4444' }]}>Absent</Text>
-          <Text style={[styles.statCardValue, { color: '#EF4444' }]}>{stats.absent}</Text>
+        <View style={styles.statCard}>
+          <View style={styles.statTopRow}>
+            <Text style={[styles.statLabel, { color: "#EF4444" }]}>ABSENT</Text>
+            <View style={styles.statIconBg}><XCircle size={14} color="#FFF" /></View>
+          </View>
+          <Text style={[styles.statNumber, { color: "#EF4444" }]} numberOfLines={1} adjustsFontSizeToFit>{stats.absent}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-           <Text style={[styles.statCardLabel, { color: '#0284C7' }]}>Attendance Rate</Text>
-           <Text style={[styles.statCardValue, { color: '#0284C7' }]}>{stats.rate}%</Text>
-           <View style={[styles.rateBarBg, { marginTop: 8 }]}>
-             <View style={[styles.rateBarFill, { width: `${stats.rate}%` }]} />
-           </View>
+        <View style={styles.statCard}>
+          <View style={styles.statTopRow}>
+            <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
+            <View style={styles.statIconBg}><TrendingUp size={14} color="#FFF" /></View>
+          </View>
+          <Text style={[styles.statNumber, { color: getBarColor(parseFloat(stats.rate)) }]} numberOfLines={1} adjustsFontSizeToFit>{stats.rate}%</Text>
         </View>
       </View>
 
-      {/* Attendance by Course Section */}
-      <View style={styles.courseRatesCard}>
-         <Text style={styles.sectionTitle}>Attendance by Course</Text>
-         
-         <View style={styles.courseRatesList}>
-            {courseStats.map((c, i) => (
-               <View key={i} style={styles.courseRateItem}>
-                  <View style={styles.courseRateHeader}>
-                    <View>
-                      <Text style={styles.cRateName}>{c.name}</Text>
-                      <Text style={styles.cRateCode}>{c.code}</Text>
-                    </View>
-                    <Text style={styles.cRateFraction}>{Math.round(c.rate)}% ({c.present}/{c.total} present)</Text>
-                  </View>
-                  <View style={styles.cRateBarBg}>
-                     <View style={[styles.cRateBarFill, { width: `${c.rate}%` }]} />
-                  </View>
-               </View>
-            ))}
-         </View>
-      </View>
+      {/* By Course */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>By Course</Text>
+        <Text style={styles.sectionSubtitle}>Attendance rate per course</Text>
 
+        {courseSummaries.length === 0 ? (
+          <Text style={styles.emptyText}>No course data available.</Text>
+        ) : (
+          courseSummaries.map((c, i) => {
+            const rate = c.rate || 0;
+            const total = c.total_sessions || c.total || 0;
+            const present = c.present || 0;
+            return (
+              <View key={i} style={[styles.courseRow, i < courseSummaries.length - 1 && styles.courseRowBorder]}>
+                <View style={styles.courseRowTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.courseRowName}>{c.course_name || c.name || "Unknown"}</Text>
+                    <Text style={styles.courseRowMeta}>{present}/{total} sessions attended</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TrendingUp size={11} color={getBarColor(rate)} style={{ marginRight: 3 }} />
+                    <Text style={[styles.courseRowPct, { color: getBarColor(rate) }]}>{rate.toFixed(1)}%</Text>
+                  </View>
+                </View>
+                <View style={styles.courseBarTrack}>
+                  <View style={[styles.courseBarFill, { width: `${Math.min(rate, 100)}%`, backgroundColor: getBarColor(rate) }]} />
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
     </View>
   );
 
+  /* ═══════════════════════════════════════ */
+  /*  All Records Tab                        */
+  /* ═══════════════════════════════════════ */
   const renderRecords = () => (
-    <View style={styles.tabContent}>
-      
-      {/* Inner Search & Filters */}
-      <View style={styles.filtersCard}>
-         <View style={styles.searchContainer}>
-           <Text style={styles.searchIcon}>🔍</Text>
-           <TextInput
-             style={styles.searchInput}
-             placeholder="Search by course name..."
-             placeholderTextColor="#94A3B8"
-             value={search}
-             onChangeText={setSearch}
-           />
-         </View>
-         
-         <View style={styles.filterBtns}>
-            <TouchableOpacity onPress={() => setFilter('All')} style={styles.filterBtn}>
-              <Text style={[styles.filterBtnText, filter === 'All' && styles.filterBtnTextActive]}>All</Text>
+    <View>
+      {/* Search + Filters */}
+      <View style={styles.filterRow}>
+        <View style={styles.searchBar}>
+          <Search size={13} color="#94A3B8" style={{ marginRight: 6 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search courses..."
+            placeholderTextColor="#94A3B8"
+            value={search}
+            onChangeText={setSearch}
+          />
+        </View>
+        <View style={styles.filterPills}>
+          {["All", "Present", "Absent"].map(f => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterPill, filter === f && styles.filterPillActive]}
+              onPress={() => setFilter(f)}
+            >
+              <Text style={[styles.filterPillText, filter === f && styles.filterPillTextActive]}>{f}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setFilter('Present')} style={styles.filterBtn}>
-              <Text style={[styles.filterBtnText, filter === 'Present' && styles.filterBtnTextActive]}>Present</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setFilter('Absent')} style={styles.filterBtn}>
-              <Text style={[styles.filterBtnText, filter === 'Absent' && styles.filterBtnTextActive]}>Absent</Text>
-            </TouchableOpacity>
-         </View>
+          ))}
+        </View>
       </View>
 
-      {/* Table Format */}
-      <View style={styles.tableCard}>
-         <View style={styles.tableHeader}>
-           <Text style={[styles.thText, { flex: 2 }]}>COURSE</Text>
-           <Text style={[styles.thText, { flex: 1.2, textAlign: 'center' }]}>ENTRY CODE</Text>
-           <Text style={[styles.thText, { flex: 1, textAlign: 'center' }]}>STATUS</Text>
-           <Text style={[styles.thText, { flex: 1.5, textAlign: 'right' }]}>DATE & TIME</Text>
-         </View>
+      {/* Records Table */}
+      <View style={styles.sectionCard}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <View>
+            <Text style={styles.sectionTitle}>Attendance Records</Text>
+            <Text style={styles.sectionSubtitle}>{filteredRecords.length} records</Text>
+          </View>
+          <Text style={{ fontSize: 10, color: "#94A3B8" }}>Sorted by most recent</Text>
+        </View>
 
-         {filteredRecords.length === 0 ? (
-           <View style={{ padding: 40, alignItems: 'center' }}>
-             <Text style={{ color: '#64748B' }}>No attendance records match your criteria.</Text>
-           </View>
-         ) : (
-           filteredRecords.map((r, i) => {
-             const dt = formatDateObj(r.timestamp || r.date || r.createdAt);
-             return (
-               <View key={r.id || i} style={styles.tableRow}>
-                 <View style={{ flex: 2 }}>
-                   <Text style={styles.tdCourseName} numberOfLines={2}>{r.course?.name || "Unknown"}</Text>
-                 </View>
-                 
-                 <Text style={[styles.tdText, { flex: 1.2, textAlign: 'center' }]}>{r.course?.entryCode || r.course?.code || "—"}</Text>
-                 
-                 <View style={{ flex: 1, alignItems: 'center' }}>
-                   <View style={[styles.statusBadge, { backgroundColor: r.status ? '#F0FDF4' : '#FEF2F2' }]}>
-                      <Text style={[styles.statusBadgeText, { color: r.status ? '#16A34A' : '#EF4444' }]}>
-                        {r.status ? 'Present' : 'Absent'}
-                      </Text>
-                   </View>
-                 </View>
-                 
-                 <Text style={[styles.tdText, { flex: 1.5, textAlign: 'right' }]}>{dt.dateStr} at {dt.timeStr}</Text>
-               </View>
-             );
-           })
-         )}
+        {/* Table Header */}
+        <View style={styles.tableHeaderRow}>
+          <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>COURSE</Text>
+          <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>STATUS</Text>
+          <Text style={[styles.tableHeaderText, { flex: 1.2, textAlign: "right" }]}>DATE</Text>
+        </View>
+
+        {filteredRecords.length === 0 ? (
+          <Text style={styles.emptyText}>No attendance records match your criteria.</Text>
+        ) : (
+          filteredRecords.map((r, i) => {
+            const dt = formatShort(r.timestamp || r.date || r.createdAt);
+            const isPresent = r.status;
+            return (
+              <View key={r.id || i} style={[styles.tableRow, i < filteredRecords.length - 1 && styles.tableRowBorder]}>
+                <Text style={[styles.tdCourse, { flex: 1.5 }]} numberOfLines={1}>{r.course?.name || r.course_name || "Unknown"}</Text>
+                <View style={{ flex: 0.8, alignItems: "center" }}>
+                  <View style={[styles.statusBadge, { backgroundColor: isPresent ? "#F0FDF4" : "#FEF2F2" }]}>
+                    {isPresent ? (
+                      <CheckCircle size={11} color="#16A34A" style={{ marginRight: 3 }} />
+                    ) : (
+                      <XCircle size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                    )}
+                    <Text style={[styles.statusText, { color: isPresent ? "#16A34A" : "#EF4444" }]}>
+                      {isPresent ? "Present" : "Absent"}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.tdDate, { flex: 1.2 }]}>{dt}</Text>
+              </View>
+            );
+          })
+        )}
       </View>
-
     </View>
   );
 
@@ -256,42 +239,36 @@ export default function AttendanceHistory({ route }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Header & Export */}
-        <View style={styles.topHeader}>
-           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-             <View style={styles.headerIconBox}>
-               <Text style={{ fontSize: 20 }}>📅</Text>
-             </View>
-             <View style={{ flex: 1, paddingRight: 10 }}>
-               <Text style={styles.title}>Attendance History</Text>
-               <Text style={styles.subtitle}>Review and analyze your attendance across all courses.</Text>
-             </View>
-           </View>
-           
-           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-             <Text style={styles.exportBtnText}>📥 Export CSV</Text>
-           </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.headerSection}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>Attendance History</Text>
+            <Text style={styles.subtitle}>Review and analyze your attendance across all courses.</Text>
+          </View>
+          <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
+            <Download size={13} color="#475569" style={{ marginRight: 4 }} />
+            <Text style={styles.exportBtnText}>Export CSV</Text>
+          </TouchableOpacity>
         </View>
-        
+
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-           <TouchableOpacity 
-             style={[styles.tab, activeTab === 'Overview' && styles.activeTab]}
-             onPress={() => setActiveTab('Overview')}
-           >
-             <Text style={[styles.tabText, activeTab === 'Overview' && styles.activeTabText]}>Overview</Text>
-           </TouchableOpacity>
-
-           <TouchableOpacity 
-             style={[styles.tab, activeTab === 'All Records' && styles.activeTab]}
-             onPress={() => setActiveTab('All Records')}
-           >
-             <Text style={[styles.tabText, activeTab === 'All Records' && styles.activeTabText]}>All Records</Text>
-           </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'Overview' && styles.activeTab]}
+            onPress={() => setActiveTab('Overview')}
+          >
+            <Text style={[styles.tabText, activeTab === 'Overview' && styles.activeTabText]}>Overview</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'All Records' && styles.activeTab]}
+            onPress={() => setActiveTab('All Records')}
+          >
+            <Text style={[styles.tabText, activeTab === 'All Records' && styles.activeTabText]}>All Records</Text>
+          </TouchableOpacity>
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color="#4361EE" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginTop: 40 }} />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderRecords()
         )}
@@ -302,273 +279,99 @@ export default function AttendanceHistory({ route }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  topHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-    paddingTop: 10,
-    flexWrap: 'wrap',
-  },
-  headerIconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#64748B",
-  },
+  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  container: { padding: 20, paddingBottom: 40 },
+
+  // Header
+  headerSection: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
   exportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#FFF',
-    marginTop: 10,
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0",
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  exportBtnText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
+  exportBtnText: { fontSize: 12, fontWeight: "600", color: "#475569" },
+
+  // Tabs
+  tabsContainer: { flexDirection: "row", backgroundColor: "#FFF", borderRadius: 10, padding: 3, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
+  tab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
+  activeTab: { backgroundColor: "#F8FAFC", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 13, fontWeight: "600", color: "#94A3B8" },
+  activeTabText: { color: "#0F172A" },
+
+  // Stats
+  statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 16 },
+  statCard: {
+    width: "48%",
+    backgroundColor: "#FFF",
     borderRadius: 12,
-    padding: 4,
+    padding: 14,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: '#F8FAFC',
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
     elevation: 1,
   },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#64748B",
-  },
-  activeTabText: {
-    color: "#0F172A",
-  },
-  tabContent: {
-    // layout wrapper
-  },
-  
-  // Overview Tab
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, flex: 1, marginRight: 4 },
+  statNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+
+  // Section Card
+  sectionCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
     padding: 16,
-    borderRadius: 12,
     marginBottom: 16,
-  },
-  statCardLabel: {
-    fontSize: 13,
-    color: "#64748B",
-    marginBottom: 4,
-  },
-  statCardValue: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  rateValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0284C7",
-  },
-  rateBarBg: {
-    height: 6,
-    backgroundColor: '#E0F2FE',
-    borderRadius: 3,
-    marginTop: 10,
-  },
-  rateBarFill: {
-    height: 6,
-    backgroundColor: '#0EA5E9',
-    borderRadius: 3,
-  },
-  courseRatesCard: {
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    padding: 20,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 20,
-  },
-  courseRatesList: {
-    gap: 16,
-  },
-  courseRateItem: {
-    marginBottom: 16,
-  },
-  courseRateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 8,
-  },
-  cRateName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
-  },
-  cRateCode: {
-    fontSize: 11,
-    color: "#64748B",
-  },
-  cRateFraction: {
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: "500",
-  },
-  cRateBarBg: {
-    height: 8,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 4,
-  },
-  cRateBarFill: {
-    height: 8,
-    backgroundColor: '#0EA5E9',
-    borderRadius: 4,
-  },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  sectionSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 1, marginBottom: 14 },
 
-  // All Records Tab
-  filtersCard: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 44,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  searchIcon: {
-    fontSize: 14,
-    marginRight: 8,
-    color: "#94A3B8",
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#0F172A",
-  },
-  filterBtns: {
-    flexDirection: 'row',
-  },
-  filterBtn: {
-    marginRight: 16,
-  },
-  filterBtnText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#64748B",
-  },
-  filterBtnTextActive: {
-    color: "#0F172A",
-  },
+  // Course Rows
+  courseRow: { paddingVertical: 14 },
+  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  courseRowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  courseRowName: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
+  courseRowMeta: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
+  courseRowPct: { fontSize: 13, fontWeight: "700" },
+  courseBarTrack: { height: 6, borderRadius: 3, backgroundColor: "#E2E8F0", overflow: "hidden" },
+  courseBarFill: { height: "100%", borderRadius: 3 },
 
-  tableCard: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    overflow: 'hidden',
+  // Filters
+  filterRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  searchBar: {
+    flexDirection: "row", alignItems: "center", flex: 1,
+    backgroundColor: "#FFF", borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 8,
+    borderWidth: 1, borderColor: "#E2E8F0", marginRight: 8,
   },
-  tableHeader: {
-    flexDirection: 'row',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#F8FAFC',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  thText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#64748B",
-    letterSpacing: 0.5,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  tdCourseName: {
-    fontSize: 14,
-    color: "#1E293B",
-    fontWeight: "500",
-  },
-  tdText: {
-    fontSize: 13,
-    color: "#64748B",
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-  }
+  searchInput: { flex: 1, fontSize: 12, color: "#1E293B", padding: 0 },
+  filterPills: { flexDirection: "row" },
+  filterPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: "#E2E8F0", marginLeft: 4, backgroundColor: "#FFF" },
+  filterPillActive: { backgroundColor: Theme.colors.primaryDark, borderColor: Theme.colors.primaryDark },
+  filterPillText: { fontSize: 11, fontWeight: "600", color: "#475569" },
+  filterPillTextActive: { color: "#FFF" },
+
+  // Table
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
+  tableRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  tdCourse: { fontSize: 13, fontWeight: "500", color: "#1E293B" },
+  tdDate: { fontSize: 11, color: "#64748B", textAlign: "right" },
+  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
+  statusText: { fontSize: 10, fontWeight: "700" },
+
+  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
 });

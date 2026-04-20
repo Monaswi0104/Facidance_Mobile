@@ -1,69 +1,80 @@
-import { apiFetch } from "./config";
+import { apiFetch, TEACHER_URL, ADMIN_URL } from "./config";
 
 // Teacher profile
 export async function getTeacherMe() {
-  const res = await apiFetch("/api/teacher/me");
+  const res = await apiFetch("/teacher/me", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Teacher stats
 export async function getTeacherStats() {
-  const res = await apiFetch("/api/teacher/stats");
+  const res = await apiFetch("/teacher/stats", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Teacher courses
 export async function getTeacherCourses() {
-  const res = await apiFetch("/api/teacher/courses");
+  const res = await apiFetch("/teacher/courses", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Students enrolled in a course
 export async function getCourseStudents(courseId) {
-  const res = await apiFetch(`/api/teacher/students?courseId=${courseId}`);
+  const res = await apiFetch(`/teacher/students?course_id=${courseId}`, {}, TEACHER_URL);
   return await res.json();
 }
 
-// Full course details including aggregated attendance
+// Full course details — fetches students for a specific course
 export async function getCourseDetails(courseId) {
-  const res = await apiFetch(`/api/teacher/courses/${courseId}`);
+  const res = await apiFetch(`/teacher/courses/${courseId}/students`, {}, TEACHER_URL);
   return await res.json();
 }
 
 // Attendance for a course
 export async function getCourseAttendance(courseId) {
-  const res = await apiFetch(`/api/teacher/attendance?courseId=${courseId}`);
+  const res = await apiFetch(`/teacher/attendance/history?course_id=${courseId}`, {}, TEACHER_URL);
   return await res.json();
 }
 
 // Reports
 export async function getTeacherReports(courseId, startDate, endDate) {
-  let url = `/api/teacher/reports?courseId=${courseId}`;
-  if (startDate) url += `&startDate=${startDate}`;
-  if (endDate) url += `&endDate=${endDate}`;
-  const res = await apiFetch(url);
+  let url = `/teacher/reports?course_id=${courseId}`;
+  if (startDate) url += `&start_date=${startDate}`;
+  if (endDate) url += `&end_date=${endDate}`;
+  const res = await apiFetch(url, {}, TEACHER_URL);
   return await res.json();
 }
 
-// Get all programs (for student import)
+// Get all programs (for student import) — extracted from teacher's own hierarchy
 export async function getAllPrograms() {
-  const res = await apiFetch("/api/admin/programs");
-  const data = await res.json();
-  return data.programs || [];
+  const hierarchy = await getHierarchy();
+  const departments = hierarchy?.departments || [];
+  const programs = [];
+  const seen = new Set();
+  for (const dept of departments) {
+    const progs = Array.isArray(dept.programs) ? dept.programs : Object.values(dept.programs || {});
+    for (const p of progs) {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        programs.push({ id: p.id, name: p.name, departmentId: p.departmentId });
+      }
+    }
+  }
+  return programs;
 }
 
 // Hierarchy (departments > programs > semesters)
 export async function getHierarchy() {
-  const res = await apiFetch("/api/teacher/hierarchy");
+  const res = await apiFetch("/teacher/hierarchy", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Import students into a course
 export async function importStudentsCsv(courseId, students) {
-  const res = await apiFetch(`/api/teacher/courses/${courseId}/import`, {
+  const res = await apiFetch(`/teacher/courses/${courseId}/import`, {
     method: "POST",
     body: JSON.stringify({ students }),
-  });
+  }, TEACHER_URL);
   const json = await res.json();
   if (!res.ok) {
     throw new Error(json.error || "Failed to import students");

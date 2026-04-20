@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star } from "lucide-react-native";
 
 export default function TeachersManagement() {
   const [approved, setApproved] = useState([]);
@@ -15,7 +17,6 @@ export default function TeachersManagement() {
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  // For inline department assignment
   const [selectedTeacherForDept, setSelectedTeacherForDept] = useState(null);
   const [selectedDeptId, setSelectedDeptId] = useState(null);
 
@@ -29,19 +30,14 @@ export default function TeachersManagement() {
       setDepartments(deptData.departments || deptData || []);
 
       const app = all.filter(t => !t.isPending).map(t => {
-        // Find courses belonging to this teacher
-        const myCourses = allCourses.filter(c => c.teacherId === t.id || c.teacher?.id === t.id);
-        
-        // Prefer full course info from allCourses since it contains proper student counts (_count.students)
+        const myCourses = allCourses.filter(c => c.teacher_id === t.id || c.teacherId === t.id || c.teacher?.id === t.id || c.teacher_name === t.name);
         const coursesToMap = t.courses && t.courses.length > 0 ? t.courses : myCourses;
         
         const mappedCourses = coursesToMap.map(c => {
           const partialCourse = c.course || c;
           const fullCourse = allCourses.find(ac => ac.id === partialCourse.id) || partialCourse;
-
-          // Manually calculate students enrolled in this course as a robust fallback
           const enrolledStudentsCount = allStudents.filter(u => {
-            const studentCourses = u.student?.courses || [];
+            const studentCourses = u.courses || u.student?.courses || [];
             return studentCourses.some(sc => sc.id === fullCourse.id);
           }).length;
           
@@ -49,9 +45,9 @@ export default function TeachersManagement() {
             id: fullCourse.id || `${Math.random()}`,
             name: fullCourse.name || "Unknown Course",
             code: fullCourse.code || "—",
-            program: fullCourse.program?.name || fullCourse.program || fullCourse.semester?.academicYear?.program?.name || "—",
-            semester: fullCourse.semester?.name || fullCourse.semester || "—",
-            students: fullCourse._count?.students || fullCourse.students?.length || fullCourse.students || enrolledStudentsCount || 0,
+            program: fullCourse.program_name || fullCourse.program?.name || fullCourse.program || fullCourse.semester?.academicYear?.program?.name || "—",
+            semester: fullCourse.semester_name || fullCourse.semester?.name || fullCourse.semester || "—",
+            students: fullCourse.student_count || fullCourse.students_count || fullCourse._count?.students || fullCourse.students?.length || fullCourse.students || enrolledStudentsCount || 0,
           };
         });
 
@@ -79,7 +75,6 @@ export default function TeachersManagement() {
   useFocusEffect(useCallback(() => { loadTeachers(); }, []));
 
   const handleApprove = (teacher) => {
-    // Toggle the expansion
     if (selectedTeacherForDept === teacher.id) {
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
@@ -94,16 +89,13 @@ export default function TeachersManagement() {
       Alert.alert("Missing", "Please select a department first.");
       return;
     }
-    
     try {
       await approveTeacher(teacher.userId || teacher.id, selectedDeptId);
-      Alert.alert("✅ Approved", `${teacher.name} has been approved and assigned to the department.`);
+      Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
       loadTeachers();
-    } catch (e) { 
-      Alert.alert("Error", "Failed to approve."); 
-    }
+    } catch (e) { Alert.alert("Error", "Failed to approve."); }
   };
 
   const handleDelete = (teacher) => {
@@ -126,139 +118,151 @@ export default function TeachersManagement() {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <View style={styles.header}>
-          <View style={[styles.headerBadge, { backgroundColor: "#F59E0B" }]}>
-            <Text style={styles.headerBadgeText}>👨‍🏫</Text>
-          </View>
+        <View style={styles.headerSection}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Teachers Management</Text>
+            <Text style={styles.title}>Teachers</Text>
             <Text style={styles.subtitle}>Approve new teachers, assign departments, and manage faculty records.</Text>
+          </View>
+          {/* Stats pills */}
+          <View style={styles.statsPills}>
+            <View style={styles.statPill}>
+              <Text style={styles.statPillLabel}>TOTAL</Text>
+              <Text style={styles.statPillValue}>{stats.total}</Text>
+            </View>
+            <View style={[styles.statPill, { borderColor: "#FECACA" }]}>
+              <Text style={[styles.statPillLabel, { color: "#EF4444" }]}>PENDING</Text>
+              <Text style={[styles.statPillValue, { color: "#EF4444" }]}>{stats.pending}</Text>
+            </View>
+            <View style={[styles.statPill, { borderColor: "#A7F3D0" }]}>
+              <Text style={[styles.statPillLabel, { color: "#10B981" }]}>APPROVED</Text>
+              <Text style={[styles.statPillValue, { color: "#10B981" }]}>{stats.approved}</Text>
+            </View>
           </View>
         </View>
 
-        {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 16 }} />
+          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
-          <View style={styles.statsRow}>
-            <View style={styles.miniStat}>
-              <Text style={styles.miniLabel}>TOTAL</Text>
-              <Text style={styles.miniValue}>{stats.total}</Text>
-              <Text style={styles.miniSub}>Teachers</Text>
+          <View style={styles.cardsRow}>
+            {/* Pending Approvals Card */}
+            <View style={[styles.sectionCard, { marginRight: 6 }]}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.sectionIconBg}>
+                  <Clock size={14} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sectionTitle}>Pending Approvals</Text>
+                  <Text style={styles.sectionSubtitle}>Assign a department to approve</Text>
+                </View>
+                <View style={[styles.countBadge, { backgroundColor: "#FEF2F2" }]}>
+                  <Text style={[styles.countText, { color: "#EF4444" }]}>{pending.length} pending</Text>
+                </View>
+              </View>
+
+              {pending.length === 0 ? (
+                <View style={styles.emptyBox}>
+                  <Star size={24} color="#CBD5E1" style={{ marginBottom: 8 }} />
+                  <Text style={styles.emptyText}>No pending registrations.</Text>
+                </View>
+              ) : (
+                pending.map((t) => {
+                  const isExpanded = selectedTeacherForDept === t.id;
+                  return (
+                    <View key={t.id} style={[styles.teacherRow, isExpanded && styles.teacherRowExpanded]}>
+                      <View style={styles.teacherMainRow}>
+                        <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>{t.name?.charAt(0) || "T"}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.teacherName}>{t.name}</Text>
+                          <Text style={styles.teacherEmail}>{t.email}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row" }}>
+                          <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(t)}>
+                            <Text style={styles.approveBtnText}>{isExpanded ? "Cancel" : "Approve"}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.deleteSmallBtn} onPress={() => handleDelete(t)}>
+                            <Trash2 size={13} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {isExpanded && (
+                        <View style={styles.assignmentArea}>
+                          <Text style={styles.assignmentLabel}>ASSIGN DEPARTMENT</Text>
+                          <View style={styles.assignmentControls}>
+                            <View style={styles.pickerContainer}>
+                              <Picker
+                                selectedValue={selectedDeptId}
+                                onValueChange={(v) => setSelectedDeptId(v)}
+                                style={styles.picker}
+                                mode="dropdown"
+                              >
+                                <Picker.Item label="Select department" value={null} color="#94A3B8" />
+                                {departments.map(d => (
+                                  <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />
+                                ))}
+                              </Picker>
+                            </View>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
+                              <CheckCircle size={13} color="#FFF" style={{ marginRight: 4 }} />
+                              <Text style={styles.confirmBtnText}>Confirm</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
+              )}
             </View>
-            <View style={styles.miniStat}>
-              <Text style={styles.miniLabel}>PENDING</Text>
-              <Text style={[styles.miniValue, { color: "#F59E0B" }]}>{stats.pending}</Text>
-              <Text style={styles.miniSub}>Requests</Text>
-            </View>
-            <View style={styles.miniStat}>
-              <Text style={styles.miniLabel}>APPROVED</Text>
-              <Text style={[styles.miniValue, { color: "#10B981" }]}>{stats.approved}</Text>
-              <Text style={styles.miniSub}>Active</Text>
+
+            {/* Approved Teachers Card */}
+            <View style={[styles.sectionCard, { marginLeft: 6 }]}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={[styles.sectionIconBg]}>
+                  <CheckCircle size={14} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sectionTitle}>Approved Teachers</Text>
+                  <Text style={styles.sectionSubtitle}>Assigned to departments</Text>
+                </View>
+                <View style={[styles.countBadge, { backgroundColor: "#F0FDF4" }]}>
+                  <Text style={[styles.countText, { color: "#10B981" }]}>{approved.length} active</Text>
+                </View>
+              </View>
+
+              {approved.length === 0 ? (
+                <Text style={styles.emptyText}>No approved teachers yet.</Text>
+              ) : (
+                approved.map((t) => (
+                  <TouchableOpacity key={t.id} style={styles.teacherRow} activeOpacity={0.7} onPress={() => setSelectedTeacher(t)}>
+                    <View style={styles.teacherMainRow}>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>{t.name?.charAt(0) || "T"}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.teacherName}>{t.name}</Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 1 }}>
+                          <Mail size={10} color="#94A3B8" style={{ marginRight: 3 }} />
+                          <Text style={styles.teacherEmail} numberOfLines={1}>{t.email}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+                          <Text style={styles.deptLabel}>Dept: </Text>
+                          <Text style={styles.deptValue}>{t.dept}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(t)}>
+                        <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                        <Text style={styles.deleteBtnText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
             </View>
           </View>
         )}
-
-        {/* Pending Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionEmoji}>⏳</Text>
-          <Text style={styles.sectionTitle}>Pending Approvals</Text>
-          <View style={[styles.countBadge, { backgroundColor: "#FEF3C7" }]}>
-            <Text style={[styles.countText, { color: "#D97706" }]}>{pending.length} pending</Text>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionSubtitle}>Review new registrations and assign them to departments</Text>
-          {pending.length === 0 ? (
-            <Text style={styles.emptyText}>No pending teacher registrations right now.</Text>
-          ) : (
-            pending.map((t) => {
-              const isExpanded = selectedTeacherForDept === t.id;
-              
-              return (
-                <View key={t.id} style={[styles.teacherRow, isExpanded && styles.teacherRowExpanded]}>
-                  {/* Main Row */}
-                  <View style={styles.teacherMainRow}>
-                    <View style={styles.teacherInfo}>
-                      <Text style={styles.teacherName}>{t.name}</Text>
-                      <Text style={styles.teacherEmail}>📧 {t.email}</Text>
-                      <Text style={styles.pendingStatusText}>Pending approval</Text>
-                    </View>
-                    <View style={styles.actionBtns}>
-                      <TouchableOpacity 
-                        style={[styles.approveBtn, isExpanded && styles.approveBtnActive]} 
-                        onPress={() => handleApprove(t)}
-                      >
-                        <Text style={[styles.approveBtnText, isExpanded && styles.approveBtnTextActive]}>
-                          {isExpanded ? "Cancel" : "Assign & Approve"}
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.rejectBtn} onPress={() => handleDelete(t)}>
-                        <Text style={styles.rejectBtnText}>Reject</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  {/* Expanded Assignment Area */}
-                  {isExpanded && (
-                    <View style={styles.assignmentArea}>
-                      <Text style={styles.assignmentLabel}>ASSIGN DEPARTMENT</Text>
-                      <View style={styles.assignmentControls}>
-                        
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                            selectedValue={selectedDeptId}
-                            onValueChange={(itemValue) => setSelectedDeptId(itemValue)}
-                            style={styles.picker}
-                            mode="dropdown"
-                          >
-                            <Picker.Item label="Select department" value={null} color="#94A3B8" />
-                            {departments.map(d => (
-                              <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />
-                            ))}
-                          </Picker>
-                        </View>
-                        
-                        <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
-                          <Text style={styles.confirmBtnText}>✓ Confirm</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  )}
-                </View>
-              );
-            })
-          )}
-        </View>
-
-        {/* Approved Section */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <Text style={styles.sectionEmoji}>✅</Text>
-          <Text style={styles.sectionTitle}>Approved Teachers</Text>
-          <View style={[styles.countBadge, { backgroundColor: "#D1FAE5" }]}>
-            <Text style={[styles.countText, { color: "#059669" }]}>{approved.length} active</Text>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionSubtitle}>Teachers already assigned to a department</Text>
-          {approved.length === 0 ? (
-            <Text style={styles.emptyText}>No approved teachers yet.</Text>
-          ) : (
-            approved.map((t) => (
-              <TouchableOpacity key={t.id} style={styles.teacherRow} activeOpacity={0.7} onPress={() => setSelectedTeacher(t)}>
-                <View style={styles.teacherInfo}>
-                  <Text style={styles.teacherName}>{t.name}</Text>
-                  <Text style={styles.teacherEmail}>📧 {t.email}</Text>
-                  <Text style={styles.teacherDept}>Department: <Text style={{ color: "#4361EE" }}>{t.dept}</Text></Text>
-                  <Text style={{ fontSize: 11, color: "#94A3B8", marginTop: 4 }}>Tap to view details →</Text>
-                </View>
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(t)}>
-                  <Text style={styles.deleteBtnText}>🗑 Delete</Text>
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
 
       </ScrollView>
 
@@ -266,7 +270,6 @@ export default function TeachersManagement() {
       <Modal visible={!!selectedTeacher} transparent animationType="slide">
         <View style={styles.detailOverlay}>
           <View style={styles.detailCard}>
-            {/* Profile Header */}
             <View style={styles.detailProfileSection}>
               <View style={styles.detailAvatar}>
                 <Text style={styles.detailAvatarText}>{selectedTeacher?.name?.charAt(0) || "T"}</Text>
@@ -277,25 +280,23 @@ export default function TeachersManagement() {
               </View>
             </View>
 
-            {/* Info List */}
             <View style={styles.detailInfoList}>
               <View style={styles.detailInfoItem}>
-                <Text style={styles.detailInfoIcon}>📧</Text>
+                <Mail size={16} color="#94A3B8" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailInfoItemLabel}>Email</Text>
-                  <Text style={styles.detailInfoItemValue}>{selectedTeacher?.email}</Text>
+                  <Text style={styles.detailInfoLabel}>Email</Text>
+                  <Text style={styles.detailInfoValue}>{selectedTeacher?.email}</Text>
                 </View>
               </View>
               <View style={styles.detailInfoItem}>
-                <Text style={styles.detailInfoIcon}>🏢</Text>
+                <Building2 size={16} color="#94A3B8" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailInfoItemLabel}>Department</Text>
-                  <Text style={styles.detailInfoItemValue}>{selectedTeacher?.dept}</Text>
+                  <Text style={styles.detailInfoLabel}>Department</Text>
+                  <Text style={styles.detailInfoValue}>{selectedTeacher?.dept}</Text>
                 </View>
               </View>
             </View>
 
-            {/* Stats Row */}
             <View style={styles.detailStatsRow}>
               <View style={styles.detailStatBox}>
                 <Text style={styles.detailStatNumber}>{selectedTeacher?.courses?.length || 0}</Text>
@@ -307,27 +308,26 @@ export default function TeachersManagement() {
               </View>
             </View>
 
-            {/* Courses List */}
             <Text style={styles.detailSectionTitle}>Courses Teaching</Text>
-            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.28 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.25 }} showsVerticalScrollIndicator={false}>
               {selectedTeacher?.courses?.length > 0 ? (
                 selectedTeacher.courses.map((c, idx) => (
                   <View key={c.id || idx} style={styles.courseItem}>
                     <View style={styles.courseItemLeft}>
-                      <Text style={styles.courseItemEmoji}>📖</Text>
+                      <BookOpen size={14} color={Theme.colors.primaryDark} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.courseItemName}>{c.name}</Text>
                       <Text style={styles.courseItemCode}>{c.code}</Text>
                       <View style={styles.courseItemTagsRow}>
-                        <View style={[styles.courseTag, { backgroundColor: "#EEF2FF" }]}>
-                          <Text style={[styles.courseTagText, { color: "#4361EE" }]}>{c.program}</Text>
+                        <View style={[styles.courseTag, { backgroundColor: "#F0FDFA" }]}>
+                          <Text style={[styles.courseTagText, { color: Theme.colors.primaryDark }]}>{c.program}</Text>
                         </View>
                         <View style={[styles.courseTag, { backgroundColor: "#F0FDF4" }]}>
                           <Text style={[styles.courseTagText, { color: "#10B981" }]}>{c.semester}</Text>
                         </View>
                         <View style={[styles.courseTag, { backgroundColor: "#FEF3C7" }]}>
-                          <Text style={[styles.courseTagText, { color: "#D97706" }]}>👥 {c.students}</Text>
+                          <Text style={[styles.courseTagText, { color: "#D97706" }]}>{c.students} students</Text>
                         </View>
                       </View>
                     </View>
@@ -338,7 +338,6 @@ export default function TeachersManagement() {
               )}
             </ScrollView>
 
-            {/* Close */}
             <TouchableOpacity style={styles.detailCloseBtn} activeOpacity={0.7} onPress={() => setSelectedTeacher(null)}>
               <Text style={styles.detailCloseBtnText}>Close</Text>
             </TouchableOpacity>
@@ -352,79 +351,89 @@ export default function TeachersManagement() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 16, marginTop: 8 },
-  headerBadge: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  headerBadgeText: { fontSize: 20 },
-  title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
-  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  miniStat: { flex: 1, backgroundColor: "#FFF", borderRadius: 14, padding: 14, marginHorizontal: 4, alignItems: "center", borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
-  miniLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 4 },
-  miniValue: { fontSize: 22, fontWeight: "800", color: "#1E293B" },
-  miniSub: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  sectionEmoji: { fontSize: 18, marginRight: 8 },
-  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#1E293B", flex: 1 },
-  countBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  countText: { fontSize: 12, fontWeight: "700" },
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
-  sectionSubtitle: { fontSize: 13, color: "#94A3B8", marginBottom: 14 },
-  emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
-  teacherRow: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  teacherRowExpanded: { backgroundColor: "#F8FAFC", paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 12, borderBottomWidth: 0, marginBottom: 8 },
-  teacherMainRow: { flexDirection: "row", alignItems: "flex-start" },
-  teacherInfo: { flex: 1 },
-  teacherName: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
-  teacherEmail: { fontSize: 13, color: "#64748B", marginBottom: 4 },
-  teacherDept: { fontSize: 13, color: "#64748B" },
-  pendingStatusText: { fontSize: 12, fontWeight: "600", color: "#D97706" },
-  actionBtns: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  approveBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
-  approveBtnActive: { backgroundColor: "#F1F5F9", borderColor: "#CBD5E1" },
-  approveBtnText: { fontSize: 12, fontWeight: "700", color: "#0F172A" },
-  approveBtnTextActive: { color: "#64748B" },
-  rejectBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#FEE2E2", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
-  rejectBtnText: { fontSize: 12, fontWeight: "700", color: "#EF4444" },
-  deleteBtn: { backgroundColor: "#FEE2E2", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  deleteBtnText: { fontSize: 12, fontWeight: "700", color: "#EF4444" },
-  
-  // Assignment Expansion Styles
-  assignmentArea: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#E2E8F0" },
-  assignmentLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" },
-  assignmentControls: { flexDirection: "row", alignItems: "center" },
-  pickerContainer: { flex: 1, height: 44, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, marginRight: 12, justifyContent: "center", backgroundColor: "#FFF" },
-  picker: { width: "100%", color: "#0F172A" },
-  confirmBtn: { backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", height: 44, paddingHorizontal: 16, borderRadius: 22, justifyContent: "center" },
-  confirmBtnText: { fontSize: 13, fontWeight: "600", color: "#64748B" },
 
-  // Teacher Detail Modal
+  // Header
+  headerSection: { marginBottom: 16, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 12, color: "#64748B", marginTop: 3, marginBottom: 12 },
+  statsPills: { flexDirection: "row", gap: 6 },
+  statPill: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: "center", backgroundColor: "#FFF" },
+  statPillLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 2 },
+  statPillValue: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+
+  // Cards Row
+  cardsRow: { flexDirection: "column" },
+
+  // Section Card
+  sectionCard: {
+    backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 14,
+    borderWidth: 1, borderColor: "#E2E8F0",
+    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+  },
+  sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  sectionIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
+  sectionSubtitle: { fontSize: 10, color: "#94A3B8" },
+  countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  countText: { fontSize: 10, fontWeight: "700" },
+
+  // Empty
+  emptyBox: { alignItems: "center", paddingVertical: 30 },
+  emptyText: { fontSize: 12, color: "#94A3B8", textAlign: "center" },
+
+  // Teacher Rows
+  teacherRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  teacherRowExpanded: { backgroundColor: "#F8FAFC", paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 10, borderBottomWidth: 0, marginBottom: 6 },
+  teacherMainRow: { flexDirection: "row", alignItems: "center" },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  avatarText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  teacherName: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
+  teacherEmail: { fontSize: 10, color: "#94A3B8" },
+  deptLabel: { fontSize: 10, color: "#94A3B8" },
+  deptValue: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryDark },
+
+  // Buttons
+  approveBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 4 },
+  approveBtnText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
+  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2", justifyContent: "center", alignItems: "center" },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnText: { fontSize: 10, fontWeight: "700", color: "#EF4444" },
+
+  // Assignment
+  assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#E2E8F0" },
+  assignmentLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 6 },
+  assignmentControls: { flexDirection: "row", alignItems: "center" },
+  pickerContainer: { flex: 1, height: 40, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, marginRight: 8, justifyContent: "center", backgroundColor: "#FFF" },
+  picker: { width: "100%", color: "#0F172A" },
+  confirmBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
+  confirmBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+
+  // Detail Modal
   detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
-  detailCard: { backgroundColor: "#FFF", borderRadius: 24, padding: 24, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
-  detailProfileSection: { alignItems: "center", marginBottom: 20, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  detailAvatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#0F172A", justifyContent: "center", alignItems: "center", marginBottom: 12 },
-  detailAvatarText: { fontSize: 26, fontWeight: "800", color: "#FFF" },
-  detailName: { fontSize: 22, fontWeight: "800", color: "#0F172A", textAlign: "center" },
-  roleBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20, marginTop: 8 },
-  roleBadgeText: { fontSize: 12, fontWeight: "700", color: "#4361EE" },
-  detailInfoList: { marginBottom: 16 },
-  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
-  detailInfoIcon: { fontSize: 18, marginRight: 14, width: 24, textAlign: "center" },
-  detailInfoItemLabel: { fontSize: 10, fontWeight: "700", color: "#94A3B8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
-  detailInfoItemValue: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
-  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: "#E2E8F0" },
-  detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 16 },
-  detailStatNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
-  detailStatLabel: { fontSize: 11, fontWeight: "600", color: "#94A3B8" },
-  detailSectionTitle: { fontSize: 13, fontWeight: "800", color: "#64748B", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 },
-  courseItem: { flexDirection: "row", backgroundColor: "#FFF", padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0" },
-  courseItemLeft: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#F0F9FF", justifyContent: "center", alignItems: "center", marginRight: 12 },
-  courseItemEmoji: { fontSize: 16 },
-  courseItemName: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  courseItemCode: { fontSize: 12, fontWeight: "600", color: "#4361EE", marginBottom: 6 },
+  detailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
+  detailProfileSection: { alignItems: "center", marginBottom: 18, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  detailAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginBottom: 10 },
+  detailAvatarText: { fontSize: 22, fontWeight: "800", color: "#FFF" },
+  detailName: { fontSize: 20, fontWeight: "800", color: "#0F172A", textAlign: "center" },
+  roleBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 14, paddingVertical: 4, borderRadius: 16, marginTop: 6, borderWidth: 1, borderColor: "#CCFBF1" },
+  roleBadgeText: { fontSize: 11, fontWeight: "700", color: Theme.colors.primaryDark },
+  detailInfoList: { marginBottom: 14 },
+  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailInfoLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 1 },
+  detailInfoValue: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
+  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 14 },
+  detailStatNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
+  detailStatLabel: { fontSize: 10, fontWeight: "600", color: "#94A3B8" },
+  detailSectionTitle: { fontSize: 11, fontWeight: "800", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 10 },
+  courseItem: { flexDirection: "row", backgroundColor: "#FFF", padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: "#E2E8F0" },
+  courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  courseItemName: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
+  courseItemCode: { fontSize: 11, fontWeight: "600", color: Theme.colors.primaryDark, marginBottom: 4 },
   courseItemTagsRow: { flexDirection: "row", flexWrap: "wrap" },
-  courseTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginRight: 6, marginBottom: 4 },
-  courseTagText: { fontSize: 10, fontWeight: "700" },
-  detailEmpty: { fontSize: 13, color: "#94A3B8", fontStyle: "italic", textAlign: "center", paddingVertical: 16 },
-  detailCloseBtn: { marginTop: 16, backgroundColor: "#0F172A", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
-  detailCloseBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+  courseTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4, marginBottom: 2 },
+  courseTagText: { fontSize: 9, fontWeight: "700" },
+  detailEmpty: { fontSize: 12, color: "#94A3B8", textAlign: "center", paddingVertical: 14 },
+  detailCloseBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  detailCloseBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
 });

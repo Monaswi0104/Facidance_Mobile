@@ -1,59 +1,84 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert, Animated
+  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert
 } from "react-native";
-import { getAdminStats } from "../../api/adminApi";
+import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
 export default function AdminDashboard({ navigation }) {
-  const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0 });
+  const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0, attendance_rate: 0, graduated: 0 });
   const [userName, setUserName] = useState("Admin");
   const [isLoading, setIsLoading] = useState(true);
-  const [showReports, setShowReports] = useState(true);
-  const scrollRef = useRef(null);
-  const reportsY = useRef(0);
-
-  const scrollToReports = () => {
-    setShowReports(true);
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: reportsY.current, animated: true });
-    }, 100);
-  };
+  const [teacherWorkload, setTeacherWorkload] = useState([]);
+  const [programDist, setProgramDist] = useState([]);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [statsData, user] = await Promise.all([getAdminStats(), getUser()]);
+      const [statsData, user, teachersList, programsList, coursesList, studentsList] = await Promise.all([
+        getAdminStats(),
+        getUser(),
+        getTeachers().catch(() => []),
+        getPrograms().catch(() => []),
+        getCourses().catch(() => []),
+        getStudents().catch(() => []),
+      ]);
       if (statsData) setStats(statsData);
       if (user?.name) setUserName(user.name);
+      
+      // Extract arrays from API responses
+      const tList = Array.isArray(teachersList?.teachers || teachersList) ? (teachersList?.teachers || teachersList) : [];
+      const pList = Array.isArray(programsList?.programs || programsList) ? (programsList?.programs || programsList) : [];
+      const cList = Array.isArray(coursesList?.courses || coursesList) ? (coursesList?.courses || coursesList) : [];
+      const sList = Array.isArray(studentsList?.students || studentsList) ? (studentsList?.students || studentsList) : [];
+
+      // Build teacher workload by cross-referencing courses
+      const workload = tList
+        .filter(t => !t.isPending)
+        .slice(0, 4)
+        .map(t => {
+          const tCourses = cList.filter(c => c.teacher_id === t.id || c.teacherId === t.id || c.teacher?.id === t.id || c.teacher_name === (t.name || t.user?.name));
+          const tStudents = sList.filter(s => {
+            const sc = s.courses || s.student?.courses || [];
+            return sc.some(c => tCourses.some(tc => tc.id === c.id));
+          });
+          return {
+            name: t.name || t.user?.name || "Teacher",
+            dept: t.department?.name || t.department_name || "Department",
+            courses: tCourses.length,
+            students: tStudents.length,
+          };
+        });
+      setTeacherWorkload(workload);
+
+      // Build program distribution by cross-referencing students
+      const dist = pList.slice(0, 4).map(p => {
+        const pStudents = sList.filter(s => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
+        return {
+          name: p.name || "Program",
+          dept: p.department?.name || p.department_name || "",
+          students: pStudents.length,
+        };
+      });
+      setProgramDist(dist);
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
-  // Back button prompts logout
   useEffect(() => {
     const backAction = () => {
-      Alert.alert(
-        "Logout",
-        "Would you like to logout?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Logout",
-            style: "destructive",
-            onPress: async () => {
-              await clearAuth();
-              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
-            },
-          },
-        ]
-      );
+      Alert.alert("Logout", "Would you like to logout?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: async () => { await clearAuth(); navigation.reset({ index: 0, routes: [{ name: "Login" }] }); } },
+      ]);
       return true;
     };
     const bh = BackHandler.addEventListener("hardwareBackPress", backAction);
@@ -61,175 +86,153 @@ export default function AdminDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "TEACHERS", value: stats.teachers, color: "#F59E0B", bg: "#FFFBEB", icon: "👨‍🏫" },
-    { label: "STUDENTS", value: stats.students, color: "#10B981", bg: "#ECFDF5", icon: "👨‍🎓" },
-    { label: "DEPARTMENTS", value: stats.departments, color: "#3B82F6", bg: "#EFF6FF", icon: "🏢" },
-    { label: "PROGRAMS", value: stats.programs, color: "#8B5CF6", bg: "#F5F3FF", icon: "🎓" },
+    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color="#FFF" />, screen: "TeachersManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color="#FFF" />, screen: "StudentsManagement" },
+    { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: "#64748B", icon: <Building2 size={16} color="#FFF" />, screen: "DepartmentsManagement" },
+    { label: "TOTAL COURSES", value: stats.courses || 0, sub: `${stats.courses || 0} sessions`, subColor: "#10B981", icon: <BookOpen size={16} color="#FFF" />, screen: "CoursesManagement" },
+    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color="#FFF" />, screen: null },
+    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: "#64748B", icon: <UserX size={16} color="#FFF" />, screen: "StudentsManagement" },
   ];
 
-  const quickActions = [
-    { title: "Approve Teachers", desc: "Review and manage teacher accounts", screen: "TeachersManagement", icon: "👨‍🏫", color: "#4361EE" },
-    { title: "Manage Departments", desc: "Create and organize departments", screen: "DepartmentsManagement", icon: "🏢", color: "#10B981" },
-    { title: "Configure Courses", desc: "Create and assign courses", screen: "CoursesManagement", icon: "📚", color: "#F59E0B" },
-    { title: "Programs & Structure", desc: "Set up academic programs", screen: "ProgramsManagement", icon: "🎓", color: "#8B5CF6" },
-    { title: "Student Directory", desc: "View all enrolled students", screen: "StudentsManagement", icon: "👨‍🎓", color: "#EF4444" },
-  ];
+  const maxProgramStudents = Math.max(...programDist.map(p => p.students), 1);
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Welcome Header */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.welcomeRow}>
-            <View style={styles.avatarBadge}>
-              <Text style={styles.avatarText}>A</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.welcomeGreeting}>Welcome back,</Text>
-              <Text style={styles.welcomeName}>{userName}</Text>
-            </View>
-            <TouchableOpacity style={styles.viewReportsBtn} onPress={scrollToReports} activeOpacity={0.7}>
-              <Text style={styles.viewReportsBtnText}>📊 Reports</Text>
+        {/* Header */}
+        <View style={styles.headerSection}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>Admin Dashboard 🏛</Text>
+            <Text style={styles.subtitle}>Institution-wide overview — teachers, students, departments & analytics</Text>
+          </View>
+          <View style={styles.headerBtns}>
+            <TouchableOpacity style={styles.headerBtnOutline} onPress={loadData} activeOpacity={0.7}>
+              <RefreshCw size={13} color="#475569" style={{ marginRight: 4 }} />
+              <Text style={styles.headerBtnText}>Refresh</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
+              <Users size={13} color="#FFF" style={{ marginRight: 4 }} />
+              <Text style={styles.headerBtnFilledText}>Manage Teachers</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.welcomeDesc}>Institution-wide overview of teachers, students, departments, and programs.</Text>
         </View>
 
-        {/* Stat Cards Grid */}
+        {/* Stat Cards 3x2 Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (
-              <View key={i} style={[styles.statCard, { backgroundColor: s.bg }]}>
+              <TouchableOpacity
+                key={i}
+                style={styles.statCard}
+                activeOpacity={0.7}
+                onPress={() => s.screen && navigation.navigate(s.screen)}
+                disabled={!s.screen}
+              >
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>{s.label}</Text>
-                  <View style={[styles.statIconBg, { backgroundColor: s.color }]}>
-                    <Text style={styles.statIconText}>{s.icon}</Text>
-                  </View>
+                  <View style={styles.statIconBg}>{s.icon}</View>
                 </View>
-                <Text style={[styles.statNumber, { color: s.color }]}>{s.value}</Text>
-              </View>
+                <Text style={styles.statNumber} numberOfLines={1} adjustsFontSizeToFit>{s.value}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                  <TrendingUp size={9} color={s.subColor} style={{ marginRight: 3 }} />
+                  <Text style={[styles.statSub, { color: s.subColor }]}>{s.sub}</Text>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
 
-        {/* Quick Actions */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <Text style={styles.sectionCount}>{quickActions.length} items</Text>
-        </View>
-        <View style={styles.actionsContainer}>
-          {quickActions.map((action, i) => (
-            <TouchableOpacity
-              key={i}
-              style={styles.actionCard}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate(action.screen)}
-            >
-              <View style={[styles.actionIconBg, { backgroundColor: action.color + "12" }]}>
-                <Text style={styles.actionIcon}>{action.icon}</Text>
-              </View>
-              <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionDesc}>{action.desc}</Text>
-              </View>
-              <Text style={styles.actionArrow}>›</Text>
+        {/* Teacher Workload */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Teacher Workload</Text>
+              <Text style={styles.sectionSubtitle}>Courses and students per teacher</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
+              <Text style={styles.viewAllText}>View all ›</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Overview Reports */}
-        <View onLayout={(e) => { reportsY.current = e.nativeEvent.layout.y; }} style={styles.reportSectionHeader}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ fontSize: 15, marginRight: 6 }}>📊</Text>
-            <Text style={styles.sectionTitle}>Overview Reports</Text>
           </View>
-          <TouchableOpacity onPress={() => setShowReports(!showReports)} activeOpacity={0.7}>
-            <Text style={styles.reportToggle}>{showReports ? "Hide" : "Show"}</Text>
-          </TouchableOpacity>
+
+          {teacherWorkload.length === 0 ? (
+            <Text style={styles.emptyText}>No approved teachers yet.</Text>
+          ) : (
+            teacherWorkload.map((t, i) => (
+              <View key={i} style={[styles.workloadRow, i < teacherWorkload.length - 1 && styles.workloadBorder]}>
+                <View style={styles.workloadAvatar}>
+                  <Text style={styles.workloadAvatarText}>{t.name.charAt(0)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.workloadName}>{t.name}</Text>
+                  <Text style={styles.workloadDept}>{t.dept}</Text>
+                </View>
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text style={styles.workloadCourses}>{t.courses}</Text>
+                  <Text style={styles.workloadStudentsMeta}>{t.students} students</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
-        {showReports && !isLoading && (() => {
-          const entities = [
-            { label: "Teachers", value: stats.teachers, color: "#F59E0B", bg: "#FFFBEB" },
-            { label: "Students", value: stats.students, color: "#10B981", bg: "#ECFDF5" },
-            { label: "Departments", value: stats.departments, color: "#3B82F6", bg: "#EFF6FF" },
-            { label: "Programs", value: stats.programs, color: "#8B5CF6", bg: "#F5F3FF" },
-          ];
-          const maxVal = Math.max(...entities.map(e => e.value), 1);
-          const totalUsers = stats.students + stats.teachers;
-          const avgPerProgram = stats.programs > 0 ? (totalUsers / stats.programs).toFixed(1) : "—";
-          const deptProgramRatio = stats.departments > 0 ? (stats.programs / stats.departments).toFixed(1) : "—";
+        {/* Program Distribution */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Program Distribution</Text>
+              <Text style={styles.sectionSubtitle}>Students enrolled per program (top 4)</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate("ProgramsManagement")} activeOpacity={0.7}>
+              <Text style={styles.viewAllText}>View all ›</Text>
+            </TouchableOpacity>
+          </View>
 
-          return (
-            <View style={styles.reportCard}>
-              {/* Entity Distribution */}
-              <Text style={styles.reportSubtitle}>Entity Distribution</Text>
-              {entities.map((e, i) => {
-                const pct = maxVal > 0 ? (e.value / maxVal) * 100 : 0;
-                const pctLabel = `${Math.round(pct)}% of max`;
-                return (
-                  <View key={i} style={styles.barRow}>
-                    <View style={styles.barLabelRow}>
-                      <Text style={styles.barLabel}>{e.label}</Text>
-                      <Text style={styles.barValue}>{e.value} <Text style={styles.barPct}>({pctLabel})</Text></Text>
+          {programDist.length === 0 ? (
+            <Text style={styles.emptyText}>No programs configured yet.</Text>
+          ) : (
+            programDist.map((p, i) => {
+              const pct = maxProgramStudents > 0 ? (p.students / maxProgramStudents) * 100 : 0;
+              return (
+                <View key={i} style={[styles.programRow, i < programDist.length - 1 && styles.workloadBorder]}>
+                  <View style={styles.programRowTop}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.programName} numberOfLines={1}>{p.name}</Text>
+                      <Text style={styles.programDept}>{p.dept}</Text>
                     </View>
-                    <View style={[styles.barTrack, { backgroundColor: e.bg }]}>
-                      <View style={[styles.barFill, { width: `${Math.max(pct, 4)}%`, backgroundColor: e.color }]} />
-                    </View>
+                    <Text style={styles.programCount}>{p.students}</Text>
                   </View>
-                );
-              })}
-
-              {/* Divider */}
-              <View style={styles.reportDivider} />
-
-              {/* Summary Stats */}
-              <View style={styles.summaryRow}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>TOTAL USERS</Text>
-                  <Text style={styles.summaryNumber}>{totalUsers}</Text>
-                  <Text style={styles.summaryMeta}>{stats.students} Students · {stats.teachers} Teachers</Text>
+                  <View style={styles.programBarTrack}>
+                    <View style={[styles.programBarFill, { width: `${Math.max(pct, 4)}%` }]} />
+                  </View>
                 </View>
-                <View style={[styles.summaryItem, styles.summaryItemBorder]}>
-                  <Text style={styles.summaryLabel}>AVG USERS / PROGRAM</Text>
-                  <Text style={styles.summaryNumber}>{avgPerProgram}</Text>
-                  <Text style={styles.summaryMeta}>Based on current programs</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>DEPT / PROGRAM</Text>
-                  <Text style={styles.summaryNumber}>{deptProgramRatio}</Text>
-                  <Text style={styles.summaryMeta}>Programs per department</Text>
-                </View>
-              </View>
-            </View>
-          );
-        })()}
+              );
+            })
+          )}
+        </View>
 
-        {/* Setup Guide */}
-        <View style={styles.guideCard}>
-          <View style={styles.guideHeader}>
-            <View style={styles.guideIconBg}>
-              <Text style={{ fontSize: 16 }}>⚙️</Text>
-            </View>
-            <Text style={styles.guideHeaderText}>Setup Guide</Text>
-          </View>
+        {/* Quick Navigation */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Quick Navigation</Text>
+          <Text style={[styles.sectionSubtitle, { marginBottom: 14 }]}>Manage your institution</Text>
           {[
-            { step: "1", text: "Create Departments" },
-            { step: "2", text: "Add Programs under departments" },
-            { step: "3", text: "Configure Academic Years & Semesters" },
-            { step: "4", text: "Register Teachers & assign departments" },
-            { step: "5", text: "Create Courses for semesters" },
-            { step: "6", text: "Import Students to programs" },
-          ].map((item, i) => (
-            <View key={i} style={styles.guideStepRow}>
-              <View style={styles.guideStepBadge}>
-                <Text style={styles.guideStepNum}>{item.step}</Text>
+            { title: "Teachers", desc: "Approve & manage", screen: "TeachersManagement", icon: <Users size={18} color={Theme.colors.primaryDark} /> },
+            { title: "Departments", desc: "Create & organize", screen: "DepartmentsManagement", icon: <Building2 size={18} color={Theme.colors.primaryDark} /> },
+            { title: "Programs", desc: "Academic structure", screen: "ProgramsManagement", icon: <BookOpen size={18} color={Theme.colors.primaryDark} /> },
+            { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={18} color={Theme.colors.primaryDark} /> },
+            { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={18} color={Theme.colors.primaryDark} /> },
+          ].map((action, i) => (
+            <TouchableOpacity key={i} style={styles.navRow} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen)}>
+              <View style={styles.navIconBg}>{action.icon}</View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.navTitle}>{action.title}</Text>
+                <Text style={styles.navDesc}>{action.desc}</Text>
               </View>
-              <Text style={styles.guideStepText}>{item.text}</Text>
-            </View>
+              <ChevronRight size={16} color="#94A3B8" />
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -242,78 +245,32 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
 
-  // Welcome Card
-  welcomeCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+  // Header
+  headerSection: { marginBottom: 18, marginTop: 8 },
+  title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 12, color: "#64748B", marginTop: 3, marginBottom: 12 },
+  headerBtns: { flexDirection: "row", gap: 8 },
+  headerBtnOutline: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0",
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  welcomeRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  avatarBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#0F172A",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
+  headerBtnText: { fontSize: 12, fontWeight: "600", color: "#475569" },
+  headerBtnFilled: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: Theme.colors.primaryDark,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  avatarText: { color: "#FFF", fontSize: 18, fontWeight: "800" },
-  welcomeGreeting: { fontSize: 13, color: "#64748B" },
-  welcomeName: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginTop: 1 },
-  welcomeDesc: { fontSize: 13, color: "#64748B", lineHeight: 19 },
-  viewReportsBtn: {
-    backgroundColor: "#EFF6FF",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#DBEAFE",
-  },
-  viewReportsBtnText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4361EE",
-  },
+  headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
 
   // Stats Grid
-  statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 24 },
+  statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 16 },
   statCard: {
-    width: (width - 52) / 2,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  statLabel: { fontSize: 11, fontWeight: "700", color: "#64748B", letterSpacing: 0.5 },
-  statNumber: { fontSize: 32, fontWeight: "800" },
-  statIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
-  statIconText: { fontSize: 16 },
-
-  // Section Header
-  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: "700", color: "#1E293B" },
-  sectionCount: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },
-
-  // Quick Actions
-  actionsContainer: { marginBottom: 24 },
-  actionCard: {
+    width: "48%",
     backgroundColor: "#FFF",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
     borderRadius: 14,
-    marginBottom: 8,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
@@ -322,141 +279,55 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  actionIconBg: { width: 44, height: 44, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  actionIcon: { fontSize: 22 },
-  actionInfo: { flex: 1 },
-  actionTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  actionDesc: { fontSize: 12, color: "#94A3B8" },
-  actionArrow: { fontSize: 22, color: "#CBD5E1", fontWeight: "300" },
+  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  statLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, flex: 1, marginRight: 4 },
+  statNumber: { fontSize: 26, fontWeight: "800", color: "#0F172A" },
+  statSub: { fontSize: 10, fontWeight: "600" },
+  statIconBg: { width: 32, height: 32, borderRadius: 9, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
-  // Overview Reports
-  reportSectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  reportToggle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#4361EE",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: "#EFF6FF",
-    borderRadius: 6,
-    overflow: "hidden",
-  },
-  reportCard: {
+  // Section Card
+  sectionCard: {
     backgroundColor: "#FFF",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  reportSubtitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#475569",
+    borderRadius: 14,
+    padding: 16,
     marginBottom: 14,
-    letterSpacing: 0.3,
-  },
-  barRow: { marginBottom: 14 },
-  barLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  barLabel: { fontSize: 13, fontWeight: "600", color: "#334155" },
-  barValue: { fontSize: 13, fontWeight: "700", color: "#1E293B" },
-  barPct: { fontSize: 11, fontWeight: "500", color: "#94A3B8" },
-  barTrack: {
-    height: 10,
-    borderRadius: 5,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 5,
-  },
-  reportDivider: {
-    height: 1,
-    backgroundColor: "#F1F5F9",
-    marginVertical: 16,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  summaryItemBorder: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: "#F1F5F9",
-  },
-  summaryLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#94A3B8",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  summaryNumber: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 2,
-  },
-  summaryMeta: {
-    fontSize: 9,
-    color: "#94A3B8",
-    textAlign: "center",
-  },
-
-  // Guide Card
-  guideCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 14,
-    padding: 18,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 1,
   },
-  guideHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  guideIconBg: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  guideHeaderText: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
-  guideStepRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  guideStepBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  guideStepNum: { fontSize: 12, fontWeight: "700", color: "#64748B" },
-  guideStepText: { fontSize: 13, color: "#475569", flex: 1 },
+  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
+  sectionSubtitle: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
+  viewAllText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryDark },
+
+  // Teacher Workload
+  workloadRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
+  workloadBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  workloadAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F1F5F9", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  workloadAvatarText: { fontSize: 13, fontWeight: "700", color: "#475569" },
+  workloadName: { fontSize: 13, fontWeight: "600", color: "#0F172A" },
+  workloadDept: { fontSize: 10, color: "#94A3B8" },
+  workloadCourses: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  workloadStudentsMeta: { fontSize: 10, color: "#94A3B8" },
+
+  // Program Distribution
+  programRow: { paddingVertical: 12 },
+  programRowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  programName: { fontSize: 13, fontWeight: "600", color: "#0F172A" },
+  programDept: { fontSize: 10, color: "#94A3B8", marginTop: 1 },
+  programCount: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  programBarTrack: { height: 6, borderRadius: 3, backgroundColor: "#E2E8F0", overflow: "hidden" },
+  programBarFill: { height: "100%", borderRadius: 3, backgroundColor: Theme.colors.primaryDark },
+
+  // Quick Nav
+  navRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  navIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 12 },
+  navTitle: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
+  navDesc: { fontSize: 11, color: "#94A3B8" },
+
+  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 16 },
 });

@@ -5,6 +5,8 @@ import {
 } from "react-native";
 import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User } from "lucide-react-native";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -23,24 +25,25 @@ export default function CourseDetails({ route, navigation }) {
       try {
         setIsLoading(true);
         const detailData = await getCourseDetails(course.id);
-        
-        if (detailData && detailData.students) {
-          const fetchedTotalSessions = detailData._count?.attendance || 0;
-          setTotalSessions(fetchedTotalSessions);
+        console.log("[CourseDetails] detailData:", JSON.stringify(detailData));
 
-          setStudents(detailData.students.map((s) => ({
-            id: s.id,
-            name: s.user?.name || "Student",
-            email: s.user?.email || "—",
-            program: s.program?.name || "—",
-            faceRegistered: !!s.faceEmbedding,
-            joinedAt: s.joinedAt,
-            status: s.status || "active",
-            attended: s._count?.attendance || 0,
-            total: fetchedTotalSessions,
-          })));
-        }
-      } catch (e) { console.log(e); }
+        // Handle both {students: [...]} and direct array response
+        const studentList = detailData?.students || (Array.isArray(detailData) ? detailData : []);
+        const fetchedTotalSessions = detailData?.session_count || detailData?._count?.attendance || course.sessions || 0;
+        setTotalSessions(fetchedTotalSessions);
+
+        setStudents(studentList.map((s) => ({
+          id: s.id,
+          name: s.user?.name || s.name || "Student",
+          email: s.user?.email || s.email || "—",
+          program: s.program?.name || s.program_name || "—",
+          faceRegistered: !!s.faceEmbedding || !!s.face_embedding,
+          joinedAt: s.joinedAt || s.joined_at || s.created_at,
+          status: s.status || "active",
+          attended: s._count?.attendance || s.attendance_count || 0,
+          total: fetchedTotalSessions,
+        })));
+      } catch (e) { console.log("[CourseDetails] Error:", e); }
       finally { setIsLoading(false); }
     };
     load();
@@ -72,6 +75,13 @@ export default function CourseDetails({ route, navigation }) {
     }
   };
 
+  const statCards = [
+    { label: "TOTAL STUDENTS", value: students.length, icon: <Users size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
+    { label: "FACE REGISTERED", value: faceRegistered, icon: <ScanFace size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
+    { label: "TOTAL SESSIONS", value: totalSessions, icon: <Clock size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
+    { label: "AVG ATTENDANCE", value: `${avgAttendance}%`, icon: <TrendingUp size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
+  ];
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -79,8 +89,8 @@ export default function CourseDetails({ route, navigation }) {
         {/* Course Header */}
         <View style={styles.headerCard}>
           <View style={styles.headerTop}>
-            <View style={[styles.headerBadge, { backgroundColor: "#4361EE" }]}>
-              <Text style={{ fontSize: 20 }}>📚</Text>
+            <View style={styles.headerBadge}>
+              <BookOpen size={22} color="#FFF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>{course.name}</Text>
@@ -93,58 +103,49 @@ export default function CourseDetails({ route, navigation }) {
             )}
           </View>
           <View style={styles.headerMeta}>
-            <Text style={styles.headerMetaText}>🏢 {course.department}</Text>
-            <Text style={styles.headerMetaText}>📅 {course.year}{course.semester ? ` · ${course.semester}` : ""}</Text>
+            <View style={styles.metaItem}>
+              <Building size={13} color="#64748B" style={{ marginRight: 5 }} />
+              <Text style={styles.headerMetaText}>{course.department}</Text>
+            </View>
+            {!!course.semester && (
+              <View style={styles.metaItem}>
+                <Calendar size={13} color="#64748B" style={{ marginRight: 5 }} />
+                <Text style={styles.headerMetaText}>{course.semester}</Text>
+              </View>
+            )}
           </View>
         </View>
 
         {/* Stats Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsGrid}>
-            <View style={[styles.statCard, { backgroundColor: "#FEF3C7" }]}>
-              <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#F59E0B" }]}>{students.length}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#F59E0B" }]}><Text style={{ fontSize: 16 }}>👨‍🎓</Text></View>
+            {statCards.map((s, i) => (
+              <View key={i} style={styles.statCard}>
+                <Text style={styles.statLabel}>{s.label}</Text>
+                <View style={styles.statRow}>
+                  <Text style={styles.statNumber}>{s.value}</Text>
+                  <View style={[styles.statIconBg, { backgroundColor: s.bg }]}>{s.icon}</View>
+                </View>
               </View>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: "#FCE7F3" }]}>
-              <Text style={styles.statLabel}>FACE REGISTERED</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#EC4899" }]}>{faceRegistered}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#EC4899" }]}><Text style={{ fontSize: 16 }}>📸</Text></View>
-              </View>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: "#DBEAFE" }]}>
-              <Text style={styles.statLabel}>TOTAL SESSIONS</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#3B82F6" }]}>{totalSessions}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#3B82F6" }]}><Text style={{ fontSize: 16 }}>🕐</Text></View>
-              </View>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: "#D1FAE5" }]}>
-              <Text style={styles.statLabel}>AVG ATTENDANCE</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#10B981" }]}>{avgAttendance}%</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#10B981" }]}><Text style={{ fontSize: 16 }}>✅</Text></View>
-              </View>
-            </View>
+            ))}
           </View>
         )}
 
-        {/* Students Section */}
-        <Text style={styles.sectionTitle}>Students</Text>
+        {/* Students Section Header */}
+        <Text style={styles.sectionTitle}>Enrolled Students</Text>
+        <Text style={styles.sectionSubtitle}>{students.length} student{students.length !== 1 ? "s" : ""} in this course</Text>
 
         <View style={styles.searchExportRow}>
           <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
             <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
               placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
           </View>
           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-            <Text style={styles.exportBtnText}>📥 Export</Text>
+            <Download size={14} color="#FFF" style={{ marginRight: 4 }} />
+            <Text style={styles.exportBtnText}>Export</Text>
           </TouchableOpacity>
         </View>
 
@@ -156,7 +157,7 @@ export default function CourseDetails({ route, navigation }) {
             <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>PROGRAM</Text>
             <Text style={[styles.tableHeaderText, { flex: 1 }]}>JOINED</Text>
             <Text style={[styles.tableHeaderText, { flex: 0.6, textAlign: 'center' }]}>FACE</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: 'center' }]}>ATTENDANCE</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: 'center' }]}>ATTEND{"\n"}ANCE</Text>
           </View>
 
           {filtered.length === 0 ? (
@@ -175,15 +176,20 @@ export default function CourseDetails({ route, navigation }) {
                 </Text>
 
                 <View style={{ flex: 0.6, alignItems: "center" }}>
-                  <View style={[styles.faceBadge, s.faceRegistered ? styles.faceYes : styles.faceNo]}>
-                    <Text style={[styles.faceText, s.faceRegistered ? { color: "#059669" } : { color: "#EF4444" }]}>
-                      {s.faceRegistered ? "✅" : "—"}
-                    </Text>
-                  </View>
+                  {s.faceRegistered ? (
+                    <CheckCircle size={16} color="#10B981" />
+                  ) : (
+                    <XCircle size={16} color="#CBD5E1" />
+                  )}
                 </View>
-                <Text style={[styles.cellText, { flex: 0.8, textAlign: "center", fontWeight: "700" }]}>
-                  {s.attended}/{s.total}
-                </Text>
+
+                {/* Attendance with mini bar */}
+                <View style={{ flex: 0.8, alignItems: "center" }}>
+                  <View style={styles.attendBarTrack}>
+                    <View style={[styles.attendBarFill, { width: `${s.total > 0 ? Math.round((s.attended / s.total) * 100) : 0}%` }]} />
+                  </View>
+                  <Text style={styles.attendText}>{s.attended}/{s.total}</Text>
+                </View>
               </TouchableOpacity>
             ))
           )}
@@ -199,7 +205,7 @@ export default function CourseDetails({ route, navigation }) {
                 <>
                   <View style={styles.modalHeader}>
                     <View style={styles.modalAvatar}>
-                      <Text style={styles.modalAvatarText}>{selectedStudent.name.charAt(0)}</Text>
+                      <User size={22} color="#4361EE" />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -227,13 +233,25 @@ export default function CourseDetails({ route, navigation }) {
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Face Registered:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.faceRegistered ? "Yes ✅" : "No ❌"}</Text>
+                    <Text style={styles.modalDetailLabel}>Face Data:</Text>
+                    <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
+                      {selectedStudent.faceRegistered ? (
+                        <>
+                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                        </>
+                      )}
+                    </View>
                   </View>
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Attendance:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} Sessions ({totalSessions > 0 ? Math.round((selectedStudent.attended / totalSessions) * 100) : 0}%)</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} ({totalSessions > 0 ? Math.round((selectedStudent.attended / totalSessions) * 100) : 0}%)</Text>
                   </View>
 
                   <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelectedStudent(null)}>
@@ -253,51 +271,71 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
 
-  headerCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0" },
-  headerTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
-  headerBadge: { width: 42, height: 42, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  // Header Card
+  headerCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  headerTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
+  headerBadge: { width: 44, height: 44, borderRadius: 12, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
   headerTitle: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginBottom: 3 },
-  headerProgram: { fontSize: 12, fontWeight: "600", color: "#4361EE", textTransform: "uppercase" },
-  codeBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginLeft: 8 },
-  codeBadgeText: { fontSize: 11, fontWeight: "700", color: "#4361EE" },
-  headerMeta: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  headerProgram: { fontSize: 12, color: "#64748B", textTransform: "uppercase" },
+  codeBadge: { backgroundColor: "#F1F5F9", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginLeft: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  codeBadgeText: { fontSize: 12, fontWeight: "700", color: "#475569" },
+  headerMeta: { flexDirection: "row", flexWrap: "wrap" },
+  metaItem: { flexDirection: "row", alignItems: "center", marginRight: 16 },
   headerMetaText: { fontSize: 13, color: "#64748B" },
 
+  // Stats
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20 },
-  statCard: { width: (width - 52) / 2, borderRadius: 14, padding: 14, marginBottom: 10 },
-  statLabel: { fontSize: 9, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6 },
+  statCard: {
+    width: (width - 52) / 2,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 6 },
   statRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  statNumber: { fontSize: 24, fontWeight: "800" },
-  statIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  statNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center" },
 
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginBottom: 10 },
+  // Section
+  sectionTitle: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
+  sectionSubtitle: { fontSize: 13, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
+
+  // Search + Export
   searchExportRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 10 },
-  searchIcon: { fontSize: 14, marginRight: 6 },
+  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 10 },
   searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
-  exportBtn: { backgroundColor: "#0F172A", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
+  exportBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, flexDirection: "row", alignItems: "center" },
   exportBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
 
-  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  // Table
+  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 6 },
   tableHeaderText: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
   tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
   studentName: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
-  studentEmail: { fontSize: 11, color: "#94A3B8" },
+  studentEmail: { fontSize: 10, color: "#94A3B8" },
   cellText: { fontSize: 12, color: "#64748B" },
-  faceBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 },
-  faceYes: { backgroundColor: "#D1FAE5" },
-  faceNo: { backgroundColor: "#FEE2E2" },
-  faceText: { fontSize: 11, fontWeight: "600" },
   emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
+
+  // Attendance mini bar
+  attendBarTrack: { width: "100%", height: 4, borderRadius: 2, backgroundColor: "#F1F5F9", overflow: "hidden", marginBottom: 3 },
+  attendBarFill: { height: "100%", borderRadius: 2, backgroundColor: Theme.colors.accent },
+  attendText: { fontSize: 10, fontWeight: "700", color: "#475569" },
   
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
   modalCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   modalHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
-  modalAvatarText: { fontSize: 20, fontWeight: "800", color: "#4361EE" },
   modalHeaderInfo: { flex: 1 },
   modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
   modalEmail: { fontSize: 13, color: "#64748B" },

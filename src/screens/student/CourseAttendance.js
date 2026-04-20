@@ -1,40 +1,44 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
-import { getAttendanceHistory } from "../../api/studentApi";
+import { getCourseAttendance, getCourse } from "../../api/studentApi";
+import { Theme } from "../../theme/Theme";
+import { BookOpen, User, Mail, Calendar, GraduationCap, Info, CheckCircle, XCircle, ChevronLeft, BarChart3 } from "lucide-react-native";
 
 const { width } = Dimensions.get('window');
 
 export default function CourseAttendance({ route, navigation }) {
 
-  const { course, tab: initialTab } = route.params;
+  const { course: initialCourse, tab: initialTab } = route.params;
   const [activeTab, setActiveTab] = useState(initialTab === 'Attendance' ? 'Attendance History' : 'Overview');
   const [isLoading, setIsLoading] = useState(true);
   
+  const [course, setCourseDetails] = useState(initialCourse);
   const [courseRecords, setCourseRecords] = useState([]);
-  const [totalClasses, setTotalClasses] = useState(course.sessions || 0); // fallback to passed data
+  const [totalClasses, setTotalClasses] = useState(initialCourse.sessions || 0);
   const [attended, setAttended] = useState(0);
 
   useEffect(() => {
     const load = async () => {
       try {
         setIsLoading(true);
-        const records = await getAttendanceHistory();
-        const list = Array.isArray(records) ? records : [];
-        // Filter records for this specific course by courseId or code
-        const filtered = list.filter(
-          (r) => r.course?.id === course.id || r.course?.code === course.code || r.course?.name === course.name
-        );
-        // Sort records by date descending
-        filtered.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
+        const [summary, courseDets] = await Promise.all([
+          getCourseAttendance(initialCourse.id),
+          getCourse(initialCourse.id).catch(() => ({}))
+        ]);
         
-        setCourseRecords(filtered);
+        let records = summary.records || [];
+        records.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
         
-        // If the backend history returns all sessions, use its length, otherwise use what is passed in course.sessions
-        const total = Math.max(course.sessions || 0, filtered.length);
-        const present = filtered.filter((r) => r.status === true).length;
+        setCourseRecords(records);
+        setTotalClasses(summary.total_sessions || 0);
+        setAttended(summary.present || 0);
         
-        setTotalClasses(total);
-        setAttended(present);
+        setCourseDetails(prev => ({
+          ...prev,
+          teacherEmail: courseDets.teacher_email || prev.teacherEmail,
+          teacherDept: courseDets.teacher_department_name || courseDets.department_name || prev.teacherDept,
+          students: courseDets.student_count !== undefined ? courseDets.student_count : prev.students,
+        }));
       } catch (e) {
         console.log("CourseAttendance load error:", e);
       } finally {
@@ -42,279 +46,232 @@ export default function CourseAttendance({ route, navigation }) {
       }
     };
     load();
-  }, [course]);
+  }, [initialCourse.id]);
 
   const missed = Math.max(0, totalClasses - attended);
   const percent = totalClasses > 0 ? Math.round((attended / totalClasses) * 100) : 0;
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Unknown Date";
+    if (!dateString) return { dateStr: "Unknown Date", timeStr: "" };
     const date = new Date(dateString);
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    const dayName = days[date.getDay()];
-    const monthName = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-    
-    let hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; 
-    const strTime = hours + ':' + minutes + ' ' + ampm;
-    
     return { 
-      dateStr: `${dayName}, ${monthName} ${day}, ${year}`, 
-      timeStr: strTime 
+      dateStr: `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`, 
     };
   };
 
+  const getBarColor = (pct) => pct >= 75 ? "#10B981" : pct >= 50 ? "#F59E0B" : "#EF4444";
+
   const renderOverview = () => (
-    <View style={styles.tabContent}>
-      {/* Overview Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <View style={styles.statCardHeader}>
-            <Text style={styles.statCardLabel}>Total Sessions</Text>
-            <Text style={[styles.statCardIcon, { color: '#3B82F6' }]}>🕓</Text>
+    <View>
+      {/* Course Details & Instructor side by side */}
+      <View style={styles.sectionCard}>
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.cardIconBg}><BookOpen size={14} color="#FFF" /></View>
+          <View>
+            <Text style={styles.cardTitle}>Course Details</Text>
+            <Text style={styles.cardSubtitle}>Academic information</Text>
           </View>
-          <Text style={styles.statCardValue}>{totalClasses}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
-          <View style={styles.statCardHeader}>
-            <Text style={styles.statCardLabel}>Attended</Text>
-            <Text style={[styles.statCardIcon, { color: '#10B981' }]}>✓</Text>
+        <View style={styles.infoRow}>
+          <Calendar size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <View>
+            <Text style={styles.infoLabel}>Academic Period</Text>
+            <Text style={styles.infoValue}>{course.year} · {course.semester}</Text>
           </View>
-          <Text style={[styles.statCardValue, { color: '#10B981' }]}>{attended}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-          <View style={styles.statCardHeader}>
-            <Text style={styles.statCardLabel}>Absent</Text>
-            <Text style={[styles.statCardIcon, { color: '#EF4444' }]}>✕</Text>
+        <View style={styles.infoRow}>
+          <GraduationCap size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <View>
+            <Text style={styles.infoLabel}>Program</Text>
+            <Text style={styles.infoValue}>{course.program}</Text>
           </View>
-          <Text style={[styles.statCardValue, { color: '#EF4444' }]}>{missed}</Text>
         </View>
-
-        <View style={[styles.statCard, { backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' }]}>
-          <View style={styles.statCardHeader}>
-            <Text style={styles.statCardLabel}>Attendance Rate</Text>
-            <Text style={[styles.statCardIcon, { color: '#A855F7' }]}>📈</Text>
-          </View>
-          <Text style={[styles.statCardValue, { color: '#7E22CE' }]}>{percent}%</Text>
+        <View style={styles.infoBanner}>
+          <Info size={12} color="#64748B" style={{ marginRight: 6 }} />
+          <Text style={styles.infoBannerText}>To mark attendance, use the <Text style={{ fontWeight: "700" }}>entry code shared by your teacher</Text> in class.</Text>
         </View>
       </View>
 
-      {/* Details Row */}
-      <View style={styles.detailsRow}>
-        {/* Course Details Card */}
-        <View style={styles.detailsCard}>
-          <View style={styles.cardHeader}>
-             <Text style={styles.cardHeaderIcon}>📖</Text>
-             <Text style={styles.cardTitle}>Course Details</Text>
-          </View>
-          
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>📅</Text>
-            <View>
-              <Text style={styles.detailLabel}>Academic Period</Text>
-              <Text style={styles.detailText}>{course.year} • {course.semester}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>🎓</Text>
-            <View>
-              <Text style={styles.detailLabel}>Program</Text>
-              <Text style={styles.detailText}>{course.program}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>👥</Text>
-            <View>
-              <Text style={styles.detailLabel}>Enrolled Students</Text>
-              <Text style={styles.detailText}>{course.students} students</Text>
-            </View>
-          </View>
-
-          <View style={styles.infoBanner}>
-            <Text style={styles.infoText}>
-              ℹ️ To mark your attendance, use the <Text style={{fontWeight: '700'}}>entry code</Text> shared by your teacher in class or on your course announcements.
-            </Text>
+      <View style={styles.sectionCard}>
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.cardIconBg}><User size={14} color="#FFF" /></View>
+          <View>
+            <Text style={styles.cardTitle}>Instructor</Text>
+            <Text style={styles.cardSubtitle}>Course teacher details</Text>
           </View>
         </View>
-
-        {/* Instructor Details Card */}
-        <View style={styles.detailsCard}>
-           <View style={styles.cardHeader}>
-             <Text style={styles.cardHeaderIcon}>👤</Text>
-             <Text style={styles.cardTitle}>Instructor Details</Text>
+        <View style={styles.infoRow}>
+          <User size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <View>
+            <Text style={styles.infoLabel}>Name</Text>
+            <Text style={styles.infoValue}>{course.teacher}</Text>
           </View>
-          
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>👤</Text>
-            <View>
-              <Text style={styles.detailLabel}>Name</Text>
-              <Text style={styles.detailText}>{course.teacher}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>🏢</Text>
-            <View>
-              <Text style={styles.detailLabel}>Department</Text>
-              <Text style={styles.detailText}>{course.teacherDept || course.department || "—"}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>✉️</Text>
-            <View>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailText}>{course.teacherEmail || "Not Provided"}</Text>
-            </View>
+        </View>
+        <View style={styles.infoRow}>
+          <Mail size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <View>
+            <Text style={styles.infoLabel}>Email</Text>
+            <Text style={styles.infoValue}>{course.teacherEmail || "Not Provided"}</Text>
           </View>
         </View>
       </View>
 
       {/* Performance Summary */}
-      <View style={styles.performanceCard}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardHeaderIcon}>🏅</Text>
-          <Text style={styles.cardTitle}>Performance Summary</Text>
+      <View style={styles.sectionCard}>
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.cardIconBg}><BarChart3 size={14} color="#FFF" /></View>
+          <View>
+            <Text style={styles.cardTitle}>Performance Summary</Text>
+            <Text style={styles.cardSubtitle}>Your overall attendance for this course</Text>
+          </View>
         </View>
 
-        <View style={styles.progressHeader}>
-           <Text style={styles.progressLabel}>Overall Attendance</Text>
-           <Text style={styles.progressPercent}>{percent}%</Text>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>Overall Attendance</Text>
+          <Text style={[styles.progressPercent, { color: getBarColor(percent) }]}>{percent}%</Text>
         </View>
-        <View style={styles.progressBarBg}>
-           <View style={[styles.progressBarFill, { width: `${percent}%`, backgroundColor: percent >= 75 ? '#0EA5E9' : '#EF4444' }]} />
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${percent}%`, backgroundColor: getBarColor(percent) }]} />
         </View>
-        
-        <View style={styles.progressStats}>
-           <View style={styles.pStatBox}>
-             <Text style={styles.pStatLabel}>Sessions Held</Text>
-             <Text style={styles.pStatValue}>{totalClasses}</Text>
-           </View>
-           <View style={styles.pStatBox}>
-             <Text style={styles.pStatLabel}>Present</Text>
-             <Text style={[styles.pStatValue, { color: '#10B981' }]}>{attended}</Text>
-           </View>
-           <View style={styles.pStatBox}>
-             <Text style={styles.pStatLabel}>Absent</Text>
-             <Text style={[styles.pStatValue, { color: '#EF4444' }]}>{missed}</Text>
-           </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+          <CheckCircle size={12} color={percent >= 75 ? "#10B981" : "#F59E0B"} style={{ marginRight: 4 }} />
+          <Text style={{ fontSize: 11, color: percent >= 75 ? "#10B981" : "#F59E0B", fontWeight: "600" }}>
+            {percent >= 75 ? "You're on track — great attendance!" : "Needs improvement — aim for 75%"}
+          </Text>
+        </View>
+
+        <View style={styles.perfStatsRow}>
+          <View style={styles.perfStatBox}>
+            <Text style={styles.perfStatLabel}>Sessions Held</Text>
+            <Text style={styles.perfStatValue}>{totalClasses}</Text>
+          </View>
+          <View style={styles.perfStatBox}>
+            <Text style={styles.perfStatLabel}>Present</Text>
+            <Text style={[styles.perfStatValue, { color: "#10B981" }]}>{attended}</Text>
+          </View>
+          <View style={styles.perfStatBox}>
+            <Text style={styles.perfStatLabel}>Absent</Text>
+            <Text style={[styles.perfStatValue, { color: "#EF4444" }]}>{missed}</Text>
+          </View>
         </View>
       </View>
     </View>
   );
 
   const renderHistory = () => (
-    <View style={styles.tabContent}>
-       <View style={styles.historyCard}>
-         <View style={styles.cardHeader}>
-            <Text style={styles.cardHeaderIcon}>📅</Text>
-            <Text style={styles.cardTitle}>Attendance History</Text>
-         </View>
+    <View style={styles.sectionCard}>
+      <View style={styles.cardHeaderRow}>
+        <View style={styles.cardIconBg}><Calendar size={14} color="#FFF" /></View>
+        <View>
+          <Text style={styles.cardTitle}>Attendance History</Text>
+          <Text style={styles.cardSubtitle}>All session records for this course</Text>
+        </View>
+      </View>
 
-         {courseRecords.length === 0 ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
-              <Text style={{ fontSize: 15, color: '#64748B' }}>No attendance records found for this course.</Text>
+      {/* Table Header */}
+      <View style={styles.tableHeaderRow}>
+        <Text style={[styles.tableHeaderText, { flex: 1 }]}>DATE</Text>
+        <Text style={[styles.tableHeaderText, { width: 80, textAlign: "right" }]}>STATUS</Text>
+      </View>
+
+      {courseRecords.length === 0 ? (
+        <Text style={styles.emptyText}>No attendance records found for this course.</Text>
+      ) : (
+        courseRecords.map((record, index) => {
+          const dt = formatDate(record.timestamp || record.date || record.createdAt);
+          const isPresent = record.status;
+          return (
+            <View key={record.id || index} style={[styles.historyRow, index < courseRecords.length - 1 && styles.historyBorder]}>
+              <Text style={styles.historyDate}>{dt.dateStr}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: isPresent ? "#F0FDF4" : "#FEF2F2" }]}>
+                {isPresent ? (
+                  <CheckCircle size={11} color="#16A34A" style={{ marginRight: 3 }} />
+                ) : (
+                  <XCircle size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                )}
+                <Text style={[styles.statusText, { color: isPresent ? "#16A34A" : "#EF4444" }]}>
+                  {isPresent ? "Present" : "Absent"}
+                </Text>
+              </View>
             </View>
-         ) : (
-           courseRecords.map((record, index) => {
-             const dt = formatDate(record.timestamp || record.date || record.createdAt);
-             return (
-               <View 
-                 key={record.id || index} 
-                 style={[
-                   styles.historyRow,
-                   { 
-                     borderColor: record.status ? '#DCFCE7' : '#FEE2E2',
-                     backgroundColor: '#FFFFFF',
-                   }
-                 ]}
-               >
-                 <View style={styles.historyLeft}>
-                   <View style={styles.historyIconBox}>
-                     <Text style={styles.historyIconText}>{record.status ? '✓' : '✕'}</Text>
-                   </View>
-                   <View>
-                     <Text style={styles.historyDate}>{dt.dateStr}</Text>
-                     <Text style={styles.historyTime}>{dt.timeStr}</Text>
-                   </View>
-                 </View>
-                 <View style={[styles.statusBadge, { backgroundColor: record.status ? '#F0FDF4' : '#FEF2F2', borderColor: record.status ? '#DCFCE7' : '#FEE2E2' }]}>
-                   <Text style={[styles.statusBadgeText, { color: record.status ? '#16A34A' : '#EF4444' }]}>
-                     {record.status ? 'Present' : 'Absent'}
-                   </Text>
-                 </View>
-               </View>
-             );
-           })
-         )}
-       </View>
+          );
+        })
+      )}
     </View>
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      
-      {/* Navigation Header */}
-      <View style={styles.navHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-          <Text style={styles.backText}>Back to My Courses</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Course Title Board */}
-        <View style={styles.courseBoard}>
-          <View style={styles.boardIconBox}>
-            <Text style={{ fontSize: 24 }}>📖</Text>
-          </View>
-          <View style={styles.boardInfo}>
-             <Text style={styles.boardTitle}>{course.name}</Text>
-             <Text style={styles.boardProgram}>{course.program}</Text>
-          </View>
-          
-          <View style={styles.boardBadges}>
-            <View style={styles.activeBadge}>
-              <Text style={styles.activeBadgeText}>Active</Text>
+        {/* Course Header */}
+        <View style={styles.courseHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+            <View style={styles.headerIconBg}>
+              <BookOpen size={18} color="#FFF" />
             </View>
-            <Text style={styles.boardTerm}>{course.year} • {course.semester}</Text>
-            <View style={styles.codeBadge}>
-               <Text style={styles.codeBadgeText}>{course.code}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.courseTitle} numberOfLines={2}>{course.name}</Text>
+              <Text style={styles.courseProgram}>{course.program}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                <User size={11} color="#94A3B8" style={{ marginRight: 4 }} />
+                <Text style={styles.courseMeta}>{course.teacher}</Text>
+                <Calendar size={11} color="#94A3B8" style={{ marginLeft: 10, marginRight: 4 }} />
+                <Text style={styles.courseMeta}>{course.semester} · {course.year}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <View style={styles.codePill}>
+              <Text style={styles.codePillText}>{course.code}</Text>
+            </View>
+            <View style={styles.activePill}>
+              <Text style={styles.activePillText}>Active</Text>
             </View>
           </View>
         </View>
-        
+
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>TOTAL SESSIONS</Text>
+            <Text style={styles.statNumber}>{totalClasses}</Text>
+          </View>
+          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#10B981" }]}>
+            <Text style={[styles.statLabel, { color: "#10B981" }]}>ATTENDED</Text>
+            <Text style={[styles.statNumber, { color: "#10B981" }]}>{attended}</Text>
+          </View>
+          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#EF4444" }]}>
+            <Text style={[styles.statLabel, { color: "#EF4444" }]}>ABSENT</Text>
+            <Text style={[styles.statNumber, { color: "#EF4444" }]}>{missed}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>RATE</Text>
+            <Text style={[styles.statNumber, { color: getBarColor(percent) }]}>{percent}%</Text>
+          </View>
+        </View>
+
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-           <TouchableOpacity 
-             style={[styles.tab, activeTab === 'Overview' && styles.activeTab]}
-             onPress={() => setActiveTab('Overview')}
-           >
-             <Text style={[styles.tabText, activeTab === 'Overview' && styles.activeTabText]}>Overview</Text>
-           </TouchableOpacity>
-
-           <TouchableOpacity 
-             style={[styles.tab, activeTab === 'Attendance History' && styles.activeTab]}
-             onPress={() => setActiveTab('Attendance History')}
-           >
-             <Text style={[styles.tabText, activeTab === 'Attendance History' && styles.activeTabText]}>Attendance History</Text>
-           </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'Overview' && styles.activeTab]}
+            onPress={() => setActiveTab('Overview')}
+          >
+            <Text style={[styles.tabText, activeTab === 'Overview' && styles.activeTabText]}>Overview</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'Attendance History' && styles.activeTab]}
+            onPress={() => setActiveTab('Attendance History')}
+          >
+            <Text style={[styles.tabText, activeTab === 'Attendance History' && styles.activeTabText]}>Attendance History</Text>
+          </TouchableOpacity>
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color="#4361EE" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginTop: 40 }} />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderHistory()
         )}
@@ -325,380 +282,98 @@ export default function CourseAttendance({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  navHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 5,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  container: { padding: 20, paddingBottom: 40 },
+
+  // Course Header
+  courseHeader: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFF',
-  },
-  backIcon: {
-    fontSize: 16,
-    color: '#0F172A',
-    marginRight: 6,
-  },
-  backText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#0F172A",
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  courseBoard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 20,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    flexWrap: 'wrap',
-  },
-  boardIconBox: {
-    width: 56,
-    height: 56,
-    backgroundColor: '#F0F9FF',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  boardInfo: {
-    flex: 1,
-    minWidth: '50%',
-  },
-  boardTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 4,
-  },
-  boardProgram: {
-    fontSize: 14,
-    color: "#64748B",
-  },
-  boardBadges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginTop: 10,
-    width: '100%',
-    justifyContent: 'flex-end',
-  },
-  activeBadge: {
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    marginRight: 10,
-  },
-  activeBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#10B981',
-  },
-  boardTerm: {
-    fontSize: 13,
-    color: '#64748B',
-    marginRight: 10,
-  },
-  codeBadge: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  codeBadgeText: {
-    fontSize: 11,
-    color: '#475569',
-    fontWeight: '600',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: '#F8FAFC',
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
     elevation: 1,
   },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#64748B",
-  },
-  activeTabText: {
-    color: "#0F172A",
-  },
-  tabContent: {
-    /* container for tab views */
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  statCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statCardLabel: {
-    fontSize: 13,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  statCardIcon: {
-    fontSize: 14,
-  },
-  statCardValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  detailsCard: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  cardHeaderIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  detailItem: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-start',
-  },
-  detailIcon: {
-    fontSize: 16,
-    marginRight: 12,
-    width: 20,
-    textAlign: 'center',
-    color: '#64748B',
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: "#94A3B8",
-    marginBottom: 2,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#1E293B",
-    fontWeight: "500",
-  },
-  infoBanner: {
-    backgroundColor: '#F8FAFC',
+  headerIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  courseTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
+  courseProgram: { fontSize: 12, color: "#64748B" },
+  courseMeta: { fontSize: 11, color: "#94A3B8" },
+  codePill: { borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 6 },
+  codePillText: { fontSize: 10, fontWeight: "600", color: "#475569" },
+  activePill: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7" },
+  activePillText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+
+  // Stats Row
+  statsRow: { flexDirection: "row", marginBottom: 14 },
+  statBox: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
     padding: 12,
-    borderRadius: 8,
+    marginHorizontal: 2,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: "#E2E8F0",
   },
-  infoText: {
-    fontSize: 12,
-    color: "#475569",
-    lineHeight: 18,
-  },
-  performanceCard: {
-    backgroundColor: '#FFF',
+  statLabel: { fontSize: 7, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 4 },
+  statNumber: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
+
+  // Tabs
+  tabsContainer: { flexDirection: "row", backgroundColor: "#FFF", borderRadius: 10, padding: 3, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
+  tab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
+  activeTab: { backgroundColor: "#F8FAFC", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 13, fontWeight: "600", color: "#94A3B8" },
+  activeTabText: { color: "#0F172A" },
+
+  // Section Card
+  sectionCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 20,
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 1,
   },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  progressLabel: {
-    fontSize: 13,
-    color: "#64748B",
-    fontWeight: "600",
-  },
-  progressPercent: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#0F172A",
-  },
-  progressBarBg: {
-    height: 10,
-    backgroundColor: '#E0F2FE',
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  progressBarFill: {
-    height: 10,
-    borderRadius: 5,
-  },
-  progressStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 16,
-  },
-  pStatBox: {
-    alignItems: 'center',
-  },
-  pStatLabel: {
-    fontSize: 12,
-    color: "#64748B",
-    marginBottom: 4,
-  },
-  pStatValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
-  },
-  historyCard: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  historyLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  historyIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  historyIconText: {
-    fontSize: 16,
-    color: '#10B981',
-  },
-  historyDate: {
-    fontSize: 13,
-    color: "#1E293B",
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  historyTime: {
-    fontSize: 12,
-    color: "#64748B",
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  }
+  cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  cardIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  cardTitle: { fontSize: 15, fontWeight: "700", color: "#0F172A" },
+  cardSubtitle: { fontSize: 11, color: "#94A3B8" },
+
+  // Info Rows
+  infoRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 14 },
+  infoLabel: { fontSize: 10, color: "#94A3B8", marginBottom: 1 },
+  infoValue: { fontSize: 13, fontWeight: "600", color: "#1E293B" },
+  infoBanner: { flexDirection: "row", alignItems: "flex-start", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  infoBannerText: { fontSize: 11, color: "#64748B", flex: 1, lineHeight: 16 },
+
+  // Performance
+  progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  progressLabel: { fontSize: 12, color: "#64748B", fontWeight: "600" },
+  progressPercent: { fontSize: 14, fontWeight: "800" },
+  progressTrack: { height: 8, borderRadius: 4, backgroundColor: "#E2E8F0", overflow: "hidden", marginBottom: 8 },
+  progressFill: { height: "100%", borderRadius: 4 },
+  perfStatsRow: { flexDirection: "row", justifyContent: "space-around", borderTopWidth: 1, borderTopColor: "#F1F5F9", paddingTop: 14 },
+  perfStatBox: { alignItems: "center" },
+  perfStatLabel: { fontSize: 11, color: "#94A3B8", marginBottom: 4 },
+  perfStatValue: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+
+  // Table / History
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 14 },
+  historyBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  historyDate: { fontSize: 13, color: "#1E293B", fontWeight: "500", flex: 1 },
+  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  statusText: { fontSize: 11, fontWeight: "700" },
+  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
 });

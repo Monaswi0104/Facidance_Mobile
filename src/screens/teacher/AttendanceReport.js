@@ -5,6 +5,8 @@ import {
 } from "react-native";
 import { getTeacherCourses, getTeacherReports, getCourseStudents } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -28,9 +30,9 @@ export default function AttendanceReport() {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const formatDate = (date) => {
-    if (!date) return "dd-mm-yyyy";
+    if (!date) return "dd/mm/yyyy";
     const d = new Date(date);
-    return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`;
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
   };
 
   useFocusEffect(useCallback(() => {
@@ -38,7 +40,7 @@ export default function AttendanceReport() {
       try {
         setIsLoading(true);
         const result = await getTeacherCourses();
-        const list = Array.isArray(result) ? result : [];
+        const list = Array.isArray(result) ? result : (result?.courses || []);
         setCourses(list);
 
       } catch (e) { console.log(e); }
@@ -56,38 +58,47 @@ export default function AttendanceReport() {
           startDate ? startDate.toISOString() : null,
           endDate ? endDate.toISOString() : null
         ),
-        getCourseStudents(courseId)
+        getCourseStudents(courseId).catch(() => []),
       ]);
 
-      const reportList = reportData?.students || reportData || [];
-      const stuList = studentData?.students || studentData || [];
-      
-      const emailMap = {};
+      // The report API returns [{studentName, studentEmail, totalSessions, attended, percentage}]
+      const reportList = Array.isArray(reportData) ? reportData : (reportData?.students || []);
+      // Student details for enriching with program, face, joined date
+      const stuList = Array.isArray(studentData) ? studentData : (studentData?.students || studentData || []);
+
+      // Build email lookup from enrolled students
+      const emailLookup = {};
       stuList.forEach(s => {
-        emailMap[s.id || s.userId] = s.user?.email || s.email || "—";
+        const email = (s.user?.email || s.email || "").toLowerCase();
+        if (email) emailLookup[email] = s;
       });
 
-      setData(reportList.map((s, i) => {
-        const studentInfo = stuList.find(st => (st.id === s.studentId || st.userId === s.studentId)) || {};
-        const attended = s.attendedSessions || s.attended || 0;
+      const parsed = reportList.map((s, i) => {
+        const attended = s.attended || s.attendedSessions || 0;
         const total = s.totalSessions || s.total || 0;
-        const percent = total > 0 ? Math.round((attended / total) * 100) : 0;
+        const percent = s.percentage ?? (total > 0 ? Math.round((attended / total) * 100) : 0);
+        const email = s.studentEmail || s.email || "—";
+        // Cross-reference by email to get program, face data, etc.
+        const enrolled = emailLookup[email.toLowerCase()] || {};
         return {
           id: s.studentId || s.id || String(i),
           name: s.studentName || s.name || "Student",
-          email: studentInfo.user?.email || studentInfo.email || emailMap[s.studentId || s.id] || "—",
-          program: studentInfo.program?.name || "—",
-          status: studentInfo.status || "active",
-          joinedAt: studentInfo.joinedAt || studentInfo.createdAt || studentInfo.user?.createdAt,
-          faceRegistered: !!studentInfo.faceEmbedding,
+          email,
+          program: enrolled.program?.name || enrolled.program_name || s.program || "—",
+          status: enrolled.status || s.status || "active",
+          joinedAt: enrolled.joinedAt || enrolled.joined_at || enrolled.createdAt || enrolled.created_at || s.joinedAt,
+          faceRegistered: !!(enrolled.faceEmbedding || enrolled.face_embedding) || s.faceRegistered || false,
           attended,
           total,
-          percent
+          percent,
         };
-      }));
+      });
+      // Sort by attendance rate descending (matching website: "Sorted by attendance rate")
+      parsed.sort((a, b) => b.percent - a.percent);
+      setData(parsed);
       setReportGenerated(true);
     } catch (e) {
-      console.log(e);
+      console.log("[AttendanceReport] Error:", e);
       setData([]);
     } finally {
       setIsReportLoading(false);
@@ -120,7 +131,7 @@ export default function AttendanceReport() {
   };
 
   const totalSessions = data.length > 0 ? Math.max(...data.map(d => d.total)) : 0;
-  const avgPercent = data.length > 0 ? Math.round(data.reduce((a, b) => a + b.percent, 0) / data.length) : 0;
+  const avgPercent = data.length > 0 ? (data.reduce((a, b) => a + b.percent, 0) / data.length).toFixed(1) : 0;
   const below75 = data.filter(d => d.percent < 75).length;
 
   const getBarColor = (percent) => {
@@ -135,48 +146,42 @@ export default function AttendanceReport() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.headerBadge, { backgroundColor: "#0F172A" }]}>
-            <Text style={{ fontSize: 18 }}>📊</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Attendance Reports</Text>
-            <Text style={styles.subtitle}>Generate insights, visualize attendance, and export detailed reports.</Text>
-          </View>
+          <Text style={styles.title}>Attendance Reports</Text>
+          <Text style={styles.subtitle}>Generate insights, visualize attendance data, and export detailed reports.</Text>
         </View>
 
         {/* Configuration Card */}
         <View style={styles.configCard}>
-          <View style={styles.configHeaderRow}>
-            <Text style={styles.configTitle}>Report Configuration</Text>
-            <Text style={styles.configMeta}>Showing data for <Text style={{fontWeight:"700", color:"#1E293B"}}>{selectedCourse ? selectedCourse.name : "..."}</Text></Text>
-          </View>
+          <Text style={styles.configTitle}>Report Configuration</Text>
+          <Text style={styles.configMeta}>{selectedCourse ? `Showing data for ${selectedCourse.name}` : "Select a course and optional date range"}</Text>
           
-          <View style={styles.dropdownsRow}>
+          <Text style={styles.labelText}>COURSE *</Text>
+          <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)} disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Theme.colors.accent} />
+            ) : (
+              <>
+                <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                  {selectedCourse ? `${selectedCourse.name} ${selectedCourse.code !== "—" ? `(${selectedCourse.code})` : ""}` : "Choose a course..."}
+                </Text>
+                <ChevronDown size={16} color="#94A3B8" />
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dateRow}>
             <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={styles.labelText}>COURSE *</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)} disabled={isLoading}>
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#4361EE" />
-                ) : (
-                  <>
-                    <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
-                      {selectedCourse ? `${selectedCourse.name} ${selectedCourse.code !== "—" ? `(${selectedCourse.code})` : ""}` : "Choose a course"}
-                    </Text>
-                    <Text style={styles.dropdownArrow}>⌄</Text>
-                  </>
-                )}
+              <Text style={styles.labelText}>START DATE (OPTIONAL)</Text>
+              <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
+                <Text style={startDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(startDate)}</Text>
+                <Calendar size={14} color="#94A3B8" />
               </TouchableOpacity>
             </View>
-            <View style={{ flex: 0.6, marginRight: 10 }}>
-              <Text style={styles.labelText}>START DATE</Text>
-              <TouchableOpacity style={[styles.dropdown, { backgroundColor: "#F8FAFC" }]} onPress={() => setShowStartPicker(true)}>
-                <Text style={startDate ? styles.dropdownText : styles.dropdownPlaceholder}>{formatDate(startDate)}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{ flex: 0.6 }}>
-              <Text style={styles.labelText}>END DATE</Text>
-              <TouchableOpacity style={[styles.dropdown, { backgroundColor: "#F8FAFC" }]} onPress={() => setShowEndPicker(true)}>
-                <Text style={endDate ? styles.dropdownText : styles.dropdownPlaceholder}>{formatDate(endDate)}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.labelText}>END DATE (OPTIONAL)</Text>
+              <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
+                <Text style={endDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(endDate)}</Text>
+                <Calendar size={14} color="#94A3B8" />
               </TouchableOpacity>
             </View>
           </View>
@@ -207,12 +212,23 @@ export default function AttendanceReport() {
           )}
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.btnPrimary} onPress={() => { if(selectedCourse) loadReport(selectedCourse.id); }}>
-              <Text style={styles.btnPrimaryText}>📄 Generate Report</Text>
+            <TouchableOpacity
+              style={[styles.btnPrimary, !selectedCourse && { opacity: 0.4 }]}
+              disabled={!selectedCourse || isReportLoading}
+              onPress={() => { if(selectedCourse) loadReport(selectedCourse.id); }}>
+              {isReportLoading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <FileText size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.btnPrimaryText}>Generate Report</Text>
+                </View>
+              )}
             </TouchableOpacity>
             {reportGenerated && (
               <TouchableOpacity style={styles.btnStroke} onPress={exportCSV}>
-                <Text style={styles.btnStrokeText}>📥 Export to CSV</Text>
+                <Download size={14} color="#475569" style={{ marginRight: 6 }} />
+                <Text style={styles.btnStrokeText}>Export CSV</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -221,78 +237,115 @@ export default function AttendanceReport() {
         {/* Generated Content */}
         {reportGenerated && (
           <>
-            {/* Stats Grid */}
-            <View style={styles.statsGrid}>
-          <View style={[styles.statBox, { borderColor: "#E2E8F0" }]}>
-            <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-            <Text style={styles.statNumber}>{data.length}</Text>
-          </View>
-          <View style={[styles.statBox, { borderColor: "#DBEAFE", backgroundColor: "#F0F9FF" }]}>
-            <Text style={[styles.statLabel, { color: "#4361EE" }]}>AVERAGE ATTENDANCE</Text>
-            <Text style={[styles.statNumber, { color: "#4361EE" }]}>{avgPercent}%</Text>
-          </View>
-          <View style={[styles.statBox, { borderColor: "#FECDD3", backgroundColor: "#FFF1F2" }]}>
-            <Text style={[styles.statLabel, { color: "#E11D48" }]}>STUDENTS BELOW 75%</Text>
-            <Text style={[styles.statNumber, { color: "#E11D48" }]}>{below75}</Text>
-          </View>
-        </View>
-
-        {/* Bar Chart (Visual Representation) */}
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Attendance by Student</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
-            <View style={styles.chartYAxis}>
-              <Text style={styles.yAxisText}>100% -</Text>
-              <Text style={styles.yAxisText}>75% -</Text>
-              <Text style={styles.yAxisText}>50% -</Text>
-              <Text style={styles.yAxisText}>25% -</Text>
-              <Text style={styles.yAxisText}>0% -</Text>
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <View style={styles.statTopRow}>
+                  <Text style={styles.statLabel}>TOTAL{"\n"}STUDENTS</Text>
+                  <View style={styles.statIconBg}><Users size={16} color="#FFF" /></View>
+                </View>
+                <Text style={styles.statNumber}>{data.length}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statTopRow}>
+                  <Text style={styles.statLabel}>AVERAGE{"\n"}ATTENDANCE</Text>
+                  <View style={styles.statIconBg}><TrendingUp size={16} color="#FFF" /></View>
+                </View>
+                <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{avgPercent}%</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statTopRow}>
+                  <Text style={styles.statLabel}>BELOW 75%</Text>
+                  <View style={styles.statIconBg}><TrendingDown size={16} color="#FFF" /></View>
+                </View>
+                <Text style={[styles.statNumber, { color: "#EF4444" }]}>{below75}</Text>
+              </View>
             </View>
-            <View style={styles.barsContainer}>
-              {data.map((d, i) => (
-                <View key={i} style={styles.barCol}>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { height: `${d.percent}%` }]} />
-                  </View>
-                  <Text style={styles.barLabel} numberOfLines={1}>{d.name.split(" ")[0]}</Text>
+
+            {/* Bar Chart */}
+            <View style={styles.chartCard}>
+              <Text style={styles.chartTitle}>Attendance by Student</Text>
+              <Text style={styles.chartSubtitle}>Individual percentage breakdown</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+                <View style={styles.chartYAxis}>
+                  <Text style={styles.yAxisText}>100%</Text>
+                  <Text style={styles.yAxisText}>75%</Text>
+                  <Text style={styles.yAxisText}>50%</Text>
+                  <Text style={styles.yAxisText}>25%</Text>
+                  <Text style={styles.yAxisText}>0%</Text>
+                </View>
+                <View style={styles.barsContainer}>
+                  {data.map((d, i) => (
+                    <View key={i} style={styles.barCol}>
+                      <View style={styles.barTrack}>
+                        <View style={[styles.barFill, { height: `${d.percent}%`, backgroundColor: getBarColor(d.percent) }]} />
+                      </View>
+                      <Text style={styles.barLabel} numberOfLines={1}>{d.name.split(" ")[0]}</Text>
+                    </View>
+                  ))}
+                  {data.length === 0 && <Text style={styles.emptyText}>No data</Text>}
+                </View>
+              </ScrollView>
+            </View>
+
+            {/* Distribution Card */}
+            <View style={styles.distCard}>
+              <Text style={styles.chartTitle}>Distribution</Text>
+              <Text style={styles.chartSubtitle}>Attendance rate segments</Text>
+              {[
+                { label: "≥ 75%", count: data.filter(d => d.percent >= 75).length, color: "#10B981" },
+                { label: "50–74%", count: data.filter(d => d.percent >= 50 && d.percent < 75).length, color: "#F59E0B" },
+                { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: "#EF4444" },
+              ].map((seg, i) => (
+                <View key={i} style={styles.distRow}>
+                  <View style={[styles.distDot, { backgroundColor: seg.color }]} />
+                  <Text style={styles.distLabel}>{seg.label}</Text>
+                  <Text style={styles.distCount}>{seg.count}</Text>
                 </View>
               ))}
-              {data.length === 0 && <Text style={styles.emptyText}>No data to display chart</Text>}
             </View>
-          </ScrollView>
-        </View>
 
-        {/* Student Table */}
-        <View style={styles.tableCard}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT NAME</Text>
-            <Text style={[styles.tableHeaderText, { flex: 2.2 }]}>EMAIL</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1, textAlign: "center" }]}>TOTAL</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.2, textAlign: "center" }]}>ATTENDED</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>%</Text>
-          </View>
-
-          {isReportLoading ? (
-            <ActivityIndicator size="large" color="#4361EE" style={{ marginVertical: 40 }} />
-          ) : data.length === 0 ? (
-            <Text style={[styles.emptyText, { paddingVertical: 20 }]}>No attendance data found.</Text>
-          ) : (
-            data.map((s, i) => (
-              <TouchableOpacity key={s.id} style={[styles.tableRow, i < data.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>
-                <Text style={[styles.studentName, { flex: 2, paddingRight: 4 }]} numberOfLines={2}>{s.name}</Text>
-                <Text style={[styles.studentEmail, { flex: 2.2, paddingRight: 4 }]} numberOfLines={2}>{s.email}</Text>
-                <Text style={[styles.cellNum, { flex: 1 }]}>{s.total}</Text>
-                <Text style={[styles.cellNum, { flex: 1.2 }]}>{s.attended}</Text>
-                <View style={{ flex: 0.8, alignItems: "center" }}>
-                  <View style={[styles.percentBadge, { borderColor: getBarColor(s.percent) + "30" }]}>
-                     <Text style={[styles.percentText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
-                  </View>
+            {/* Student Report Table */}
+            <View style={styles.tableCard}>
+              <View style={styles.tableTopRow}>
+                <View>
+                  <Text style={styles.tableTitle}>Student Report</Text>
+                  <Text style={styles.tableSubtitle}>{data.length} student{data.length !== 1 ? "s" : ""}</Text>
                 </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-        </>
+                <Text style={styles.sortedText}>Sorted by attendance rate</Text>
+              </View>
+
+              <View style={styles.tableHeaderRow}>
+                <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>TOTAL</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>ATTEND.</Text>
+                <Text style={[styles.tableHeaderText, { flex: 1.5, textAlign: "right" }]}>ATTENDANCE %</Text>
+              </View>
+
+              {isReportLoading ? (
+                <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
+              ) : data.length === 0 ? (
+                <Text style={[styles.emptyText, { paddingVertical: 20 }]}>No attendance data found.</Text>
+              ) : (
+                data.map((s, i) => (
+                  <TouchableOpacity key={s.id} style={[styles.tableRow, i < data.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>
+                    <View style={{ flex: 2, paddingRight: 6 }}>
+                      <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
+                      <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
+                    </View>
+                    <Text style={[styles.cellNum, { flex: 0.9 }]}>{s.total}</Text>
+                    <Text style={[styles.cellNum, { flex: 0.9 }]}>{s.attended}</Text>
+                    <View style={{ flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
+                      <View style={styles.attendBarTrack}>
+                        <View style={[styles.attendBarFill, { width: `${s.percent}%`, backgroundColor: getBarColor(s.percent) }]} />
+                      </View>
+                      <Text style={[styles.percentText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          </>
         )}
 
       </ScrollView>
@@ -303,11 +356,15 @@ export default function AttendanceReport() {
           <View style={styles.modalContent}>
              <Text style={styles.modalTitle}>Select Course</Text>
              <ScrollView style={{maxHeight: 400}}>
-               {courses.map(c => (
-                 <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => handleCourseSelect(c)}>
-                   <Text style={styles.modalItemText}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
-                 </TouchableOpacity>
-               ))}
+               {courses.map(c => {
+                 const isSelected = selectedCourse?.id === c.id;
+                 return (
+                   <TouchableOpacity key={c.id} style={[styles.modalItem, isSelected && styles.modalItemSelected]} onPress={() => handleCourseSelect(c)}>
+                     <Text style={[styles.modalItemText, isSelected && { color: Theme.colors.primaryDark, fontWeight: "700" }]}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
+                     {isSelected && <CheckCircle size={18} color={Theme.colors.primaryDark} />}
+                   </TouchableOpacity>
+                 );
+               })}
              </ScrollView>
              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowCourseInfo(false)}>
                <Text style={styles.modalCloseText}>Cancel</Text>
@@ -319,12 +376,12 @@ export default function AttendanceReport() {
       {/* Student Details Modal */}
       <Modal visible={!!selectedStudent} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
+            <View style={styles.modalDetailCard}>
               {selectedStudent && (
                 <>
                   <View style={styles.modalHeaderInfoSection}>
                     <View style={styles.modalAvatar}>
-                      <Text style={styles.modalAvatarText}>{selectedStudent.name.charAt(0)}</Text>
+                      <User size={22} color={Theme.colors.primaryDark} />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -339,26 +396,38 @@ export default function AttendanceReport() {
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : "#4361EE" }]}>
-                       {selectedStudent.status.toUpperCase()}
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
+                       {(selectedStudent.status || "active").toUpperCase()}
                     </Text>
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Joined Date:</Text>
+                    <Text style={styles.modalDetailLabel}>Joined:</Text>
                     <Text style={styles.modalDetailValue}>
                       {selectedStudent.joinedAt ? new Date(selectedStudent.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                     </Text>
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Face Registered:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.faceRegistered ? "Yes ✅" : "No ❌"}</Text>
+                    <Text style={styles.modalDetailLabel}>Face Data:</Text>
+                    <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
+                      {selectedStudent.faceRegistered ? (
+                        <>
+                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                        </>
+                      )}
+                    </View>
                   </View>
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Attendance:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} Sessions ({selectedStudent.percent}%)</Text>
+                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} ({selectedStudent.percent}%)</Text>
                   </View>
 
                   <TouchableOpacity style={styles.modalDetailCloseBtn} onPress={() => setSelectedStudent(null)}>
@@ -377,70 +446,108 @@ export default function AttendanceReport() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20, marginTop: 8 },
-  headerBadge: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 2 },
 
-  configCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  configHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  configTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
-  configMeta: { fontSize: 11, color: "#64748B" },
+  // Header
+  header: { marginBottom: 18, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
 
-  labelText: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6 },
-  dropdownsRow: { flexDirection: "row", marginBottom: 18 },
-  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0" },
-  dropdownPlaceholder: { fontSize: 12, color: "#94A3B8" },
+  // Config Card
+  configCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 18, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
+  configTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
+  configMeta: { fontSize: 12, color: "#94A3B8", marginBottom: 16 },
+
+  labelText: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6, marginTop: 4 },
+  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 14 },
+  dropdownPlaceholder: { fontSize: 13, color: "#94A3B8", flex: 1 },
   dropdownText: { fontSize: 13, color: "#1E293B", flex: 1, fontWeight: "500" },
-  dropdownArrow: { color: "#94A3B8", fontSize: 16, paddingBottom: 4 },
 
-  actionsRow: { flexDirection: "row" },
-  btnPrimary: { flexDirection: "row", backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, marginRight: 10, alignItems: "center" },
-  btnPrimaryText: { color: "#1E293B", fontSize: 13, fontWeight: "700" },
-  btnStroke: { flexDirection: "row", backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#DCFCE7", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
-  btnStrokeText: { color: "#16A34A", fontSize: 13, fontWeight: "700" },
+  // Date pickers
+  dateRow: { flexDirection: "row", marginBottom: 6 },
+  dateBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E2E8F0" },
+  dateBtnText: { fontSize: 13, color: "#1E293B" },
+  dateBtnPlaceholder: { fontSize: 13, color: "#94A3B8" },
 
-  statsGrid: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
-  statBox: { flex: 1, backgroundColor: "#FFF", borderWidth: 1, borderRadius: 12, padding: 14, marginHorizontal: 4 },
-  statLabel: { fontSize: 9, fontWeight: "800", color: "#64748B", marginBottom: 4, letterSpacing: 0.5 },
-  statNumber: { fontSize: 20, fontWeight: "800", color: "#1E293B" },
+  // Actions
+  actionsRow: { flexDirection: "row", marginTop: 10 },
+  btnPrimary: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 18, paddingVertical: 11, borderRadius: 10, marginRight: 10, alignItems: "center" },
+  btnPrimaryText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  btnStroke: { flexDirection: "row", backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
+  btnStrokeText: { color: "#475569", fontSize: 13, fontWeight: "600" },
 
+  // Stats
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  statLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, flex: 1, marginRight: 6 },
+  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 },
+  statNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+
+  // Chart
   chartCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  chartTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 16 },
+  chartTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  chartSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 16 },
   chartScroll: { flexDirection: "row", paddingBottom: 10 },
   chartYAxis: { justifyContent: "space-between", paddingRight: 10, height: 150, paddingBottom: 20 },
   yAxisText: { fontSize: 10, color: "#94A3B8" },
   barsContainer: { flexDirection: "row", height: 150, alignItems: "flex-end" },
   barCol: { width: 40, alignItems: "center", marginRight: 10 },
-  barTrack: { width: 30, height: 130, justifyContent: "flex-end" },
-  barFill: { width: 30, backgroundColor: "#0F172A", borderTopLeftRadius: 4, borderTopRightRadius: 4 },
-  barLabel: { fontSize: 9, color: "#64748B", marginTop: 6, transform: [{ rotate: "-30deg" }] },
+  barTrack: { width: 28, height: 130, justifyContent: "flex-end", backgroundColor: "#F8FAFC", borderRadius: 4 },
+  barFill: { width: 28, borderRadius: 4 },
+  barLabel: { fontSize: 9, color: "#64748B", marginTop: 6 },
 
+  // Distribution
+  distCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
+  distRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  distDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
+  distLabel: { flex: 1, fontSize: 13, color: "#475569" },
+  distCount: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
+
+  // Table
   tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 20 },
+  tableTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
+  sortedText: { fontSize: 11, color: "#94A3B8", fontStyle: "italic" },
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
-  tableHeaderText: { fontSize: 9, fontWeight: "800", color: "#94A3B8", letterSpacing: 0.5 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B" },
-  studentEmail: { fontSize: 10, color: "#64748B" },
-  cellNum: { fontSize: 12, color: "#475569", textAlign: "center", fontWeight: "600" },
-  percentBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 12, borderWidth: 1, alignSelf: "center" },
-  percentText: { fontSize: 10, fontWeight: "800" },
+  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: "#94A3B8" },
+  cellNum: { fontSize: 13, color: "#475569", textAlign: "center", fontWeight: "600" },
+  attendBarTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F1F5F9", overflow: "hidden", marginRight: 8 },
+  attendBarFill: { height: "100%", borderRadius: 3 },
+  percentText: { fontSize: 11, fontWeight: "800", minWidth: 38, textAlign: "right" },
   emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center" },
 
+  // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
   modalContent: { backgroundColor: "#FFF", borderRadius: 16, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginBottom: 16 },
-  modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalItemSelected: { backgroundColor: Theme.colors.accentLight, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 8 },
   modalItemText: { fontSize: 15, color: "#334155" },
   modalCloseBtn: { marginTop: 20, backgroundColor: "#F1F5F9", padding: 14, borderRadius: 12, alignItems: "center" },
   modalCloseText: { fontSize: 15, fontWeight: "600", color: "#64748B" },
 
-  // Student Details Modal Styles
-  modalCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  // Student Details Modal
+  modalDetailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
-  modalAvatarText: { fontSize: 20, fontWeight: "800", color: "#4361EE" },
+  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: Theme.colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
   modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
   modalEmail: { fontSize: 13, color: "#64748B" },

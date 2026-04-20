@@ -2,7 +2,7 @@ import { BASE_URL } from "./config";
 import { saveToken, saveUser } from "./authStorage";
 
 export async function loginUser(email, password) {
-  const response = await fetch(`${BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -11,7 +11,7 @@ export async function loginUser(email, password) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || "Login failed");
+    throw new Error(data.detail || data.error || data.message || "Login failed");
   }
 
   // Save token and user info
@@ -26,7 +26,7 @@ export async function loginUser(email, password) {
 }
 
 export async function registerTeacher(name, email, password) {
-  const response = await fetch(`${BASE_URL}/api/auth/register-teacher`, {
+  const response = await fetch(`${BASE_URL}/auth/register-teacher`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),

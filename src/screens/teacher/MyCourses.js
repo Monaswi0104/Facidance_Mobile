@@ -5,6 +5,8 @@ import {
 } from "react-native";
 import { getTeacherCourses } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Search, BookOpen, Building, Calendar, Key, Users, Clock } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -18,18 +20,24 @@ export default function MyCourses({ navigation }) {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
-        const list = Array.isArray(data) ? data : [];
+        console.log("[MyCourses] raw data:", JSON.stringify(data));
+        // Handle both array and {courses: [...]} response
+        const list = Array.isArray(data) ? data : (data?.courses || []);
+        console.log("[MyCourses] list length:", list.length);
+        if (list.length > 0) console.log("[MyCourses] first course keys:", Object.keys(list[0]));
         setCourses(list.map((c) => ({
-          id: c.id, name: c.name, code: c.code || "—",
-          entryCode: c.entryCode || "",
-          program: c.semester?.academicYear?.program?.name || "",
-          department: c.semester?.academicYear?.program?.department?.name || "",
-          semester: c.semester?.name || "",
-          year: c.semester?.academicYear?.name || "",
-          students: c._count?.students || 0,
-          sessions: c._count?.attendance || 0,
+          id: c.id, 
+          name: c.name || c.course_name || "Untitled",
+          code: c.code || c.course_code || "—",
+          entryCode: c.entryCode || c.entry_code || "",
+          program: c.semester?.academicYear?.program?.name || c.program_name || c.program || "",
+          department: c.semester?.academicYear?.program?.department?.name || c.department_name || c.department || "",
+          semester: c.semester?.name || c.semester_name || "",
+          year: c.semester?.academicYear?.name || c.academic_year || c.year || "",
+          students: c._count?.students || c.student_count || c.students_count || c.total_students || 0,
+          sessions: c.session_count || c._count?.attendance || c.attendance_count || c.sessions_count || c.total_sessions || 0,
         })));
-      } catch (e) { console.log(e); }
+      } catch (e) { console.log("[MyCourses] Error:", e); }
       finally { setIsLoading(false); }
     };
     load();
@@ -48,21 +56,16 @@ export default function MyCourses({ navigation }) {
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: "#10B981" }]}>
-            <Text style={styles.badgeText}>C</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>My Courses</Text>
-            <Text style={styles.subtitle}>Manage your assigned courses, students, and attendance sessions.</Text>
-          </View>
+          <Text style={styles.title}>My Courses</Text>
+          <Text style={styles.subtitle}>{courses.length} course{courses.length !== 1 ? "s" : ""} assigned to you</Text>
         </View>
 
         {/* Search */}
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Search size={16} color="#94A3B8" style={{ marginRight: 10 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by course name, code, department, program..."
+            placeholder="Search by course name, code, program, or department..."
             placeholderTextColor="#94A3B8"
             value={search}
             onChangeText={setSearch}
@@ -71,45 +74,75 @@ export default function MyCourses({ navigation }) {
 
         {/* Course Cards */}
         {isLoading ? (
-          <ActivityIndicator size="large" color="#4361EE" style={{ marginVertical: 40 }} />
+          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📚</Text>
+            <BookOpen size={48} color="#CBD5E1" />
             <Text style={styles.emptyText}>No courses found</Text>
           </View>
         ) : (
-          filtered.map((course) => (
-            <TouchableOpacity key={course.id} style={styles.courseCard} activeOpacity={0.7}
-              onPress={() => navigation.navigate("CourseDetails", { course })}>
+          filtered.map((course) => {
+            const sessionPct = course.sessions > 0 ? Math.min(100, Math.round((course.sessions / Math.max(course.sessions, 10)) * 100)) : 0;
+            return (
+              <TouchableOpacity key={course.id} style={styles.courseCard} activeOpacity={0.7}
+                onPress={() => navigation.navigate("CourseDetails", { course })}>
 
-              <View style={styles.courseTopRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.courseName}>{course.name}</Text>
-                  <Text style={styles.courseProgram}>{course.program}</Text>
+                {/* Course Name + Active Badge */}
+                <View style={styles.courseTopRow}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                      <Text style={styles.courseName}>{course.name}</Text>
+                      <View style={styles.activeBadge}>
+                        <Text style={styles.activeBadgeText}>Active</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.courseProgram}>{course.program}</Text>
+                  </View>
                 </View>
-                <View style={[styles.courseIconBg, { backgroundColor: "#EEF2FF" }]}>
-                  <Text style={{ fontSize: 18 }}>📚</Text>
-                </View>
-              </View>
 
-              <View style={styles.courseDetailRow}>
-                <Text style={styles.courseDetailText}>🏢 {course.department}</Text>
-              </View>
-              <View style={styles.courseDetailRow}>
-                <Text style={styles.courseDetailText}>📅 {course.year}{course.semester ? ` · ${course.semester}` : ""}</Text>
-              </View>
-              {course.code !== "—" && (
-                <View style={styles.codeChip}>
-                  <Text style={styles.codeChipText}>🔗 {course.code}</Text>
-                </View>
-              )}
+                {/* Details with icons */}
+                {!!course.department && (
+                  <View style={styles.courseDetailRow}>
+                    <Building size={13} color="#64748B" style={{ marginRight: 6 }} />
+                    <Text style={styles.courseDetailText}>{course.department}</Text>
+                  </View>
+                )}
+                {!!course.semester && (
+                  <View style={styles.courseDetailRow}>
+                    <Calendar size={13} color="#64748B" style={{ marginRight: 6 }} />
+                    <Text style={styles.courseDetailText}>{course.semester}</Text>
+                  </View>
+                )}
+                {!!course.entryCode && (
+                  <View style={styles.courseDetailRow}>
+                    <Key size={13} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+                    <Text style={[styles.courseDetailText, { color: Theme.colors.accent, fontWeight: "700" }]}>{course.entryCode}</Text>
+                  </View>
+                )}
 
-              <View style={styles.courseFooter}>
-                <Text style={styles.footerStat}>👨‍🎓 {course.students} students</Text>
-                <Text style={styles.footerStat}>🕐 {course.sessions} sessions</Text>
-              </View>
-            </TouchableOpacity>
-          ))
+                {/* Session Activity Bar */}
+                <View style={styles.activityRow}>
+                  <Text style={styles.activityLabel}>Session activity</Text>
+                  <Text style={styles.activityPct}>{sessionPct}%</Text>
+                </View>
+                <View style={styles.activityTrack}>
+                  <View style={[styles.activityFill, { width: `${Math.max(sessionPct, 4)}%` }]} />
+                </View>
+
+                {/* Footer Stats */}
+                <View style={styles.courseFooter}>
+                  <View style={styles.footerItem}>
+                    <Text style={styles.footerNumber}>{course.students}</Text>
+                    <Text style={styles.footerLabel}>Students</Text>
+                  </View>
+                  <View style={styles.footerItem}>
+                    <Text style={[styles.footerNumber, { color: Theme.colors.accent }]}>{course.sessions}</Text>
+                    <Text style={styles.footerLabel}>Sessions</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
@@ -119,26 +152,92 @@ export default function MyCourses({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 14, marginTop: 8 },
-  badge: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  badgeText: { color: "#FFF", fontSize: 16, fontWeight: "800" },
-  title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 12, color: "#64748B", marginTop: 2 },
-  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 18, borderWidth: 1, borderColor: "#E2E8F0" },
-  searchIcon: { fontSize: 16, marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 14, color: "#1E293B", padding: 0 },
+
+  // Header
+  header: { marginBottom: 16, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+
+  // Search
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+
+  // Empty
   emptyState: { alignItems: "center", paddingVertical: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: "#94A3B8" },
-  courseCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: "#94A3B8", marginTop: 12 },
+
+  // Course Card
+  courseCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+  },
   courseTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
-  courseName: { fontSize: 17, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
-  courseProgram: { fontSize: 12, fontWeight: "600", color: "#4361EE", textTransform: "uppercase" },
-  courseIconBg: { width: 38, height: 38, borderRadius: 10, justifyContent: "center", alignItems: "center", marginLeft: 10 },
-  courseDetailRow: { marginBottom: 4 },
+  courseName: { fontSize: 17, fontWeight: "800", color: "#0F172A", marginRight: 8 },
+  courseProgram: { fontSize: 12, color: "#64748B" },
+
+  // Active badge
+  activeBadge: {
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+
+  // Detail rows with icons
+  courseDetailRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   courseDetailText: { fontSize: 13, color: "#64748B" },
-  codeChip: { backgroundColor: "#EEF2FF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, alignSelf: "flex-start", marginTop: 6 },
-  codeChipText: { fontSize: 12, fontWeight: "600", color: "#4361EE" },
-  courseFooter: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#F1F5F9", marginTop: 12, paddingTop: 12 },
-  footerStat: { fontSize: 13, fontWeight: "600", color: "#64748B" },
+
+  // Session activity bar
+  activityRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  activityLabel: { fontSize: 12, color: "#94A3B8" },
+  activityPct: { fontSize: 12, fontWeight: "700", color: "#1E293B" },
+  activityTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#F1F5F9",
+    overflow: "hidden",
+    marginBottom: 14,
+  },
+  activityFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: Theme.colors.accent,
+  },
+
+  // Footer
+  courseFooter: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+    paddingTop: 12,
+  },
+  footerItem: { marginRight: 24 },
+  footerNumber: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  footerLabel: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
 });

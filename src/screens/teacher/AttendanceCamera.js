@@ -4,8 +4,9 @@ import {
   ScrollView, ActivityIndicator, TextInput, Dimensions, Alert
 } from "react-native";
 import { getTeacherCourses, getCourseStudents } from "../../api/teacherApi";
-import { launchCamera } from "react-native-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
+import { Theme } from "../../theme/Theme";
+import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info } from "lucide-react-native";
 import { BASE_URL } from "../../api/config";
 import { getToken } from "../../api/authStorage";
 
@@ -25,14 +26,16 @@ export default function AttendanceCamera({ navigation }) {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
-        const list = Array.isArray(data) ? data : [];
+        const list = Array.isArray(data) ? data : (data?.courses || []);
         setCourses(list.map((c) => ({
-          id: c.id, name: c.name, code: c.code || "",
-          program: c.semester?.academicYear?.program?.name || "",
-          department: c.semester?.academicYear?.program?.department?.name || "",
-          semester: c.semester?.name || "",
-          year: c.semester?.academicYear?.name || "",
-          students: c._count?.students || 0,
+          id: c.id, 
+          name: c.name || c.course_name || "Untitled", 
+          code: c.code || c.course_code || "",
+          program: c.semester?.academicYear?.program?.name || c.program_name || c.program || "",
+          department: c.semester?.academicYear?.program?.department?.name || c.department_name || c.department || "",
+          semester: c.semester?.name || c.semester_name || "",
+          year: c.semester?.academicYear?.name || c.academic_year || c.year || "",
+          students: c._count?.students || c.student_count || c.students_count || c.total_students || 0,
         })));
       } catch (e) { console.log(e); }
       finally { setIsLoading(false); }
@@ -51,7 +54,7 @@ export default function AttendanceCamera({ navigation }) {
         email: s.user?.email || "—",
         hasPhotos: !!s.faceEmbedding || s.photosUploaded || false,
         trained: !!s.faceEmbedding,
-        photoCount: s.photoCount || 3,
+        photoCount: s.photoCount || 0,
       })));
     } catch (e) { console.log(e); }
     finally { setIsLoadingStudents(false); }
@@ -73,37 +76,15 @@ export default function AttendanceCamera({ navigation }) {
     try {
       setIsTraining(true);
       const token = await getToken();
-      const res = await fetch(`${API_BASE_URL}/api/train`, {
+      const res = await fetch(`${BASE_URL}/api/train`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ courseId: selectedCourse.id }),
       });
-      Alert.alert("✅ Training Started", "Model training has been initiated for all untrained students.");
+      Alert.alert("Training Started", "Model training has been initiated for all students.");
     } catch (e) {
       Alert.alert("Error", "Failed to start training.");
     } finally { setIsTraining(false); }
-  };
-
-  const captureAttendance = () => {
-    launchCamera({ mediaType: "photo", quality: 0.8 }, async (res) => {
-      if (res.assets) {
-        const image = res.assets[0];
-        const formData = new FormData();
-        formData.append("file", { uri: image.uri, type: image.type, name: image.fileName });
-        formData.append("courseId", selectedCourse.id);
-        try {
-          const token = await getToken();
-          await fetch(`${API_BASE_URL}/api/recognize`, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${token}` },
-            body: formData,
-          });
-          Alert.alert("✅ Attendance Captured", "Photo has been processed for face recognition.");
-        } catch (e) {
-          Alert.alert("Error", "Failed to process attendance.");
-        }
-      }
-    });
   };
 
   const trained = students.filter((s) => s.trained).length;
@@ -117,72 +98,44 @@ export default function AttendanceCamera({ navigation }) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
           {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.headerBadge, { backgroundColor: "#0F172A" }]}>
-              <Text style={{ fontSize: 18 }}>📸</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>Attendance Management</Text>
-              <Text style={styles.subtitle}>Search and select your course to get started.</Text>
-            </View>
+            <Text style={styles.title}>Attendance Management</Text>
+            <Text style={styles.subtitle}>Select a course, train the face recognition model, then capture live attendance.</Text>
           </View>
 
-          {/* Select Course Section */}
+          {/* Select Course Card */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={{ fontSize: 14 }}>📚</Text>
-              <Text style={styles.sectionHeaderText}>Select Course</Text>
+              <View style={styles.sectionIconBg}>
+                <BookOpen size={16} color="#FFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sectionHeaderText}>Select Course</Text>
+                <Text style={styles.sectionSubText}>{courses.length} course{courses.length !== 1 ? "s" : ""} available — search to filter</Text>
+              </View>
             </View>
 
             <View style={styles.searchBar}>
-              <Text style={styles.searchIcon}>🔍</Text>
+              <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
               <TextInput style={styles.searchInput}
-                placeholder="Search by course name, code, department, program..."
+                placeholder="Search by course name, department, program, or semester..."
                 placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
             </View>
 
-            {/* Mini stats */}
-            <View style={styles.miniStatsRow}>
-              <View style={styles.miniStat}>
-                <Text style={styles.miniStatLabel}>Total Courses</Text>
-                <Text style={styles.miniStatNumber}>{courses.length}</Text>
-              </View>
-              <View style={styles.miniStat}>
-                <Text style={styles.miniStatLabel}>Departments</Text>
-                <Text style={styles.miniStatNumber}>{new Set(courses.map(c => c.department).filter(Boolean)).size}</Text>
-              </View>
-            </View>
-
             {isLoading ? (
-              <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+            ) : filteredCourses.length === 0 ? (
+              <Text style={styles.emptyText}>No courses found.</Text>
             ) : (
               filteredCourses.map((c) => (
-                <TouchableOpacity key={c.id} style={styles.courseItem} onPress={() => selectCourse(c)}>
+                <TouchableOpacity key={c.id} style={styles.courseItem} onPress={() => selectCourse(c)} activeOpacity={0.7}>
                   <Text style={styles.courseItemName}>{c.name}</Text>
-                  <Text style={styles.courseItemMeta}>{c.department} · {c.year}{c.semester ? ` · ${c.semester}` : ""}</Text>
-                  <Text style={styles.courseItemMeta}>{c.code} · {c.students} students</Text>
+                  <Text style={styles.courseItemMeta}>{c.department} → {c.program} → {c.year}{c.semester ? ` → ${c.semester}` : ""}</Text>
                 </TouchableOpacity>
               ))
             )}
-          </View>
-
-          {/* How AI Attendance Works */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={{ fontSize: 14 }}>⚡</Text>
-              <Text style={styles.sectionHeaderText}>How AI Attendance Works</Text>
-            </View>
-            {[
-              "1. Search for your course using the smart search bar",
-              "2. Select from results — courses appear instantly as you type",
-              "3. Ensure students have uploaded photos so the model can recognize them",
-              "4. Click Train Model to generate or update face embeddings",
-              "5. Once trained, use Capture Attendance to start a live recognition session",
-            ].map((s, i) => <Text key={i} style={styles.guideStep}>{s}</Text>)}
-            <View style={styles.proTipBar}>
-              <Text style={styles.proTipText}>💡 Pro Tip: You can search by course code (e.g. IT-701), course name, department, or any combination!</Text>
-            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -195,132 +148,142 @@ export default function AttendanceCamera({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
         {/* Header */}
         <View style={styles.header}>
-          <View style={[styles.headerBadge, { backgroundColor: "#0F172A" }]}>
-            <Text style={{ fontSize: 18 }}>📸</Text>
-          </View>
+          <Text style={styles.title}>Attendance Management</Text>
+          <Text style={styles.subtitle}>Select a course, train the face recognition model, then capture live attendance.</Text>
+        </View>
+
+        {/* Selected Course Banner */}
+        <View style={styles.selectedBanner}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Attendance Management</Text>
-            <Text style={styles.subtitle}>Managing: {selectedCourse.name}</Text>
+            <Text style={styles.selectedLabel}>SELECTED COURSE</Text>
+            <Text style={styles.selectedName}>{selectedCourse.name}</Text>
+            <Text style={styles.selectedMeta} numberOfLines={2}>{selectedCourse.department} → {selectedCourse.program} → {selectedCourse.year}{selectedCourse.semester ? ` → ${selectedCourse.semester}` : ""}</Text>
           </View>
-          <TouchableOpacity style={styles.backBtn} onPress={() => { setSelectedCourse(null); setStudents([]); }}>
-            <Text style={styles.backBtnText}>← Back</Text>
+          <TouchableOpacity style={styles.changeCourseBtn} onPress={() => { setSelectedCourse(null); setStudents([]); }}>
+            <Text style={styles.changeCourseBtnText}>Change{"\n"}course</Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats Grid */}
         {isLoadingStudents ? (
-          <ActivityIndicator size="small" color="#4361EE" style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
-          <View style={styles.statsGrid}>
-            <View style={[styles.statCard, { backgroundColor: "#FEF3C7" }]}>
-              <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#F59E0B" }]}>{students.length}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#F59E0B" }]}><Text style={{ fontSize: 16 }}>👨‍🎓</Text></View>
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <View style={styles.statTopRow}>
+                <Text style={styles.statLabel}>STUDENTS</Text>
+                <View style={styles.statIconBg}><Users size={14} color="#FFF" /></View>
               </View>
+              <Text style={styles.statNumber}>{students.length}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: "#D1FAE5" }]}>
-              <Text style={styles.statLabel}>TRAINED</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#10B981" }]}>{trained}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#10B981" }]}><Text style={{ fontSize: 16 }}>✅</Text></View>
+            <View style={styles.statCard}>
+              <View style={styles.statTopRow}>
+                <Text style={styles.statLabel}>TRAINED</Text>
+                <View style={styles.statIconBg}><ScanFace size={14} color="#FFF" /></View>
               </View>
+              <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{trained}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: "#DBEAFE" }]}>
-              <Text style={styles.statLabel}>HAVE PHOTOS</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#3B82F6" }]}>{withPhotos}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#3B82F6" }]}><Text style={{ fontSize: 16 }}>📸</Text></View>
+            <View style={styles.statCard}>
+              <View style={styles.statTopRow}>
+                <Text style={styles.statLabel}>PHOTOS</Text>
+                <View style={styles.statIconBg}><Camera size={14} color="#FFF" /></View>
               </View>
+              <Text style={styles.statNumber}>{withPhotos}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: "#FCE7F3" }]}>
-              <Text style={styles.statLabel}>NOT TRAINED</Text>
-              <View style={styles.statRow}>
-                <Text style={[styles.statNumber, { color: "#EC4899" }]}>{notTrained}</Text>
-                <View style={[styles.statIconBg, { backgroundColor: "#EC4899" }]}><Text style={{ fontSize: 16 }}>⚠️</Text></View>
+            <View style={styles.statCard}>
+              <View style={styles.statTopRow}>
+                <Text style={styles.statLabel}>UNTRAINED</Text>
+                <View style={styles.statIconBg}><AlertCircle size={14} color="#FFF" /></View>
               </View>
+              <Text style={[styles.statNumber, { color: "#EF4444" }]}>{notTrained}</Text>
             </View>
           </View>
         )}
 
-        {/* Attendance Actions */}
-        <Text style={styles.sectionTitle}>Attendance Actions</Text>
-        <View style={styles.actionsCard}>
-          <TouchableOpacity style={styles.actionRow} onPress={trainModel} disabled={isTraining}>
-            <View style={[styles.actionDot, { backgroundColor: "#10B981" }]} />
-            <View style={styles.actionInfo}>
-              <Text style={styles.actionTitle}>{isTraining ? "Training..." : "Train Model"}</Text>
-              <Text style={styles.actionDesc}>Prepare or update embeddings for all untrained students</Text>
-            </View>
-          </TouchableOpacity>
-          <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-          <TouchableOpacity style={styles.actionRow} onPress={captureAttendance}>
-            <View style={[styles.actionDot, { backgroundColor: "#4361EE" }]} />
-            <View style={styles.actionInfo}>
-              <Text style={styles.actionTitle}>Capture Attendance</Text>
-              <Text style={styles.actionDesc}>Open the camera-based recognition screen for this course</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        {/* Train Model Action */}
+        <TouchableOpacity
+          style={[styles.trainBtn, isTraining && { opacity: 0.6 }]}
+          onPress={trainModel}
+          disabled={isTraining}
+          activeOpacity={0.8}>
+          {isTraining ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <>
+              <Cpu size={16} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.trainBtnText}>Train Recognition Model</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
-        {/* Student Training Status + Next Steps */}
-        <View style={styles.bottomRow}>
-          {/* Student Training Table */}
-          <View style={[styles.sectionCard, { flex: 1 }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={{ fontSize: 14 }}>👁‍🗨</Text>
-              <Text style={styles.sectionHeaderText}>Student Training Status</Text>
-            </View>
+        {/* Enrolled Students Table */}
+        <View style={styles.tableCard}>
+          <Text style={styles.tableTitle}>Enrolled Students</Text>
+          <Text style={styles.tableSubtitle}>{students.length} total enrolled</Text>
 
-            {/* Table Header */}
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeaderText, { width: 24 }]}>#</Text>
-              <Text style={[styles.tableHeaderText, { flex: 1.5 }]}>Student</Text>
-              <Text style={[styles.tableHeaderText, { flex: 1 }]}>Photos</Text>
-              <Text style={[styles.tableHeaderText, { flex: 0.8 }]}>Status</Text>
-            </View>
+          <View style={styles.tableHeaderRow}>
+            <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>PHOTOS</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>COUNT</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>STATUS</Text>
+          </View>
 
-            {students.length === 0 ? (
-              <Text style={styles.emptyText}>No students enrolled.</Text>
-            ) : (
-              students.map((s, i) => (
-                <View key={s.id} style={[styles.tableRow, i < students.length - 1 && styles.tableBorder]}>
-                  <Text style={[styles.cellText, { width: 24, color: "#94A3B8" }]}>{i + 1}</Text>
-                  <View style={{ flex: 1.5 }}>
-                    <Text style={styles.studentName} numberOfLines={1}>{s.name}</Text>
-                    <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
-                  </View>
-                  <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-                    <View style={[styles.photoBadge, s.hasPhotos ? styles.photoYes : styles.photoNo]}>
-                      <Text style={{ fontSize: 10 }}>{s.hasPhotos ? "✅ Available" : "—"}</Text>
-                    </View>
-                  </View>
-                  <View style={{ flex: 0.8, alignItems: "center" }}>
-                    <View style={[styles.statusBadge, s.trained ? styles.trainedYes : styles.trainedNo]}>
-                      <Text style={[styles.statusBadgeText, s.trained ? { color: "#059669" } : { color: "#DC2626" }]}>
-                        {s.trained ? "Trained" : "Pending"}
-                      </Text>
-                    </View>
-                  </View>
+          {students.length === 0 ? (
+            <Text style={styles.emptyText}>No students enrolled.</Text>
+          ) : (
+            students.map((s, i) => (
+              <View key={s.id} style={[styles.tableRow, i < students.length - 1 && styles.tableBorder]}>
+                <View style={{ flex: 2, paddingRight: 6 }}>
+                  <Text style={styles.studentName} numberOfLines={1}>{s.name}</Text>
+                  <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
                 </View>
-              ))
-            )}
-          </View>
+                <View style={{ flex: 0.8, alignItems: "center" }}>
+                  {s.hasPhotos ? (
+                    <View style={styles.photoAvailable}>
+                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
+                      <Text style={[styles.badgeText, { color: "#059669" }]}>Available</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.photoMissing}>
+                      <XCircle size={11} color="#EF4444" style={{ marginRight: 2 }} />
+                      <Text style={[styles.badgeText, { color: "#EF4444" }]}>Missing</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.cellNum, { flex: 0.8 }]}>{s.photoCount}</Text>
+                <View style={{ flex: 0.9, alignItems: "center" }}>
+                  {s.trained ? (
+                    <View style={styles.trainedBadge}>
+                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
+                      <Text style={[styles.badgeText, { color: "#059669" }]}>Trained</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.pendingBadge}>
+                      <Text style={[styles.badgeText, { color: "#94A3B8" }]}>Pending</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
-        {/* Next Steps */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={{ fontSize: 14 }}>📋</Text>
-            <Text style={styles.sectionHeaderText}>Next Steps</Text>
+        {/* Info Card */}
+        <View style={styles.infoCard}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+            <Info size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+            <Text style={styles.infoTitle}>How cumulative attendance works</Text>
           </View>
-          {[
-            '1. Use the "Capture Attendance" action to start a live session',
-            "2. Ask students to look at the camera for accurate detection",
-            "3. Review your attendance reports from the Reports section",
-          ].map((s, i) => <Text key={i} style={styles.guideStep}>{s}</Text>)}
+          <Text style={styles.infoStep}>• Face recognition runs centrally via CCTV/webcam</Text>
+          <Text style={styles.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
+          <Text style={styles.infoStep}>• Once recognized, students stay marked present</Text>
+          <Text style={styles.infoStep}>• Submit at end to save the session record</Text>
+          <View style={styles.infoHighlight}>
+            <Text style={styles.infoHighlightText}>Students only need to be detected once — no need to stay in frame!</Text>
+          </View>
         </View>
 
       </ScrollView>
@@ -331,63 +294,118 @@ export default function AttendanceCamera({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 18, marginTop: 8 },
-  headerBadge: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  title: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 12, color: "#64748B", marginTop: 2 },
-  backBtn: { backgroundColor: "#F1F5F9", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  backBtnText: { fontSize: 12, fontWeight: "700", color: "#64748B" },
 
-  sectionCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  // Header
+  header: { marginBottom: 18, marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+
+  // Section Card
+  sectionCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  sectionHeaderText: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginLeft: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 10 },
+  sectionIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  sectionHeaderText: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
+  sectionSubText: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
 
-  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 12 },
-  searchIcon: { fontSize: 14, marginRight: 6 },
+  // Search
+  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 12 },
   searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
 
-  miniStatsRow: { flexDirection: "row", marginBottom: 12 },
-  miniStat: { flex: 1, backgroundColor: "#F8FAFC", borderRadius: 10, padding: 12, marginRight: 8 },
-  miniStatLabel: { fontSize: 10, fontWeight: "600", color: "#94A3B8", marginBottom: 4 },
-  miniStatNumber: { fontSize: 20, fontWeight: "800", color: "#1E293B" },
-
+  // Course Items
   courseItem: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 10, padding: 14, marginBottom: 8 },
-  courseItemName: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  courseItemMeta: { fontSize: 12, color: "#64748B" },
+  courseItemName: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
+  courseItemMeta: { fontSize: 11, color: "#64748B" },
 
-  guideStep: { fontSize: 13, color: "#475569", lineHeight: 22, marginBottom: 2 },
-  proTipBar: { backgroundColor: "#EEF2FF", borderRadius: 8, padding: 10, marginTop: 12 },
-  proTipText: { fontSize: 12, color: "#4361EE", fontWeight: "600" },
+  // Selected Course Banner
+  selectedBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderLeftWidth: 4,
+    borderLeftColor: Theme.colors.accent,
+  },
+  selectedLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.accent, letterSpacing: 0.5, marginBottom: 3 },
+  selectedName: { fontSize: 17, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
+  selectedMeta: { fontSize: 11, color: "#64748B" },
+  changeCourseBtn: { backgroundColor: "#F1F5F9", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0", alignItems: "center" },
+  changeCourseBtnText: { fontSize: 11, fontWeight: "600", color: "#475569", textAlign: "center" },
 
-  statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20 },
-  statCard: { width: (width - 52) / 2, borderRadius: 14, padding: 14, marginBottom: 10 },
-  statLabel: { fontSize: 9, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6 },
-  statRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  statNumber: { fontSize: 24, fontWeight: "800" },
-  statIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  // Stats
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 3,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
+  statLabel: { fontSize: 7, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, flex: 1, marginRight: 6 },
+  statNumber: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
+  statIconBg: { width: 26, height: 26, borderRadius: 7, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
-  actionsCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 6, marginBottom: 20, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
-  actionRow: { flexDirection: "row", alignItems: "center", padding: 14 },
-  actionDot: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  actionInfo: { flex: 1 },
-  actionTitle: { fontSize: 15, fontWeight: "700", color: "#1E293B", marginBottom: 2 },
-  actionDesc: { fontSize: 12, color: "#64748B" },
+  // Train Button
+  trainBtn: {
+    flexDirection: "row",
+    backgroundColor: Theme.colors.primaryDark,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+  trainBtnText: { color: "#FFF", fontSize: 14, fontWeight: "700" },
 
-  bottomRow: { marginBottom: 16 },
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
-  tableHeaderText: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.3 },
-  tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
-  tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
-  cellText: { fontSize: 12 },
-  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B" },
+  // Table
+  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
+  tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
   studentEmail: { fontSize: 10, color: "#94A3B8" },
-  photoBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  photoYes: { backgroundColor: "#D1FAE5" },
-  photoNo: { backgroundColor: "#F1F5F9" },
-  statusBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 },
-  trainedYes: { backgroundColor: "#D1FAE5" },
-  trainedNo: { backgroundColor: "#FEE2E2" },
-  statusBadgeText: { fontSize: 10, fontWeight: "700" },
+  cellNum: { fontSize: 13, fontWeight: "600", color: "#475569", textAlign: "center" },
+
+  // Badges
+  photoAvailable: { flexDirection: "row", alignItems: "center" },
+  photoMissing: { flexDirection: "row", alignItems: "center" },
+  trainedBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
+  pendingBadge: { backgroundColor: "#F8FAFC", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  badgeText: { fontSize: 9, fontWeight: "700" },
+
+  // Info
+  infoCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
+  infoTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
+  infoStep: { fontSize: 12, color: "#64748B", lineHeight: 20, marginBottom: 2 },
+  infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
+  infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
+
   emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 16 },
 });
