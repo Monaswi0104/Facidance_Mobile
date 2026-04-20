@@ -3,12 +3,10 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, TextInput, Dimensions, Alert
 } from "react-native";
-import { getTeacherCourses, getCourseStudents } from "../../api/teacherApi";
+import { getTeacherCourses, getCourseStudents, trainModel as trainModelApi } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info } from "lucide-react-native";
-import { BASE_URL } from "../../api/config";
-import { getToken } from "../../api/authStorage";
+import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -75,15 +73,13 @@ export default function AttendanceCamera({ navigation }) {
   const trainModel = async () => {
     try {
       setIsTraining(true);
-      const token = await getToken();
-      const res = await fetch(`${BASE_URL}/api/train`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId: selectedCourse.id }),
-      });
-      Alert.alert("Training Started", "Model training has been initiated for all students.");
+      await trainModelApi(selectedCourse.id);
+      Alert.alert("Training Complete", "Model training has been completed for all students.");
+      // Reload students to get updated trained status
+      loadStudents(selectedCourse.id);
     } catch (e) {
-      Alert.alert("Error", "Failed to start training.");
+      console.log("Training error:", e);
+      Alert.alert("Error", e.message || "Failed to start training.");
     } finally { setIsTraining(false); }
   };
 
@@ -203,21 +199,36 @@ export default function AttendanceCamera({ navigation }) {
           </View>
         )}
 
-        {/* Train Model Action */}
-        <TouchableOpacity
-          style={[styles.trainBtn, isTraining && { opacity: 0.6 }]}
-          onPress={trainModel}
-          disabled={isTraining}
-          activeOpacity={0.8}>
-          {isTraining ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <>
-              <Cpu size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.trainBtnText}>Train Recognition Model</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {/* Action Buttons Row */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.trainBtnOutline, isTraining && { opacity: 0.6 }]}
+            onPress={trainModel}
+            disabled={isTraining}
+            activeOpacity={0.8}>
+            {isTraining ? (
+              <ActivityIndicator size="small" color={Theme.colors.accent} />
+            ) : (
+              <>
+                <Cpu size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+                <Text style={styles.trainBtnOutlineText}>Train Recognition Model</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.captureBtn}
+            onPress={() => navigation.navigate("AttendanceSession", {
+              course: selectedCourse,
+              studentCount: students.length,
+              trainedCount: trained,
+              notTrainedCount: notTrained,
+            })}
+            activeOpacity={0.8}>
+            <Play size={14} color="#FFF" style={{ marginRight: 6 }} />
+            <Text style={styles.captureBtnText}>Capture Attendance</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Enrolled Students Table */}
         <View style={styles.tableCard}>
@@ -369,17 +380,35 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
   statIconBg: { width: 26, height: 26, borderRadius: 7, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
-  // Train Button
-  trainBtn: {
+  // Action Buttons
+  actionRow: {
     flexDirection: "row",
-    backgroundColor: Theme.colors.primaryDark,
-    paddingVertical: 14,
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 18,
+  },
+  trainBtnOutline: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    paddingVertical: 13,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 18,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.accent,
   },
-  trainBtnText: { color: "#FFF", fontSize: 14, fontWeight: "700" },
+  trainBtnOutlineText: { color: Theme.colors.accent, fontSize: 11, fontWeight: "700" },
+  captureBtn: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: Theme.colors.primaryDark,
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  captureBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
 
   // Table
   tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },

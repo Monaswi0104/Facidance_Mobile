@@ -7,7 +7,7 @@ import TeacherDashboard from "../screens/teacher/TeacherDashboard";
 import MyCourses from "../screens/teacher/MyCourses";
 import CourseDetails from "../screens/teacher/CourseDetails";
 import AttendanceCamera from "../screens/teacher/AttendanceCamera";
-import TrainingScreen from "../screens/teacher/TrainingScreen";
+import AttendanceSession from "../screens/teacher/AttendanceSession";
 import StudentEnrollment from "../screens/teacher/StudentEnrollment";
 import AttendanceReport from "../screens/teacher/AttendanceReport";
 
@@ -75,7 +75,7 @@ export default function TeacherTabs({ navigation }) {
       <Stack.Screen name="MyCourses" component={MyCourses} options={{ title: "My Courses" }} />
       <Stack.Screen name="CourseDetails" component={CourseDetails} options={{ title: "Course Details" }} />
       <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} options={{ title: "Attendance" }} />
-      <Stack.Screen name="TrainingScreen" component={TrainingScreen} options={{ title: "Training" }} />
+      <Stack.Screen name="AttendanceSession" component={AttendanceSession} options={{ title: "AI Session" }} />
       <Stack.Screen name="StudentEnrollment" component={StudentEnrollment} options={{ title: "Enroll Students" }} />
       <Stack.Screen name="AttendanceReport" component={AttendanceReport} options={{ title: "Report" }} />
 

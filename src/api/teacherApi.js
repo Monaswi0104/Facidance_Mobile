@@ -81,3 +81,61 @@ export async function importStudentsCsv(courseId, students) {
   }
   return json;
 }
+
+// ─── Attendance APIs ───────────────────────────────────────
+
+// Get students for attendance marking (with training status)
+export async function getAttendanceStudents(courseId) {
+  const res = await apiFetch("/teacher/attendance/get-students", {
+    method: "POST",
+    body: JSON.stringify({ courseId }),
+  }, TEACHER_URL);
+  return await res.json();
+}
+
+// Trigger model training for a course
+export async function trainModel(courseId) {
+  const res = await apiFetch("/teacher/attendance/run-training", {
+    method: "POST",
+    body: JSON.stringify({ courseId }),
+  }, TEACHER_URL);
+  return await res.json();
+}
+
+// Send camera frame(s) for face recognition
+// frames: array of { uri, type, name } objects
+export async function recognizeFaces(courseId, frames, batchId = null, autoSubmit = false) {
+  const formData = new FormData();
+  formData.append("course_id", courseId);
+  if (batchId) formData.append("batch_id", batchId);
+  formData.append("auto_submit", autoSubmit.toString());
+
+  frames.forEach((frame, i) => {
+    formData.append("frames", {
+      uri: frame.uri,
+      type: frame.type || "image/jpeg",
+      name: frame.name || `frame_${i}.jpg`,
+    });
+  });
+
+  const res = await apiFetch("/teacher/attendance/recognize", {
+    method: "POST",
+    body: formData,
+  }, TEACHER_URL);
+  return await res.json();
+}
+
+// Submit final attendance for a session
+export async function submitAttendance(courseId, batchId, presentStudentIds, date = null) {
+  const res = await apiFetch("/teacher/attendance/submit", {
+    method: "POST",
+    body: JSON.stringify({
+      courseId,
+      batchId,
+      presentStudentIds,
+      date: date || new Date().toISOString(),
+    }),
+  }, TEACHER_URL);
+  return await res.json();
+}
+
