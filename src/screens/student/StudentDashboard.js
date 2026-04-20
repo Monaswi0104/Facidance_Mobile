@@ -91,7 +91,7 @@ export default function StudentDashboard({ navigation }) {
               <BarChart3 size={13} color="#475569" style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnOutlineText}>History</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("StudentCourses")}>
+            <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("StudentCoursesTab")}>
               <BookOpen size={13} color="#FFF" style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnFilledText}>Courses</Text>
             </TouchableOpacity>
@@ -107,7 +107,7 @@ export default function StudentDashboard({ navigation }) {
           <ActivityIndicator color={Theme.colors.accent} size="small" style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsRow}>
-            <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("StudentCourses")}>
+            <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("StudentCoursesTab")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>MY COURSES</Text>
                 <View style={styles.statIconBg}><BookOpen size={14} color="#FFF" /></View>
