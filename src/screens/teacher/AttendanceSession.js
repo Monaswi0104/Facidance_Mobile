@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Alert, PermissionsAndroid, Platform
 } from "react-native";
-import { launchCamera } from "react-native-image-picker";
+import { Camera } from "react-native-camera-kit";
 import { Theme } from "../../theme/Theme";
 import { recognizeFaces, submitAttendance, getCourseAttendance } from "../../api/teacherApi";
 import {
@@ -17,7 +17,10 @@ const CAPTURE_INTERVAL = 2 * 60 * 1000; // 2 minutes in ms
 export default function AttendanceSession({ route, navigation }) {
   const { course, studentCount, trainedCount, notTrainedCount } = route.params;
 
+  const cameraRef = useRef(null);
+
   // Session state
+  const [hasPermission, setHasPermission] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(SESSION_DURATION);
   const [batchId, setBatchId] = useState(null);
@@ -25,7 +28,7 @@ export default function AttendanceSession({ route, navigation }) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Recognition results
+  // Recognition results (cumulative)
   const [recognizedStudents, setRecognizedStudents] = useState(new Map());
   const [lastCaptureTime, setLastCaptureTime] = useState(null);
 
@@ -38,11 +41,34 @@ export default function AttendanceSession({ route, navigation }) {
   const captureIntervalRef = useRef(null);
   const timerRef = useRef(null);
   const sessionActiveRef = useRef(false);
+  const isCapturingRef = useRef(false);
 
-  // Keep ref in sync with state
+  // Keep refs in sync
   useEffect(() => {
     sessionActiveRef.current = sessionActive;
   }, [sessionActive]);
+  useEffect(() => {
+    isCapturingRef.current = isCapturing;
+  }, [isCapturing]);
+
+  // Request camera permission
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS === "android") {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message: "Facidance needs camera access to capture attendance.",
+            buttonPositive: "OK",
+          }
+        );
+        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+      } else {
+        setHasPermission(true);
+      }
+    })();
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -77,66 +103,37 @@ export default function AttendanceSession({ route, navigation }) {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Request camera permission (Android)
-  const requestCameraPermission = async () => {
-    if (Platform.OS === "android") {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        {
-          title: "Camera Permission",
-          message: "Facidance needs camera access to capture attendance.",
-          buttonPositive: "OK",
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
-
-  // Capture a photo and send for recognition
+  // Capture a frame from the live camera and send for recognition
   const captureAndRecognize = async () => {
-    if (isCapturing) return;
+    if (isCapturingRef.current || !cameraRef.current) return;
 
     try {
       setIsCapturing(true);
 
-      const result = await launchCamera({
-        mediaType: "photo",
-        cameraType: "back",
-        quality: 0.7,
-        maxWidth: 1280,
-        maxHeight: 960,
-        saveToPhotos: false,
-      });
-
-      if (result.didCancel || result.errorCode) {
-        console.log("Camera cancelled or error:", result.errorMessage);
+      // Capture frame from live camera preview
+      const image = await cameraRef.current.capture();
+      if (!image?.uri) {
+        console.log("No frame captured");
         return;
       }
 
-      const asset = result.assets?.[0];
-      if (!asset?.uri) {
-        console.log("No photo captured");
-        return;
-      }
-
-      // Send to backend
-      const recognitionResult = await recognizeFaces(
+      // Send frame to backend for face recognition
+      const result = await recognizeFaces(
         course.id,
-        [{ uri: asset.uri, type: asset.type || "image/jpeg", name: `capture_${captureCount}.jpg` }],
+        [{ uri: image.uri, type: "image/jpeg", name: `frame_${captureCount}.jpg` }],
         batchId
       );
 
       // Update batch ID
-      if (recognitionResult?.batchId && !batchId) {
-        setBatchId(recognitionResult.batchId);
+      if (result?.batchId && !batchId) {
+        setBatchId(result.batchId);
       }
 
-      // Process recognized students (cumulative)
-      if (recognitionResult?.recognized && Array.isArray(recognitionResult.recognized)) {
+      // Accumulate recognized students (cumulative — once detected, stays present)
+      if (result?.recognized && Array.isArray(result.recognized)) {
         setRecognizedStudents((prev) => {
           const updated = new Map(prev);
-          recognitionResult.recognized.forEach((student) => {
+          result.recognized.forEach((student) => {
             const sid = student.studentId || student.id;
             if (sid && !updated.has(sid)) {
               updated.set(sid, {
@@ -154,20 +151,14 @@ export default function AttendanceSession({ route, navigation }) {
       setCaptureCount((prev) => prev + 1);
       setLastCaptureTime(new Date().toLocaleTimeString());
     } catch (e) {
-      console.log("Capture error:", e);
+      console.log("Capture/recognize error:", e);
     } finally {
       setIsCapturing(false);
     }
   };
 
   // Start the 45-minute session
-  const startSession = async () => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) {
-      Alert.alert("Permission Denied", "Camera permission is required to capture attendance.");
-      return;
-    }
-
+  const startSession = () => {
     setSessionActive(true);
     setTimeLeft(SESSION_DURATION);
     setRecognizedStudents(new Map());
@@ -175,10 +166,10 @@ export default function AttendanceSession({ route, navigation }) {
     setBatchId(null);
     setLastCaptureTime(null);
 
-    // First capture immediately
-    setTimeout(() => captureAndRecognize(), 500);
+    // First capture after a short delay (camera needs a moment)
+    setTimeout(() => captureAndRecognize(), 2000);
 
-    // Then every 2 minutes
+    // Auto-capture every 2 minutes
     captureIntervalRef.current = setInterval(() => {
       if (sessionActiveRef.current) {
         captureAndRecognize();
@@ -247,6 +238,19 @@ export default function AttendanceSession({ route, navigation }) {
     if (!showHistory) loadHistory();
     setShowHistory(!showHistory);
   };
+
+  // Permission not granted
+  if (!hasPermission) {
+    return (
+      <SafeAreaView style={s.safeArea}>
+        <View style={s.centerContainer}>
+          <CameraIcon size={48} color="#94A3B8" />
+          <Text style={s.permTitle}>Camera Permission Required</Text>
+          <Text style={s.permSubtitle}>Please grant camera access to capture attendance.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safeArea}>
@@ -319,34 +323,63 @@ export default function AttendanceSession({ route, navigation }) {
           </View>
         )}
 
-        {/* Camera / Capture Card */}
+        {/* Live Camera Feed */}
         <View style={s.cameraCard}>
-          <Text style={s.cameraTitle}>Live Camera Feed</Text>
-          <Text style={s.cameraSubtitle}>Face recognition capture</Text>
-
-          <View style={s.cameraContainer}>
-            {/* Status display */}
-            <CameraIcon size={32} color="#94A3B8" />
-            <Text style={s.cameraStatusTitle}>
-              {sessionActive ? "Session Active" : captureCount > 0 ? "Session Paused" : "Ready to capture attendance"}
-            </Text>
-            <Text style={s.cameraStatusSubtitle}>
-              {sessionActive
-                ? `Captures: ${captureCount} · Last: ${lastCaptureTime || "—"}`
-                : "45-minute session · auto-capture every 2 min\n· cumulative recognition"}
-            </Text>
-
+          <View style={s.cameraTitleRow}>
+            <View>
+              <Text style={s.cameraTitle}>Live Camera Feed</Text>
+              <Text style={s.cameraSubtitle}>Face recognition capture</Text>
+            </View>
             {sessionActive && (
-              <View style={s.timerBadge}>
-                <Clock size={14} color="#FFF" style={{ marginRight: 6 }} />
-                <Text style={s.timerText}>{formatTime(timeLeft)}</Text>
+              <View style={s.liveBadge}>
+                <View style={s.liveDot} />
+                <Text style={s.liveText}>LIVE</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Camera Preview */}
+          <View style={s.cameraContainer}>
+            <Camera
+              ref={cameraRef}
+              style={s.camera}
+              cameraType="back"
+              flashMode="off"
+            />
+
+            {/* Overlay: Timer + Status */}
+            <View style={s.cameraOverlayTop}>
+              {sessionActive && (
+                <View style={s.timerBadge}>
+                  <Clock size={12} color="#FFF" style={{ marginRight: 4 }} />
+                  <Text style={s.timerText}>{formatTime(timeLeft)}</Text>
+                </View>
+              )}
+              {isCapturing && (
+                <View style={s.capturingBadge}>
+                  <ActivityIndicator size="small" color="#FFF" />
+                  <Text style={s.capturingText}>Recognizing...</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Capture count overlay bottom */}
+            {sessionActive && (
+              <View style={s.cameraOverlayBottom}>
+                <Text style={s.captureCountText}>
+                  Captures: {captureCount} {lastCaptureTime ? `· Last: ${lastCaptureTime}` : ""}
+                </Text>
               </View>
             )}
 
-            {isCapturing && (
-              <View style={s.capturingBadge}>
-                <ActivityIndicator size="small" color="#FFF" />
-                <Text style={s.capturingText}>Recognizing faces...</Text>
+            {/* "Start" overlay when not active */}
+            {!sessionActive && captureCount === 0 && (
+              <View style={s.startOverlay}>
+                <CameraIcon size={28} color="#FFF" />
+                <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
+                <Text style={s.startOverlaySubtitle}>
+                  45-minute session · auto-capture every 2 min{"\n"}· cumulative recognition
+                </Text>
               </View>
             )}
           </View>
@@ -376,7 +409,7 @@ export default function AttendanceSession({ route, navigation }) {
           )}
         </View>
 
-        {/* Session Attendance */}
+        {/* Session Attendance (recognized students) */}
         <View style={s.resultsCard}>
           <Text style={s.resultsTitle}>Session Attendance</Text>
           <Text style={s.resultsSubtitle}>Cumulative recognized students</Text>
@@ -409,7 +442,7 @@ export default function AttendanceSession({ route, navigation }) {
             </>
           )}
 
-          {/* Submit */}
+          {/* Submit button */}
           {recognizedStudents.size > 0 && !sessionActive && (
             <TouchableOpacity
               style={[s.submitBtn, isSubmitting && { opacity: 0.6 }]}
@@ -435,7 +468,7 @@ export default function AttendanceSession({ route, navigation }) {
             <Info size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
             <Text style={s.infoTitle}>How cumulative attendance works</Text>
           </View>
-          <Text style={s.infoStep}>• Click "Start" → camera opens automatically</Text>
+          <Text style={s.infoStep}>• Click "Start" → camera activates automatically</Text>
           <Text style={s.infoStep}>• First face capture runs immediately</Text>
           <Text style={s.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
           <Text style={s.infoStep}>• Once recognized, students stay marked present</Text>
@@ -469,19 +502,29 @@ const s = StyleSheet.create({
 
   // Camera
   cameraCard: { backgroundColor: "#1E293B", borderRadius: 16, padding: 16, marginBottom: 16 },
-  cameraTitle: { fontSize: 16, fontWeight: "700", color: "#FFF", marginBottom: 2 },
-  cameraSubtitle: { fontSize: 12, color: "#94A3B8", marginBottom: 12 },
-  cameraContainer: {
-    width: "100%", minHeight: 200, borderRadius: 12, backgroundColor: "#0F172A",
-    justifyContent: "center", alignItems: "center", marginBottom: 16, paddingVertical: 30, paddingHorizontal: 20,
-  },
-  cameraStatusTitle: { color: "#FFF", fontSize: 15, fontWeight: "700", marginTop: 12, textAlign: "center" },
-  cameraStatusSubtitle: { color: "#94A3B8", fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 6 },
+  cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  cameraTitle: { fontSize: 16, fontWeight: "700", color: "#FFF" },
+  cameraSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
+  liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.9)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFF", marginRight: 5 },
+  liveText: { color: "#FFF", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
 
-  timerBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16,185,129,0.9)", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, marginTop: 14 },
-  timerText: { color: "#FFF", fontSize: 16, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.85)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginTop: 10 },
+  cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: "#0F172A", marginBottom: 16, position: "relative" },
+  camera: { width: "100%", height: "100%" },
+
+  // Camera overlays
+  cameraOverlayTop: { position: "absolute", top: 10, left: 10, right: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", zIndex: 10 },
+  timerBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
+  timerText: { color: "#FFF", fontSize: 14, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.85)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
   capturingText: { color: "#FFF", fontSize: 11, fontWeight: "600", marginLeft: 6 },
+
+  cameraOverlayBottom: { position: "absolute", bottom: 10, left: 10, right: 10, alignItems: "center", zIndex: 10 },
+  captureCountText: { color: "#FFF", fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
+
+  startOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(15,23,42,0.75)", zIndex: 5 },
+  startOverlayTitle: { color: "#FFF", fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
+  startOverlaySubtitle: { color: "#94A3B8", fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 4 },
 
   // Controls
   startBtn: { flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
@@ -530,6 +573,11 @@ const s = StyleSheet.create({
   infoStep: { fontSize: 12, color: "#64748B", lineHeight: 20, marginBottom: 2 },
   infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
   infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
+
+  // Permission
+  centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 30 },
+  permTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginTop: 16 },
+  permSubtitle: { fontSize: 13, color: "#64748B", textAlign: "center", marginTop: 6 },
 
   emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 16 },
 });
