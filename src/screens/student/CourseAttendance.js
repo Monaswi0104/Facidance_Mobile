@@ -207,6 +207,12 @@ export default function CourseAttendance({ route, navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={20} color="#0F172A" />
+          <Text style={styles.backBtnText}>Back to Courses</Text>
+        </TouchableOpacity>
+
         {/* Course Header */}
         <View style={styles.courseHeader}>
           <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
@@ -284,6 +290,26 @@ export default function CourseAttendance({ route, navigation }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { padding: 20, paddingBottom: 40 },
+
+  // Back Button
+  backBtn: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 16,
+    alignSelf: "flex-start",
+    backgroundColor: "#FFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 1
+  },
+  backBtnText: { fontSize: 14, fontWeight: "700", color: "#0F172A", marginLeft: 4 },
 
   // Course Header
   courseHeader: {

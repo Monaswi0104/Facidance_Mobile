@@ -197,9 +197,9 @@ export default function ProgramsManagement() {
                         style={styles.picker}
                         mode="dropdown"
                       >
-                        <Picker.Item label="Select a department" value={null} color="#94A3B8" />
+                        <Picker.Item label="Select a department" value={null} />
                         {departments.map(d => (
-                          <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" />
+                          <Picker.Item key={d.id} label={d.name} value={d.id} />
                         ))}
                       </Picker>
                     </View>
