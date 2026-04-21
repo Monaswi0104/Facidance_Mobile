@@ -154,9 +154,8 @@ export default function CourseDetails({ route, navigation }) {
           {/* Table Header */}
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableHeaderText, { flex: 2.1 }]}>STUDENT</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>PROGRAM</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1 }]}>JOINED</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.6, textAlign: 'center' }]}>FACE</Text>
+            <Text style={[styles.tableHeaderText, { flex: 2 }]}>PROGRAM</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: 'center' }]}>FACE</Text>
             <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: 'center' }]}>ATTEND{"\n"}ANCE</Text>
           </View>
 
@@ -169,13 +168,9 @@ export default function CourseDetails({ route, navigation }) {
                   <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
                   <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
                 </View>
-                <Text style={[styles.cellText, { flex: 1.2, fontSize: 11, paddingRight: 4 }]} numberOfLines={3}>{s.program}</Text>
-                
-                <Text style={[styles.cellText, { flex: 1, fontSize: 10 }]} numberOfLines={1}>
-                   {s.joinedAt ? new Date(s.joinedAt).toLocaleDateString() : '—'}
-                </Text>
+                <Text style={[styles.cellText, { flex: 2, fontSize: 11, paddingRight: 4 }]} numberOfLines={3}>{s.program}</Text>
 
-                <View style={{ flex: 0.6, alignItems: "center" }}>
+                <View style={{ flex: 0.8, alignItems: "center" }}>
                   {s.faceRegistered ? (
                     <CheckCircle size={16} color="#10B981" />
                   ) : (
@@ -222,13 +217,6 @@ export default function CourseDetails({ route, navigation }) {
                     <Text style={styles.modalDetailLabel}>Status:</Text>
                     <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : "#4361EE" }]}>
                        {selectedStudent.status.toUpperCase()}
-                    </Text>
-                  </View>
-
-                  <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Joined Date:</Text>
-                    <Text style={styles.modalDetailValue}>
-                      {selectedStudent.joinedAt ? new Date(selectedStudent.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                     </Text>
                   </View>
 

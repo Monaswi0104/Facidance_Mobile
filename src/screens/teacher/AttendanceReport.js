@@ -402,13 +402,6 @@ export default function AttendanceReport() {
                   </View>
 
                   <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Joined:</Text>
-                    <Text style={styles.modalDetailValue}>
-                      {selectedStudent.joinedAt ? new Date(selectedStudent.joinedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Face Data:</Text>
                     <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                       {selectedStudent.faceRegistered ? (
