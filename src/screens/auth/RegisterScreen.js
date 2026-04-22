@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
-  StatusBar, ActivityIndicator, Alert, useSafeAreaInsets,
+  StatusBar, ActivityIndicator, Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { registerTeacher } from "../../api/authApi";
 import { Theme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3 } from "lucide-react-native";
@@ -13,6 +14,9 @@ const logoImg = require("../../assets/logo.png");
 
 export default function RegisterScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const topPadding = Platform.OS === 'android'
+    ? Math.max(insets.top, StatusBar.currentHeight || 0)
+    : insets.top;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,7 +62,7 @@ export default function RegisterScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
-        <View style={[styles.hero, { paddingTop: insets.top }]}>
+        <View style={[styles.hero, { paddingTop: topPadding }]}>
           <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
           <View style={styles.heroOverlay} />
 

@@ -196,10 +196,11 @@ export default function ProgramsManagement() {
                         onValueChange={(v) => setSelectedDeptId(v)}
                         style={styles.picker}
                         mode="dropdown"
+                        dropdownIconColor="#1E293B"
                       >
-                        <Picker.Item label="Select a department" value={null} />
+                        <Picker.Item label="Select a department" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
                         {departments.map(d => (
-                          <Picker.Item key={d.id} label={d.name} value={d.id} />
+                          <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />
                         ))}
                       </Picker>
                     </View>

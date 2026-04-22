@@ -165,18 +165,18 @@ export default function CoursesManagement() {
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>FILTER BY DEPARTMENT</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker}>
-                        <Picker.Item label="All Departments" value={null} />
-                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} />)}
+                      <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker} dropdownIconColor="#1E293B">
+                        <Picker.Item label="All Departments" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
+                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>TEACHER *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker}>
-                        <Picker.Item label="Select Teacher" value={null} />
-                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} />)}
+                      <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker} dropdownIconColor="#1E293B">
+                        <Picker.Item label="Select Teacher" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
+                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -186,9 +186,9 @@ export default function CoursesManagement() {
                   <View style={styles.formFieldFull}>
                     <Text style={styles.formLabel}>PROGRAM *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker}>
-                        <Picker.Item label="Select Program" value={null} />
-                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} />)}
+                      <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker} dropdownIconColor="#1E293B">
+                        <Picker.Item label="Select Program" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
+                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -203,9 +203,9 @@ export default function CoursesManagement() {
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>SEMESTER *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker}>
-                        <Picker.Item label="Select" value={null} />
-                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} />)}
+                      <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker} dropdownIconColor="#1E293B">
+                        <Picker.Item label="Select" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
+                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
