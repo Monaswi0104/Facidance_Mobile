@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
-  StatusBar, ActivityIndicator, Alert,
+  StatusBar, ActivityIndicator, Alert, useSafeAreaInsets,
 } from "react-native";
 import { loginUser } from "../../api/authApi";
 import { Theme } from "../../theme/Theme";
@@ -12,6 +12,7 @@ const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
 
 export default function LoginScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -57,11 +58,11 @@ export default function LoginScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
-        <View style={styles.hero}>
+        <View style={[styles.hero, { paddingTop: insets.top }]}>
           <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
           <View style={styles.heroOverlay} />
 
-          <SafeAreaView style={styles.heroInner}>
+          <View style={styles.heroInner}>
             {/* Brand */}
             <View style={styles.brandRow}>
               <Image source={logoImg} style={styles.brandLogo} resizeMode="contain" />
@@ -112,7 +113,7 @@ export default function LoginScreen({ navigation }) {
                 <Text style={styles.statLabel}>Courses</Text>
               </View>
             </View>
-          </SafeAreaView>
+          </View>
         </View>
 
         {/* Form */}
@@ -222,6 +223,7 @@ const styles = StyleSheet.create({
     minHeight: 460,
     width: "100%",
     position: "relative",
+    paddingHorizontal: 24,
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
@@ -233,9 +235,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,49,53,0.80)",
   },
   heroInner: {
-    flex: 1,
     justifyContent: "flex-end",
-    paddingHorizontal: 24,
     paddingBottom: 32,
   },
   brandRow: {
