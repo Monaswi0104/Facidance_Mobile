@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
   tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
   sortedText: { fontSize: 11, color: "#94A3B8", fontStyle: "italic" },
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
+  tableHeaderRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
   tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
