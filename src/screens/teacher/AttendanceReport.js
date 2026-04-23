@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  ActivityIndicator, ScrollView, Modal, Dimensions, Alert, Platform
+  ActivityIndicator, ScrollView, Modal, Dimensions, Alert, Platform, Linking
 } from "react-native";
 import { getTeacherCourses, getTeacherReports, getCourseStudents } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle } from "lucide-react-native";
+import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle, Mail } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -17,13 +17,13 @@ export default function AttendanceReport() {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [data, setData] = useState([]);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [showCourseInfo, setShowCourseInfo] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  
+
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -140,6 +140,14 @@ export default function AttendanceReport() {
     return "#EF4444";
   };
 
+  const sendEmail = (student) => {
+    const courseName = selectedCourse?.name || "your course";
+    const subject = `Attendance Alert - ${courseName}`;
+    const body = `Dear ${student.name},\n\nYour attendance in ${courseName} is currently at ${student.percent}% (${student.attended}/${student.total} sessions), which is below the required 75% threshold.\n\nPlease ensure regular attendance to avoid academic consequences.\n\nRegards`;
+    const url = `mailto:${student.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    Linking.openURL(url).catch(() => Alert.alert("Error", "Could not open email client."));
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -154,7 +162,7 @@ export default function AttendanceReport() {
         <View style={styles.configCard}>
           <Text style={styles.configTitle}>Report Configuration</Text>
           <Text style={styles.configMeta}>{selectedCourse ? `Showing data for ${selectedCourse.name}` : "Select a course and optional date range"}</Text>
-          
+
           <Text style={styles.labelText}>COURSE *</Text>
           <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)} disabled={isLoading}>
             {isLoading ? (
@@ -215,7 +223,7 @@ export default function AttendanceReport() {
             <TouchableOpacity
               style={[styles.btnPrimary, !selectedCourse && { opacity: 0.4 }]}
               disabled={!selectedCourse || isReportLoading}
-              onPress={() => { if(selectedCourse) loadReport(selectedCourse.id); }}>
+              onPress={() => { if (selectedCourse) loadReport(selectedCourse.id); }}>
               {isReportLoading ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
@@ -317,9 +325,10 @@ export default function AttendanceReport() {
 
               <View style={styles.tableHeaderRow}>
                 <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
-                <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>TOTAL</Text>
-                <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>ATTEND.</Text>
-                <Text style={[styles.tableHeaderText, { flex: 1.5, textAlign: "right" }]}>ATTENDANCE %</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.75, textAlign: "center" }]}>TOTAL</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.75, textAlign: "center" }]}>ATTEND.</Text>
+                <Text style={[styles.tableHeaderText, { flex: 1.3, textAlign: "right" }]}>ATTENDANCE %</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.5, textAlign: "center" }]}></Text>
               </View>
 
               {isReportLoading ? (
@@ -333,13 +342,24 @@ export default function AttendanceReport() {
                       <Text style={styles.studentName} numberOfLines={2}>{s.name}</Text>
                       <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
                     </View>
-                    <Text style={[styles.cellNum, { flex: 0.9 }]}>{s.total}</Text>
-                    <Text style={[styles.cellNum, { flex: 0.9 }]}>{s.attended}</Text>
-                    <View style={{ flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
+                    <Text style={[styles.cellNum, { flex: 0.75 }]}>{s.total}</Text>
+                    <Text style={[styles.cellNum, { flex: 0.75 }]}>{s.attended}</Text>
+                    <View style={{ flex: 1.3, flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
                       <View style={styles.attendBarTrack}>
                         <View style={[styles.attendBarFill, { width: `${s.percent}%`, backgroundColor: getBarColor(s.percent) }]} />
                       </View>
                       <Text style={[styles.percentText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
+                    </View>
+                    <View style={{ flex: 0.5, alignItems: "flex-end", paddingLeft: 4 }}>
+                      {s.email && s.email !== "—" && (
+                        <TouchableOpacity
+                          style={styles.reportEmailBtn}
+                          onPress={(e) => { e.stopPropagation?.(); sendEmail(s); }}
+                          activeOpacity={0.6}
+                        >
+                          <Mail size={13} color="#64748B" />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </TouchableOpacity>
                 ))
@@ -354,21 +374,21 @@ export default function AttendanceReport() {
       <Modal visible={showCourseInfo} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-             <Text style={styles.modalTitle}>Select Course</Text>
-             <ScrollView style={{maxHeight: 400}}>
-               {courses.map(c => {
-                 const isSelected = selectedCourse?.id === c.id;
-                 return (
-                   <TouchableOpacity key={c.id} style={[styles.modalItem, isSelected && styles.modalItemSelected]} onPress={() => handleCourseSelect(c)}>
-                     <Text style={[styles.modalItemText, isSelected && { color: Theme.colors.primaryDark, fontWeight: "700" }]}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
-                     {isSelected && <CheckCircle size={18} color={Theme.colors.primaryDark} />}
-                   </TouchableOpacity>
-                 );
-               })}
-             </ScrollView>
-             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowCourseInfo(false)}>
-               <Text style={styles.modalCloseText}>Cancel</Text>
-             </TouchableOpacity>
+            <Text style={styles.modalTitle}>Select Course</Text>
+            <ScrollView style={{ maxHeight: 400 }}>
+              {courses.map(c => {
+                const isSelected = selectedCourse?.id === c.id;
+                return (
+                  <TouchableOpacity key={c.id} style={[styles.modalItem, isSelected && styles.modalItemSelected]} onPress={() => handleCourseSelect(c)}>
+                    <Text style={[styles.modalItemText, isSelected && { color: Theme.colors.primaryDark, fontWeight: "700" }]}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
+                    {isSelected && <CheckCircle size={18} color={Theme.colors.primaryDark} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowCourseInfo(false)}>
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -376,59 +396,59 @@ export default function AttendanceReport() {
       {/* Student Details Modal */}
       <Modal visible={!!selectedStudent} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-            <View style={styles.modalDetailCard}>
-              {selectedStudent && (
-                <>
-                  <View style={styles.modalHeaderInfoSection}>
-                    <View style={styles.modalAvatar}>
-                      <User size={22} color={Theme.colors.primaryDark} />
-                    </View>
-                    <View style={styles.modalHeaderInfo}>
-                      <Text style={styles.modalName}>{selectedStudent.name}</Text>
-                      <Text style={styles.modalEmail}>{selectedStudent.email}</Text>
-                    </View>
+          <View style={styles.modalDetailCard}>
+            {selectedStudent && (
+              <>
+                <View style={styles.modalHeaderInfoSection}>
+                  <View style={styles.modalAvatar}>
+                    <User size={22} color={Theme.colors.primaryDark} />
                   </View>
-
-                  <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Program:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.program}</Text>
+                  <View style={styles.modalHeaderInfo}>
+                    <Text style={styles.modalName}>{selectedStudent.name}</Text>
+                    <Text style={styles.modalEmail}>{selectedStudent.email}</Text>
                   </View>
+                </View>
 
-                  <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
-                       {(selectedStudent.status || "active").toUpperCase()}
-                    </Text>
+                <View style={styles.modalDetailRow}>
+                  <Text style={styles.modalDetailLabel}>Program:</Text>
+                  <Text style={styles.modalDetailValue}>{selectedStudent.program}</Text>
+                </View>
+
+                <View style={styles.modalDetailRow}>
+                  <Text style={styles.modalDetailLabel}>Status:</Text>
+                  <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
+                    {(selectedStudent.status || "active").toUpperCase()}
+                  </Text>
+                </View>
+
+                <View style={styles.modalDetailRow}>
+                  <Text style={styles.modalDetailLabel}>Face Data:</Text>
+                  <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
+                    {selectedStudent.faceRegistered ? (
+                      <>
+                        <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
+                        <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                        <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                      </>
+                    )}
                   </View>
+                </View>
 
-                  <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Face Data:</Text>
-                    <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
-                      {selectedStudent.faceRegistered ? (
-                        <>
-                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
-                        </>
-                      )}
-                    </View>
-                  </View>
+                <View style={styles.modalDetailRow}>
+                  <Text style={styles.modalDetailLabel}>Attendance:</Text>
+                  <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} ({selectedStudent.percent}%)</Text>
+                </View>
 
-                  <View style={styles.modalDetailRow}>
-                    <Text style={styles.modalDetailLabel}>Attendance:</Text>
-                    <Text style={styles.modalDetailValue}>{selectedStudent.attended}/{selectedStudent.total} ({selectedStudent.percent}%)</Text>
-                  </View>
-
-                  <TouchableOpacity style={styles.modalDetailCloseBtn} onPress={() => setSelectedStudent(null)}>
-                    <Text style={styles.modalDetailCloseBtnText}>Close</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+                <TouchableOpacity style={styles.modalDetailCloseBtn} onPress={() => setSelectedStudent(null)}>
+                  <Text style={styles.modalDetailCloseBtnText}>Close</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
       </Modal>
 
@@ -525,6 +545,11 @@ const styles = StyleSheet.create({
   attendBarTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F1F5F9", overflow: "hidden", marginRight: 8 },
   attendBarFill: { height: "100%", borderRadius: 3 },
   percentText: { fontSize: 11, fontWeight: "800", minWidth: 38, textAlign: "right" },
+  reportEmailBtn: {
+    width: 28, height: 28, borderRadius: 7,
+    backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0",
+    justifyContent: "center", alignItems: "center",
+  },
   emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center" },
 
   // Modals
