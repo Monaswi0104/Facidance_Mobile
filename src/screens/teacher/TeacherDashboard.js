@@ -231,24 +231,26 @@ export default function TeacherDashboard({ navigation }) {
                   </View>
                 </View>
 
-                {atRiskStudents.slice(0, 5).map((s, i) => (
-                  <View key={i} style={[styles.atRiskRow, i < Math.min(atRiskStudents.length, 5) - 1 && styles.borderBottom]}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.atRiskName} numberOfLines={1}>{s.name}</Text>
-                      <Text style={styles.atRiskCourse} numberOfLines={1}>{s.course}</Text>
+                <ScrollView style={styles.atRiskScroll} nestedScrollEnabled showsVerticalScrollIndicator>
+                  {atRiskStudents.map((s, i) => (
+                    <View key={i} style={[styles.atRiskRow, i < atRiskStudents.length - 1 && styles.borderBottom]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.atRiskName} numberOfLines={1}>{s.name}</Text>
+                        <Text style={styles.atRiskCourse} numberOfLines={1}>{s.course}</Text>
+                      </View>
+                      <Text style={styles.atRiskAttend}>{s.attended}/{s.total}</Text>
+                      <View style={[styles.percentBadge, { backgroundColor: getBarColor(s.percent) + "18" }]}>
+                        <AlertTriangle size={10} color={getBarColor(s.percent)} style={{ marginRight: 3 }} />
+                        <Text style={[styles.percentBadgeText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
+                      </View>
+                      {!!s.email && (
+                        <TouchableOpacity style={styles.emailBtn} onPress={() => sendEmail(s)} activeOpacity={0.6}>
+                          <Mail size={14} color="#64748B" />
+                        </TouchableOpacity>
+                      )}
                     </View>
-                    <Text style={styles.atRiskAttend}>{s.attended}/{s.total}</Text>
-                    <View style={[styles.percentBadge, { backgroundColor: getBarColor(s.percent) + "18" }]}>
-                      <AlertTriangle size={10} color={getBarColor(s.percent)} style={{ marginRight: 3 }} />
-                      <Text style={[styles.percentBadgeText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
-                    </View>
-                    {!!s.email && (
-                      <TouchableOpacity style={styles.emailBtn} onPress={() => sendEmail(s)} activeOpacity={0.6}>
-                        <Mail size={14} color="#64748B" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                  ))}
+                </ScrollView>
 
                 <TouchableOpacity style={styles.viewFullBtn} onPress={() => navigation.navigate("AttendanceReport")} activeOpacity={0.7}>
                   <Text style={styles.viewFullText}>View full reports</Text>
@@ -425,6 +427,7 @@ const styles = StyleSheet.create({
   // At-Risk
   atRiskBadge: { backgroundColor: "#FEF2F2", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   atRiskBadgeText: { fontSize: 11, fontWeight: "700", color: "#EF4444" },
+  atRiskScroll: { maxHeight: 280 },
   atRiskRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 8 },
   atRiskName: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
   atRiskCourse: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
