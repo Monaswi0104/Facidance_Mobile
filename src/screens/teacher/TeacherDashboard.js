@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
 
   // Welcome
   welcomeSection: { marginBottom: 18, marginTop: 8 },
-  welcomeGreeting: { fontSize: 14, color: "#64748B", marginBottom: 2 },
+  welcomeGreeting: { fontSize: 18, fontWeight: "700", color: "#64748B", marginBottom: 2 },
   welcomeName: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
   welcomeDesc: { fontSize: 13, color: "#64748B", marginBottom: 12 },
   headerBtns: { flexDirection: "row", gap: 8 },

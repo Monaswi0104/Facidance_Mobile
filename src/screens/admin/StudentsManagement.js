@@ -137,11 +137,15 @@ export default function StudentsManagement() {
   const handleActivate = async () => {
     try {
       setIsActionLoading(true);
-      await ungraduateStudent(selectedStudent.id);
+      console.log("[StudentsManagement] Activating student:", selectedStudent.id, selectedStudent.name);
+      const result = await ungraduateStudent(selectedStudent.id);
+      console.log("[StudentsManagement] Activate result:", result);
       await loadData();
       closeModal();
+      Alert.alert("Success", "Student has been reactivated successfully.");
     } catch (e) {
-      Alert.alert("Error", e.message || "Failed to activate student.");
+      console.error("[StudentsManagement] Activate error:", e);
+      Alert.alert("Error", e.message || "Failed to activate student. Please try again.");
     } finally {
       setIsActionLoading(false);
     }

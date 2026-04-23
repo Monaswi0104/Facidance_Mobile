@@ -62,9 +62,9 @@ export default function ProgramsManagement() {
           if (tName) teacherSet.add(tName);
         });
 
-        // Use API counts first, then computed counts as fallback
-        const studentCount = p.students_count || p._count?.students || p.students?.length || pStudents.length || 0;
-        const courseCount = p.courses_count || p._count?.courses || p.courses?.length || pCourses.length || 0;
+        // Use computed counts first, then API counts as fallback
+        const studentCount = pStudents.length || p.students_count || p._count?.students || p.students?.length || 0;
+        const courseCount = pCourses.length || p.courses_count || p._count?.courses || p.courses?.length || 0;
 
         return {
           id: p.id,

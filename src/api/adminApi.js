@@ -148,15 +148,29 @@ export async function markStudentGraduated(id) {
 }
 
 export async function ungraduateStudent(id) {
-  const res = await apiFetch(`/admin/students/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status: "active" }),
-  }, ADMIN_URL);
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error || "Failed to activate student");
+  // Try dedicated endpoint first
+  try {
+    const res = await apiFetch(`/admin/students/${id}/ungraduate`, {
+      method: "POST",
+    }, ADMIN_URL);
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error || "Failed to activate student");
+    }
+    return json;
+  } catch (e) {
+    // Fallback to generic PATCH if dedicated endpoint doesn't exist
+    console.log("[adminApi] Dedicated endpoint failed, trying fallback:", e.message);
+    const res = await apiFetch(`/admin/students/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "active" }),
+    }, ADMIN_URL);
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error || "Failed to activate student");
+    }
+    return json;
   }
-  return json;
 }
 
 export async function deleteStudent(id) {
