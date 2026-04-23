@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, Platform, StatusBar } from "react-native";
 import { clearAuth } from "../api/authStorage";
 
 import TeacherDashboard from "../screens/teacher/TeacherDashboard";
@@ -46,7 +46,7 @@ export default function TeacherTabs({ navigation }) {
   );
 
   const commonHeaderStyle = {
-    headerStyle: { backgroundColor: "#FFFFFF" },
+    headerStyle: { backgroundColor: "#FFFFFF", height: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 50 : undefined },
     headerTintColor: "#0F172A",
     headerTitleStyle: { fontWeight: "700", fontSize: 17, color: "#0F172A" },
     headerShadowVisible: false,

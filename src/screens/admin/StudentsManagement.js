@@ -4,10 +4,10 @@ import {
   ScrollView, ActivityIndicator, Dimensions, TextInput, Alert, Platform,
   Modal, KeyboardAvoidingView
 } from "react-native";
-import { getStudents, updateStudent, markStudentGraduated, deleteStudent } from "../../api/adminApi";
+import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, deleteStudent } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown } from "lucide-react-native";
+import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -129,6 +129,19 @@ export default function StudentsManagement() {
       closeModal();
     } catch (e) {
       Alert.alert("Error", e.message || "Failed to graduate student.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleActivate = async () => {
+    try {
+      setIsActionLoading(true);
+      await ungraduateStudent(selectedStudent.id);
+      await loadData();
+      closeModal();
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to activate student.");
     } finally {
       setIsActionLoading(false);
     }
@@ -291,9 +304,13 @@ export default function StudentsManagement() {
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("edit", s)}>
                     <Edit2 size={14} color="#475569" />
                   </TouchableOpacity>
-                  {s.status !== "graduated" && (
+                  {s.status !== "graduated" ? (
                     <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
                       <Users size={14} color="#D97706" />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]} onPress={() => openModal("activate", s)}>
+                      <UserCheck size={14} color="#059669" />
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]} onPress={() => openModal("delete", s)}>
@@ -383,6 +400,20 @@ export default function StudentsManagement() {
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#6D28D9'}]} onPress={handleGraduate} disabled={isActionLoading}>
                      {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
+                   </TouchableOpacity>
+                 </View>
+              </View>
+            )}
+
+            {/* Activate Confirmation */}
+            {modalType === "activate" && selectedStudent && (
+              <View>
+                 <View style={styles.modalHeader}><UserCheck size={20} color="#059669" style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Reactivate Student</Text></View>
+                 <Text style={styles.confirmText}>Are you sure you want to reactivate <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text> and change their status back to Active?</Text>
+                 <View style={styles.modalActionRow}>
+                   <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
+                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#059669'}]} onPress={handleActivate} disabled={isActionLoading}>
+                     {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Activate</Text>}
                    </TouchableOpacity>
                  </View>
               </View>

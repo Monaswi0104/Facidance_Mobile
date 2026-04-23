@@ -147,6 +147,18 @@ export async function markStudentGraduated(id) {
   return json;
 }
 
+export async function ungraduateStudent(id) {
+  const res = await apiFetch(`/admin/students/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "active" }),
+  }, ADMIN_URL);
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || "Failed to activate student");
+  }
+  return json;
+}
+
 export async function deleteStudent(id) {
   const res = await apiFetch(`/admin/students/${id}`, {
     method: "DELETE",

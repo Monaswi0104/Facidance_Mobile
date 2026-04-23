@@ -1,7 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { Theme } from "../theme/Theme";
 import { LayoutDashboard, BookOpen, ClipboardList, Camera } from "lucide-react-native";
@@ -83,7 +83,7 @@ export default function StudentTabs({ navigation: rootNav }) {
                 onPress={() => navigation.navigate(tab.name)}
                 activeOpacity={0.7}
               >
-                <Icon size={13} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
+                <Icon size={16} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
                 <Text style={[s.navPillText, isActive && s.navPillTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
@@ -114,7 +114,7 @@ export default function StudentTabs({ navigation: rootNav }) {
 const s = StyleSheet.create({
   headerWrapper: {
     backgroundColor: "#FFFFFF",
-    paddingTop: 50,
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 4 : 50,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },

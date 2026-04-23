@@ -57,6 +57,15 @@ export default function AdminDashboard({ navigation }) {
         });
       setTeacherWorkload(workload);
 
+      // Compute graduated/active counts from student list as fallback
+      const graduatedCount = sList.filter(s => (s.status || s.student?.status) === "graduated").length;
+      const activeCount = sList.length - graduatedCount;
+      if (statsData) {
+        statsData.graduated = statsData.graduated || graduatedCount;
+        statsData.active_students = activeCount;
+        setStats(statsData);
+      }
+
       // Build program distribution by cross-referencing students
       const dist = pList.slice(0, 4).map(p => {
         const pStudents = sList.filter(s => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
@@ -87,7 +96,7 @@ export default function AdminDashboard({ navigation }) {
 
   const statCards = [
     { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color="#FFF" />, screen: "TeachersManagement" },
-    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color="#FFF" />, screen: "StudentsManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color="#FFF" />, screen: "StudentsManagement" },
     { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: "#64748B", icon: <Building2 size={16} color="#FFF" />, screen: "DepartmentsManagement" },
     { label: "TOTAL COURSES", value: stats.courses || 0, sub: `${stats.courses || 0} sessions`, subColor: "#10B981", icon: <BookOpen size={16} color="#FFF" />, screen: "CoursesManagement" },
     { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color="#FFF" />, screen: null },

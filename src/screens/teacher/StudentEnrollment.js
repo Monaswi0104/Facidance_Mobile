@@ -50,9 +50,14 @@ export default function StudentEnrollment() {
             const stuData = await getCourseStudents(c.id);
             const stuList = Array.isArray(stuData) ? stuData : [];
             stuList.forEach((s) => {
-              if (!allStudents.find((x) => x.id === (s.id || s.userId))) {
+              const sid = s.id || s.userId;
+              const existing = allStudents.find((x) => x.id === sid);
+              if (existing) {
+                // Student already tracked — just add this course to their list
+                if (!existing.courseIds.includes(c.id)) existing.courseIds.push(c.id);
+              } else {
                 allStudents.push({
-                  id: s.id || s.userId,
+                  id: sid,
                   name: s.user?.name || s.name || "Student",
                   email: s.user?.email || s.email || "—",
                   program: s.program?.name || "—",
@@ -62,7 +67,7 @@ export default function StudentEnrollment() {
                   coursesCount: s._count?.courses || 1,
                   attendance: s._count?.attendance || 0,
                   faceRegistered: !!s.faceEmbedding,
-                  courseId: c.id
+                  courseIds: [c.id]
                 });
               }
             });
@@ -212,9 +217,13 @@ export default function StudentEnrollment() {
           const stuData = await getCourseStudents(c.id);
           const stuList = Array.isArray(stuData) ? stuData : [];
           stuList.forEach((s) => {
-            if (!allStudents.find((x) => x.id === (s.id || s.userId))) {
+            const sid = s.id || s.userId;
+            const existing = allStudents.find((x) => x.id === sid);
+            if (existing) {
+              if (!existing.courseIds.includes(c.id)) existing.courseIds.push(c.id);
+            } else {
               allStudents.push({
-                id: s.id || s.userId,
+                id: sid,
                 name: s.user?.name || s.name || "Student",
                 email: s.user?.email || s.email || "—",
                 program: s.program?.name || "—",
@@ -224,7 +233,7 @@ export default function StudentEnrollment() {
                 coursesCount: s._count?.courses || 1,
                 attendance: s._count?.attendance || 0,
                 faceRegistered: !!s.faceEmbedding,
-                courseId: c.id
+                courseIds: [c.id]
               });
             }
           });
@@ -245,7 +254,7 @@ export default function StudentEnrollment() {
   const filteredStudents = students.filter(s => {
     const q = search.toLowerCase();
     const matchesSearch = !search || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.program.toLowerCase().includes(q);
-    const matchesCourse = !filterCourse || s.courseId === filterCourse.id;
+    const matchesCourse = !filterCourse || (s.courseIds && s.courseIds.includes(filterCourse.id));
     return matchesSearch && matchesCourse;
   });
 
