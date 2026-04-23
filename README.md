@@ -1,97 +1,199 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Facidance Mobile
 
-# Getting Started
+A comprehensive mobile attendance management system built with React Native, designed for educational institutions to streamline student attendance tracking, course management, and administrative oversight.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🎯 Features
 
-## Step 1: Start Metro
+### For Students
+- **Face Recognition Attendance**: Quick and secure attendance marking using facial recognition
+- **Attendance History**: View detailed attendance records across all enrolled courses
+- **Course Management**: Browse enrolled courses and track attendance rates
+- **Profile Management**: Update personal information and profile photo
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### For Teachers
+- **Attendance Sessions**: Conduct real-time attendance sessions with camera-based verification
+- **Student Management**: View and manage enrolled students per course
+- **Attendance Reports**: Generate comprehensive attendance reports with analytics
+- **Course Overview**: Monitor attendance rates and student engagement
+- **At-Risk Alerts**: Identify students with attendance below 75% threshold
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### For Administrators
+- **Dashboard**: Institution-wide overview with key metrics and analytics
+- **User Management**: Manage teachers, students, departments, and programs
+- **Course Management**: Create and manage courses across departments
+- **Student Oversight**: Track student status (active/graduated) and enrollment
+- **Teacher Approval**: Review and approve teacher applications
 
-```sh
-# Using npm
+## 🛠 Tech Stack
+
+- **Frontend**: React Native 0.84.1
+- **Navigation**: React Navigation 7.x
+- **State Management**: Redux Toolkit
+- **UI Components**: Lucide React Native icons
+- **Camera**: React Native Camera Kit
+- **File Handling**: React Native FS, React Native Document Picker
+- **Image Processing**: React Native Image Picker
+- **Data Export**: XLSX for reports, React Native Share
+- **Date/Time**: @react-native-community/datetimepicker
+
+## 📱 Screens
+
+### Authentication
+- Login Screen
+- Registration Screen
+
+### Student Portal
+- Student Dashboard
+- My Courses
+- Course Attendance
+- Attendance History
+- Profile Upload
+
+### Teacher Portal
+- Teacher Dashboard
+- My Courses
+- Attendance Camera
+- Attendance Session
+- Course Details
+- Student Enrollment
+- Attendance Report
+
+### Admin Portal
+- Admin Dashboard
+- Teachers Management
+- Students Management
+- Departments Management
+- Programs Management
+- Courses Management
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js >= 22.11.0
+- npm or yarn
+- React Native CLI
+- Android Studio (for Android development)
+- Xcode (for iOS development - macOS only)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Monaswi0104/Facidance_Mobile.git
+   cd Facidance_Mobile
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Install iOS dependencies (macOS only)**
+   ```bash
+   cd ios
+   bundle install
+   bundle exec pod install
+   cd ..
+   ```
+
+4. **Configure environment variables**
+   - Create a `.env` file in the root directory
+   - Add your API endpoints and configuration
+
+### Running the App
+
+#### Android
+```bash
+# Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# In another terminal, run the Android app
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+#### iOS (macOS only)
+```bash
+# Start Metro bundler
+npm start
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+# In another terminal, run the iOS app
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## 📁 Project Structure
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+Facidance_Mobile/
+├── src/
+│   ├── api/              # API calls and configurations
+│   ├── assets/           # Images, fonts, and static assets
+│   ├── components/       # Reusable UI components
+│   ├── navigation/       # Navigation configuration
+│   ├── screens/          # Screen components
+│   │   ├── admin/        # Admin screens
+│   │   ├── student/      # Student screens
+│   │   └── teacher/      # Teacher screens
+│   └── theme/            # Theme and styling
+├── android/              # Android native code
+├── ios/                  # iOS native code
+└── App.tsx              # Main app component
+```
 
-## Step 3: Modify your app
+## 🔧 Configuration
 
-Now that you have successfully run the app, let's make changes!
+### API Configuration
+Update the API endpoints in `src/api/config.js` to match your backend server.
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+### Theme Customization
+Modify the theme colors and styles in `src/theme/Theme.js`.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 📊 Key Features Explained
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Face Recognition Attendance
+- Uses camera integration to capture student faces
+- Matches against registered face embeddings
+- Provides instant attendance confirmation
+- Works offline with local caching
 
-## Congratulations! :tada:
+### Attendance Analytics
+- Real-time attendance rate calculation
+- Visual charts and graphs
+- Export reports to CSV
+- At-risk student identification
 
-You've successfully run and modified your React Native App. :partying_face:
+### Multi-Role Access
+- Role-based authentication (Student, Teacher, Admin)
+- Customized dashboards per role
+- Granular permission control
 
-### Now what?
+## 🤝 Contributing
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+Contributions are welcome! Please follow these steps:
 
-# Troubleshooting
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## 📝 License
 
-# Learn More
+This project is licensed under the MIT License.
 
-To learn more about React Native, take a look at the following resources:
+## 👨‍💻 Author
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+**Monaswi0104**
+
+## 🙏 Acknowledgments
+
+- React Native community for the amazing framework
+- All contributors and users of this project
+
+## 📞 Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+---
+
+**Note**: This is a mobile application that requires a backend API server to function properly. Ensure your backend is running and accessible before using the app.
