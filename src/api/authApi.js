@@ -35,7 +35,7 @@ export async function registerTeacher(name, email, password) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || "Registration failed");
+    throw new Error(data.error || data.detail || "Registration failed");
   }
 
   return data;

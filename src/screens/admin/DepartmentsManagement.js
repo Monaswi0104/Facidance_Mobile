@@ -64,12 +64,16 @@ export default function DepartmentsManagement() {
     if (!newName.trim()) { Alert.alert("Error", "Please enter a department name."); return; }
     try {
       setIsCreating(true);
+      console.log("[DepartmentsManagement] Creating department:", newName.trim());
       await createDepartment(newName.trim());
       setNewName("");
       setShowAddForm(false);
       Alert.alert("Success", "Department created.");
       loadData();
-    } catch (e) { Alert.alert("Error", "Failed to create department."); }
+    } catch (e) {
+      console.error("[DepartmentsManagement] Create failed:", e);
+      Alert.alert("Error", e.message || "Failed to create department.");
+    }
     finally { setIsCreating(false); }
   };
 

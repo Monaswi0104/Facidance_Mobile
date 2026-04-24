@@ -87,6 +87,7 @@ export default function CoursesManagement() {
       return;
     }
     try {
+      console.log("[CoursesManagement] Creating course:", { name, teacherId, programId, academicYear, semesterNumber });
       const result = await createCourse({ name, teacherId, programId, academicYear, semesterNumber });
       if (result.error) {
         Alert.alert("Error", result.error + (result.hint ? `\n\n${result.hint}` : ""));
@@ -96,7 +97,10 @@ export default function CoursesManagement() {
       setShowAddForm(false);
       setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
       loadData();
-    } catch (e) { Alert.alert("Error", e.message || "Failed to create course."); }
+    } catch (e) {
+      console.error("[CoursesManagement] Create failed:", e);
+      Alert.alert("Error", e.message || "Failed to create course.");
+    }
   };
 
   const filteredPrograms = form.departmentId ? programs.filter(p => p.departmentId === form.departmentId || p.department_id === form.departmentId) : programs;
@@ -351,9 +355,23 @@ const styles = StyleSheet.create({
   formField: { flex: 0.48 },
   formFieldFull: { flex: 1 },
   formLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.3, marginBottom: 4 },
-  pickerBox: { height: 38, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, justifyContent: "center", backgroundColor: "#F8FAFC" },
-  picker: { width: "100%", color: "#0F172A" },
-  formInput: { height: 38, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 10, fontSize: 12, color: "#0F172A", backgroundColor: "#F8FAFC" },
+  pickerBox: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    backgroundColor: "#F8FAFC",
+    height: 54,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  picker: {
+    width: "100%",
+    height: 54,
+    color: "#0F172A",
+    backgroundColor: "#F8FAFC",
+    transform: [{ translateY: -2 }],
+  },
+  formInput: { height: 54, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 10, fontSize: 12, color: "#0F172A", backgroundColor: "#F8FAFC" },
   formActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
   formCancelBtn: { paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
   formCancelText: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },

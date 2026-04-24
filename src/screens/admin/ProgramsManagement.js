@@ -96,12 +96,16 @@ export default function ProgramsManagement() {
     if (!selectedDeptId) { Alert.alert("Error", "Select a department."); return; }
     try {
       setIsCreating(true);
+      console.log("[ProgramsManagement] Creating program:", newName.trim(), "for department:", selectedDeptId);
       await createProgram(newName.trim(), selectedDeptId);
       setNewName("");
       setShowAddForm(false);
       Alert.alert("Success", "Program created.");
       loadData();
-    } catch (e) { Alert.alert("Error", "Failed to create program."); }
+    } catch (e) {
+      console.error("[ProgramsManagement] Create failed:", e);
+      Alert.alert("Error", e.message || "Failed to create program.");
+    }
     finally { setIsCreating(false); }
   };
 
@@ -190,17 +194,18 @@ export default function ProgramsManagement() {
                 <View style={styles.addFormRow}>
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={styles.addFormLabel}>DEPARTMENT</Text>
-                    <View style={styles.pickerContainer}>
+                    <View style={styles.pickerWrapper}>
                       <Picker
                         selectedValue={selectedDeptId}
                         onValueChange={(v) => setSelectedDeptId(v)}
                         style={styles.picker}
                         mode="dropdown"
                         dropdownIconColor="#1E293B"
+                        itemStyle={{ fontSize: 13, color: "#0F172A" }}
                       >
-                        <Picker.Item label="Select a department" value={null} color="#94A3B8" style={{ backgroundColor: '#FFFFFF' }} />
+                        <Picker.Item label="Select a department" value={null} color="#94A3B8" />
                         {departments.map(d => (
-                          <Picker.Item key={d.id} label={d.name} value={d.id} color="#1E293B" style={{ backgroundColor: '#FFFFFF' }} />
+                          <Picker.Item key={d.id} label={d.name} value={d.id} color="#0F172A" />
                         ))}
                       </Picker>
                     </View>
@@ -367,11 +372,25 @@ const styles = StyleSheet.create({
   addFormTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A", flex: 1 },
   addFormFields: { marginBottom: 8 },
   addFormLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.primaryDark, letterSpacing: 0.4, marginBottom: 6 },
-  addFormInput: { backgroundColor: "#F8FAFC", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: "#1E293B", borderWidth: 1, borderColor: "#E2E8F0" },
+  addFormInput: { height: 54, backgroundColor: "#F8FAFC", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: "#1E293B", borderWidth: 1, borderColor: "#E2E8F0" },
   addFormRow: { flexDirection: "row", alignItems: "flex-end" },
-  pickerContainer: { height: 40, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, justifyContent: "center", backgroundColor: "#F8FAFC" },
-  picker: { width: "100%", color: "#0F172A" },
-  addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, height: 40, borderRadius: 8, justifyContent: "center", marginLeft: 8 },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+    backgroundColor: "#F8FAFC",
+    height: 54,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  picker: {
+    width: "100%",
+    height: 54,
+    color: "#0F172A",
+    backgroundColor: "#F8FAFC",
+    transform: [{ translateY: -2 }],
+  },
+  addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, height: 54, borderRadius: 8, justifyContent: "center", marginLeft: 8 },
   addFormBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
 
   // List Card

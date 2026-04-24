@@ -61,6 +61,9 @@ export async function uploadFacePhotos(images, studentId) {
     method: "POST",
     body: formData,
   }, STUDENT_URL);
-
-  return await res.json();
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Failed to upload photos");
+  }
+  return json;
 }

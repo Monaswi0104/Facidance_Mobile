@@ -46,7 +46,19 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL) {
       const text = await response.text();
       console.log(`[API FAIL] Response text:`, text.substring(0, 200));
       // Re-construct the response as a simple object since 'Response' constructor might not be globally available in React Native
-      return { ok: false, status: response.status, headers: response.headers, text: async () => text, json: async () => JSON.parse(text) };
+      return { 
+        ok: false, 
+        status: response.status, 
+        headers: response.headers, 
+        text: async () => text, 
+        json: async () => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            return { error: text || `HTTP Error ${response.status}` };
+          }
+        }
+      };
     }
 
     return response;

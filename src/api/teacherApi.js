@@ -77,7 +77,7 @@ export async function importStudentsCsv(courseId, students) {
   }, TEACHER_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to import students");
+    throw new Error(json.error || json.detail || "Failed to import students");
   }
   return json;
 }

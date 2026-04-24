@@ -31,7 +31,7 @@ export async function deleteTeacher(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to delete teacher");
+    throw new Error(json.error || json.detail || "Failed to delete teacher");
   }
   return json;
 }
@@ -43,11 +43,17 @@ export async function getDepartments() {
 }
 
 export async function createDepartment(name) {
+  console.log("[adminApi] Creating department with name:", name);
   const res = await apiFetch("/admin/departments", {
     method: "POST",
     body: JSON.stringify({ name }),
   }, ADMIN_URL);
-  return await res.json();
+  const json = await res.json();
+  console.log("[adminApi] Department create response:", json);
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Failed to create department");
+  }
+  return json;
 }
 
 export async function deleteDepartment(id) {
@@ -57,7 +63,7 @@ export async function deleteDepartment(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to delete department");
+    throw new Error(json.error || json.detail || "Failed to delete department");
   }
   return json;
 }
@@ -69,11 +75,17 @@ export async function getPrograms() {
 }
 
 export async function createProgram(name, departmentId) {
+  console.log("[adminApi] Creating program with name:", name, "departmentId:", departmentId);
   const res = await apiFetch("/admin/programs", {
     method: "POST",
     body: JSON.stringify({ name, departmentId }),
   }, ADMIN_URL);
-  return await res.json();
+  const json = await res.json();
+  console.log("[adminApi] Program create response:", json);
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Failed to create program");
+  }
+  return json;
 }
 
 export async function deleteProgram(id) {
@@ -83,7 +95,7 @@ export async function deleteProgram(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to delete program");
+    throw new Error(json.error || json.detail || "Failed to delete program");
   }
   return json;
 }
@@ -95,13 +107,15 @@ export async function getCourses() {
 }
 
 export async function createCourse(data) {
+  console.log("[adminApi] Creating course with data:", data);
   const res = await apiFetch("/admin/courses", {
     method: "POST",
     body: JSON.stringify(data),
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Course create response:", json);
   if (!res.ok) {
-    throw new Error(json.error || json.hint || "Failed to create course");
+    throw new Error(json.error || json.detail || json.hint || "Failed to create course");
   }
   return json;
 }
@@ -113,7 +127,7 @@ export async function deleteCourse(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to delete course");
+    throw new Error(json.error || json.detail || "Failed to delete course");
   }
   return json;
 }
@@ -131,7 +145,7 @@ export async function updateStudent(id, data) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to update student");
+    throw new Error(json.error || json.detail || "Failed to update student");
   }
   return json;
 }
@@ -142,7 +156,7 @@ export async function markStudentGraduated(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to graduate student");
+    throw new Error(json.error || json.detail || "Failed to graduate student");
   }
   return json;
 }
@@ -155,7 +169,7 @@ export async function ungraduateStudent(id) {
     }, ADMIN_URL);
     const json = await res.json();
     if (!res.ok) {
-      throw new Error(json.error || "Failed to activate student");
+      throw new Error(json.error || json.detail || "Failed to activate student");
     }
     return json;
   } catch (e) {
@@ -167,7 +181,7 @@ export async function ungraduateStudent(id) {
     }, ADMIN_URL);
     const json = await res.json();
     if (!res.ok) {
-      throw new Error(json.error || "Failed to activate student");
+      throw new Error(json.error || json.detail || "Failed to activate student");
     }
     return json;
   }
@@ -179,7 +193,7 @@ export async function deleteStudent(id) {
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.error || "Failed to delete student");
+    throw new Error(json.error || json.detail || "Failed to delete student");
   }
   return json;
 }
