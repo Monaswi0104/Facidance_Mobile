@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
-  headerSection: { marginBottom: 18, marginTop: 8 },
+  headerSection: { marginBottom: 18, marginTop: 4 },
   title: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
   subtitle: { fontSize: 12, color: "#64748B", marginTop: 3, marginBottom: 12 },
   headerBtns: { flexDirection: "row", gap: 8 },

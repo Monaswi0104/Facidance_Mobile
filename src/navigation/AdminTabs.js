@@ -74,7 +74,7 @@ export default function AdminTabs({ navigation: rootNav }) {
                 onPress={() => navigation.navigate(tab.name)}
                 activeOpacity={0.7}
               >
-                <Icon size={16} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
+                <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
                 <Text style={[s.navPillText, isActive && s.navPillTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
@@ -123,14 +123,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    paddingBottom: 10,
+    paddingBottom: 4,
     gap: 6,
   },
   navPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
@@ -141,7 +141,7 @@ const s = StyleSheet.create({
     borderColor: Theme.colors.primaryDark,
   },
   navPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: "#64748B",
   },

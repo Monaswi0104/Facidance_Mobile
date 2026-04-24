@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
 
   // Welcome
-  welcomeSection: { marginBottom: 18, marginTop: 8 },
+  welcomeSection: { marginBottom: 18, marginTop: 4 },
   welcomeTitle: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
   welcomeName: { fontSize: 16, fontWeight: "600", color: "#475569", marginTop: 2 },
   welcomeSubtitle: { fontSize: 13, color: "#64748B", marginTop: 3, marginBottom: 12 },
