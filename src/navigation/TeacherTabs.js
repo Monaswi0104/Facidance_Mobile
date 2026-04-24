@@ -63,8 +63,8 @@ export default function TeacherTabs({ navigation }) {
           headerTitle: "",
           headerLeft: () => (
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Image source={require("../assets/logo.png")} style={{ width: 35, height: 35, resizeMode: "contain", marginRight: 8 }} />
-              <Text style={{ fontSize: 19, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
+              <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
+              <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
             </View>
           ),
           headerBackVisible: false,

@@ -51,8 +51,8 @@ export default function AdminTabs({ navigation: rootNav }) {
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image source={require("../assets/logo.png")} style={{ width: 30, height: 30, resizeMode: "contain", marginRight: 6 }} />
-            <Text style={{ fontSize: 17, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
+            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
+            <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <TouchableOpacity onPress={confirmLogout} style={s.logoutBtn} activeOpacity={0.7}>
             <View style={s.logoutDoor} />
