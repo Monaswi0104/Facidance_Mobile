@@ -73,8 +73,16 @@ export default function CoursesManagement() {
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
-          try { await deleteCourse(course.id); loadData(); }
-          catch (e) { Alert.alert("Error", e.message || "Failed to delete."); }
+          try {
+            console.log("[CoursesManagement] Deleting course:", course.id, course.name);
+            await deleteCourse(course.id);
+            loadData();
+            Alert.alert("Success", "Course deleted.");
+          }
+          catch (e) {
+            console.error("[CoursesManagement] Delete failed:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);

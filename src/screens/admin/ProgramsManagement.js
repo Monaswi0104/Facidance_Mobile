@@ -114,8 +114,16 @@ export default function ProgramsManagement() {
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
-          try { await deleteProgram(prog.id); loadData(); }
-          catch (e) { Alert.alert("Error", e.message || "Failed to delete."); }
+          try {
+            console.log("[ProgramsManagement] Deleting program:", prog.id, prog.name);
+            await deleteProgram(prog.id);
+            loadData();
+            Alert.alert("Success", "Program deleted.");
+          }
+          catch (e) {
+            console.error("[ProgramsManagement] Delete failed:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);

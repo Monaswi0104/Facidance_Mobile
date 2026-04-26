@@ -104,10 +104,14 @@ export default function TeachersManagement() {
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
+            console.log("[TeachersManagement] Deleting teacher:", teacher.userId || teacher.id, teacher.name);
             await deleteTeacher(teacher.userId || teacher.id);
             Alert.alert("Done", `${teacher.name} removed.`);
             loadTeachers();
-          } catch (e) { Alert.alert("Error", "Failed to delete."); }
+          } catch (e) {
+            console.error("[TeachersManagement] Delete failed:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);

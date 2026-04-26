@@ -82,8 +82,16 @@ export default function DepartmentsManagement() {
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
-          try { await deleteDepartment(dept.id); loadData(); }
-          catch (e) { Alert.alert("Error", "Failed to delete."); }
+          try {
+            console.log("[DepartmentsManagement] Deleting department:", dept.id, dept.name);
+            await deleteDepartment(dept.id);
+            loadData();
+            Alert.alert("Success", "Department deleted.");
+          }
+          catch (e) {
+            console.error("[DepartmentsManagement] Delete failed:", e);
+            Alert.alert("Error", e.message || "Failed to delete.");
+          }
         }
       },
     ]);

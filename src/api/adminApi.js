@@ -15,7 +15,7 @@ export async function getTeachers() {
 export async function approveTeacher(userId, departmentId) {
   const res = await apiFetch("/admin/approve-teacher", {
     method: "POST",
-    body: JSON.stringify({ userId, departmentId }),
+    body: JSON.stringify({ teacher_id: userId, department_id: departmentId }),
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
@@ -25,11 +25,12 @@ export async function approveTeacher(userId, departmentId) {
 }
 
 export async function deleteTeacher(id) {
-  const res = await apiFetch("/admin/teachers", {
+  console.log("[adminApi] Deleting teacher with id:", id);
+  const res = await apiFetch(`/admin/teachers/${id}`, {
     method: "DELETE",
-    body: JSON.stringify({ id }),
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Teacher delete response:", json);
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to delete teacher");
   }
@@ -57,11 +58,12 @@ export async function createDepartment(name) {
 }
 
 export async function deleteDepartment(id) {
-  const res = await apiFetch("/admin/departments", {
+  console.log("[adminApi] Deleting department with id:", id);
+  const res = await apiFetch(`/admin/departments/${id}`, {
     method: "DELETE",
-    body: JSON.stringify({ id }),
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Department delete response:", json);
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to delete department");
   }
@@ -78,7 +80,7 @@ export async function createProgram(name, departmentId) {
   console.log("[adminApi] Creating program with name:", name, "departmentId:", departmentId);
   const res = await apiFetch("/admin/programs", {
     method: "POST",
-    body: JSON.stringify({ name, departmentId }),
+    body: JSON.stringify({ name, department_id: departmentId }),
   }, ADMIN_URL);
   const json = await res.json();
   console.log("[adminApi] Program create response:", json);
@@ -89,11 +91,12 @@ export async function createProgram(name, departmentId) {
 }
 
 export async function deleteProgram(id) {
-  const res = await apiFetch("/admin/programs", {
+  console.log("[adminApi] Deleting program with id:", id);
+  const res = await apiFetch(`/admin/programs/${id}`, {
     method: "DELETE",
-    body: JSON.stringify({ id }),
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Program delete response:", json);
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to delete program");
   }
@@ -108,9 +111,16 @@ export async function getCourses() {
 
 export async function createCourse(data) {
   console.log("[adminApi] Creating course with data:", data);
+  const backendData = {
+    name: data.name,
+    teacher_id: data.teacherId || data.teacher_id,
+    program_id: data.programId || data.program_id,
+    academic_year: data.academicYear || data.academic_year,
+    semester_number: data.semesterNumber || data.semester_number,
+  };
   const res = await apiFetch("/admin/courses", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(backendData),
   }, ADMIN_URL);
   const json = await res.json();
   console.log("[adminApi] Course create response:", json);
@@ -121,11 +131,12 @@ export async function createCourse(data) {
 }
 
 export async function deleteCourse(id) {
-  const res = await apiFetch("/admin/courses", {
+  console.log("[adminApi] Deleting course with id:", id);
+  const res = await apiFetch(`/admin/courses/${id}`, {
     method: "DELETE",
-    body: JSON.stringify({ id }),
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Course delete response:", json);
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to delete course");
   }
@@ -139,9 +150,15 @@ export async function getStudents() {
 }
 
 export async function updateStudent(id, data) {
+  const backendData = {
+    name: data.name,
+    email: data.email,
+    ...(data.programId && { program_id: data.programId }),
+    ...(data.program_id && { program_id: data.program_id }),
+  };
   const res = await apiFetch(`/admin/students/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(data),
+    body: JSON.stringify(backendData),
   }, ADMIN_URL);
   const json = await res.json();
   if (!res.ok) {
@@ -188,10 +205,12 @@ export async function ungraduateStudent(id) {
 }
 
 export async function deleteStudent(id) {
+  console.log("[adminApi] Deleting student with id:", id);
   const res = await apiFetch(`/admin/students/${id}`, {
     method: "DELETE",
   }, ADMIN_URL);
   const json = await res.json();
+  console.log("[adminApi] Student delete response:", json);
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to delete student");
   }

@@ -155,26 +155,7 @@ export default function TeacherDashboard({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Navigation Bar */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navBar}>
-          {[
-            { label: "Dashboard", screen: null, icon: <LayoutDashboard size={16} />, active: true },
-            { label: "My Courses", screen: "MyCourses", icon: <BookOpen size={16} /> },
-            { label: "Attendance", screen: "AttendanceCamera", icon: <CheckCircle size={16} /> },
-            { label: "Students", screen: "StudentEnrollment", icon: <Users size={16} /> },
-            { label: "Reports", screen: "AttendanceReport", icon: <BarChart2 size={16} /> },
-          ].map((tab, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[styles.navTab, tab.active && styles.navTabActive]}
-              onPress={() => tab.screen && navigation.navigate(tab.screen)}
-              activeOpacity={0.7}
-            >
-              {React.cloneElement(tab.icon, { color: tab.active ? "#FFF" : "#64748B" })}
-              <Text style={[styles.navTabText, tab.active && styles.navTabTextActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>

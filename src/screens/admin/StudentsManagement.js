@@ -154,10 +154,13 @@ export default function StudentsManagement() {
   const handleDelete = async () => {
     try {
       setIsActionLoading(true);
+      console.log("[StudentsManagement] Deleting student:", selectedStudent.id, selectedStudent.name);
       await deleteStudent(selectedStudent.id);
       await loadData();
       closeModal();
+      Alert.alert("Success", "Student deleted.");
     } catch (e) {
+      console.error("[StudentsManagement] Delete failed:", e);
       Alert.alert("Error", e.message || "Failed to delete student.");
     } finally {
       setIsActionLoading(false);

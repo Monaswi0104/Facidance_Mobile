@@ -1,10 +1,9 @@
 import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { Theme } from "../theme/Theme";
-import { LayoutDashboard, BookOpen, ClipboardList, Users } from "lucide-react-native";
+import { LayoutDashboard, BookOpen, Users, Camera, BarChart2 } from "lucide-react-native";
 
 import TeacherDashboard from "../screens/teacher/TeacherDashboard";
 import MyCourses from "../screens/teacher/MyCourses";
@@ -14,27 +13,15 @@ import AttendanceSession from "../screens/teacher/AttendanceSession";
 import StudentEnrollment from "../screens/teacher/StudentEnrollment";
 import AttendanceReport from "../screens/teacher/AttendanceReport";
 
-const Tab = createBottomTabNavigator();
-const CoursesStack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const TAB_CONFIG = [
   { name: "TeacherDashboard", label: "Overview", Icon: LayoutDashboard },
-  { name: "TeacherCoursesTab", label: "Courses", Icon: BookOpen },
-  { name: "AttendanceReport", label: "Report", Icon: ClipboardList },
+  { name: "MyCourses", label: "Courses", Icon: BookOpen },
+  { name: "AttendanceCamera", label: "Attendance", Icon: Camera },
   { name: "StudentEnrollment", label: "Students", Icon: Users },
+  { name: "AttendanceReport", label: "Reports", Icon: BarChart2 },
 ];
-
-// Nested stack for Courses tab: MyCourses -> CourseDetails -> AttendanceCamera -> AttendanceSession
-function CoursesStackScreen() {
-  return (
-    <CoursesStack.Navigator screenOptions={{ headerShown: false }}>
-      <CoursesStack.Screen name="TeacherCourses" component={MyCourses} />
-      <CoursesStack.Screen name="CourseDetails" component={CourseDetails} />
-      <CoursesStack.Screen name="AttendanceCamera" component={AttendanceCamera} />
-      <CoursesStack.Screen name="AttendanceSession" component={AttendanceSession} />
-    </CoursesStack.Navigator>
-  );
-}
 
 export default function TeacherTabs({ navigation: rootNav }) {
 
@@ -56,9 +43,9 @@ export default function TeacherTabs({ navigation: rootNav }) {
     );
   };
 
-  // Custom header that includes logo + logout + nav pills (same as AdminTabs)
+  // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
-    const activeIndex = state.index;
+    const currentRouteName = state.routes[state.index].name;
     return (
       <View style={s.headerWrapper}>
         {/* Top row: Logo + Logout */}
@@ -77,8 +64,8 @@ export default function TeacherTabs({ navigation: rootNav }) {
 
         {/* Nav pills row */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.navRow}>
-          {TAB_CONFIG.map((tab, i) => {
-            const isActive = activeIndex === i;
+          {TAB_CONFIG.map((tab) => {
+            const isActive = tab.name === currentRouteName;
             const Icon = tab.Icon;
             return (
               <TouchableOpacity
@@ -98,20 +85,29 @@ export default function TeacherTabs({ navigation: rootNav }) {
   }
 
   return (
-    <Tab.Navigator
-      tabBar={() => null}
+    <Stack.Navigator
       screenOptions={{
-        header: ({ navigation }) => {
+        header: ({ navigation, route }) => {
           const state = navigation.getState();
+          // Only show custom header for main tabs, not for nested screens
+          const isMainTab = TAB_CONFIG.some(tab => tab.name === route.name);
+          if (!isMainTab) return null;
           return <CustomHeader navigation={navigation} state={state} />;
         },
+        animation: "slide_from_right",
+        animationTypeForReplace: "push",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
       }}
     >
-      <Tab.Screen name="TeacherDashboard" component={TeacherDashboard} />
-      <Tab.Screen name="TeacherCoursesTab" component={CoursesStackScreen} />
-      <Tab.Screen name="AttendanceReport" component={AttendanceReport} />
-      <Tab.Screen name="StudentEnrollment" component={StudentEnrollment} />
-    </Tab.Navigator>
+      <Stack.Screen name="TeacherDashboard" component={TeacherDashboard} />
+      <Stack.Screen name="MyCourses" component={MyCourses} />
+      <Stack.Screen name="CourseDetails" component={CourseDetails} options={{ headerShown: false }} />
+      <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
+      <Stack.Screen name="AttendanceSession" component={AttendanceSession} options={{ headerShown: false }} />
+      <Stack.Screen name="AttendanceReport" component={AttendanceReport} />
+      <Stack.Screen name="StudentEnrollment" component={StudentEnrollment} />
+    </Stack.Navigator>
   );
 }
 
