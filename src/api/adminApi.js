@@ -6,6 +6,12 @@ export async function getAdminStats() {
   return await res.json();
 }
 
+// Analytics – student count per program
+export async function getProgramDistribution() {
+  const res = await apiFetch("/admin/analytics/program-distribution", {}, ADMIN_URL);
+  return await res.json();
+}
+
 // Teachers
 export async function getTeachers() {
   const res = await apiFetch("/admin/teachers", {}, ADMIN_URL);

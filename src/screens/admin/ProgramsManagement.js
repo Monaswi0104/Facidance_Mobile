@@ -4,7 +4,7 @@ import {
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStats, getCourses, getStudents } from "../../api/adminApi";
+import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStats, getCourses, getStudents, getProgramDistribution } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
 import { BookOpen, Building2, Users, GraduationCap, Plus, Trash2, X, Key } from "lucide-react-native";
@@ -26,6 +26,17 @@ export default function ProgramsManagement() {
       const [progData, deptData, statsData, coursesData, studentsData] = await Promise.all([
         getPrograms(), getDepartments(), getAdminStats(), getCourses(), getStudents()
       ]);
+
+      // Fetch program distribution separately so failure doesn't break everything
+      let distMap = {};
+      try {
+        const distData = await getProgramDistribution();
+        const distList = distData?.programs || [];
+        distList.forEach(d => { distMap[d.program_id] = d.student_count || 0; });
+      } catch (distErr) {
+        console.log("[ProgramsManagement] Distribution fetch failed (non-critical):", distErr);
+      }
+
       if (statsData?.students) setAdminStudents(statsData.students);
       const progList = progData.programs || progData || [];
       const deptList = deptData.departments || deptData || [];
@@ -49,7 +60,7 @@ export default function ProgramsManagement() {
           c.semester?.academicYear?.program_id === p.id
         );
         
-        // Match students to this program
+        // Match students to this program for per-course counting
         const pStudents = studentList.filter(s => 
           s.program_id === p.id || s.programId === p.id || 
           s.program_name === p.name || 
@@ -62,8 +73,8 @@ export default function ProgramsManagement() {
           if (tName) teacherSet.add(tName);
         });
 
-        // Use computed counts first, then API counts as fallback
-        const studentCount = pStudents.length || p.students_count || p._count?.students || p.students?.length || 0;
+        // Use the analytics endpoint count (most accurate), then computed, then API fallbacks
+        const studentCount = (distMap[p.id] ?? pStudents.length) || p.students_count || p._count?.students || p.students?.length || 0;
         const courseCount = pCourses.length || p.courses_count || p._count?.courses || p.courses?.length || 0;
 
         return {
@@ -72,12 +83,19 @@ export default function ProgramsManagement() {
           departmentId: p.department_id || p.departmentId,
           dept: p.department_name || p.department?.name || deptMap[p.department_id || p.departmentId] || "—",
           students: studentCount,
-          courses: pCourses.map(c => ({
-            id: c.id, name: c.name, code: c.code || "—",
-            teacher: c.teacher_name || c.teacher?.user?.name || "—",
-            semester: c.semester_name || c.semester?.name || "—",
-            students: c.student_count || c.students_count || c._count?.students || pStudents.filter(s => (s.courses || []).some(sc => sc.id === c.id)).length || 0,
-          })),
+          courses: pCourses.map(c => {
+            // Count students enrolled in this specific course
+            const courseStudentCount = pStudents.filter(s => {
+              const sCourses = s.courses || [];
+              return sCourses.some(sc => sc.id === c.id);
+            }).length;
+            return {
+              id: c.id, name: c.name, code: c.code || "—",
+              teacher: c.teacher_name || c.teacher?.user?.name || "—",
+              semester: c.semester_name || c.semester?.name || "—",
+              students: c.student_count || c.students_count || c._count?.students || courseStudentCount || 0,
+            };
+          }),
           teachers: Array.from(teacherSet),
           totalCourses: courseCount,
         };
@@ -167,13 +185,6 @@ export default function ProgramsManagement() {
                   <View style={styles.statIconBg}><Building2 size={14} color="#FFF" /></View>
                 </View>
                 <Text style={styles.statNumber}>{uniqueDepts.size}</Text>
-              </View>
-              <View style={styles.statCard}>
-                <View style={styles.statTopRow}>
-                  <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color="#FFF" /></View>
-                </View>
-                <Text style={styles.statNumber}>{totalStudents}</Text>
               </View>
             </View>
 
@@ -296,10 +307,6 @@ export default function ProgramsManagement() {
 
               <View style={styles.detailStatsRow}>
                 <View style={styles.detailStatBox}>
-                  <Text style={styles.detailStatNumber}>{selectedProgram?.students || 0}</Text>
-                  <Text style={styles.detailStatLabel}>Students</Text>
-                </View>
-                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
                   <Text style={styles.detailStatNumber}>{selectedProgram?.totalCourses || selectedProgram?.courses?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Courses</Text>
                 </View>
