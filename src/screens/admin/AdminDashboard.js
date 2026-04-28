@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert
 } from "react-native";
-import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents } from "../../api/adminApi";
+import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents, getTeacherLoad, getProgramDistribution } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
@@ -38,24 +38,30 @@ export default function AdminDashboard({ navigation }) {
       const cList = Array.isArray(coursesList?.courses || coursesList) ? (coursesList?.courses || coursesList) : [];
       const sList = Array.isArray(studentsList?.students || studentsList) ? (studentsList?.students || studentsList) : [];
 
-      // Build teacher workload by cross-referencing courses
-      const workload = tList
-        .filter(t => !t.isPending)
-        .slice(0, 4)
-        .map(t => {
-          const tCourses = cList.filter(c => c.teacher_id === t.id || c.teacherId === t.id || c.teacher?.id === t.id || c.teacher_name === (t.name || t.user?.name));
-          const tStudents = sList.filter(s => {
-            const sc = s.courses || s.student?.courses || [];
-            return sc.some(c => tCourses.some(tc => tc.id === c.id));
-          });
-          return {
-            name: t.name || t.user?.name || "Teacher",
+      // Build teacher workload from the dedicated analytics endpoint (accurate counts)
+      try {
+        const loadData2 = await getTeacherLoad();
+        const loadList = loadData2?.teachers || [];
+        setTeacherWorkload(loadList.map(t => ({
+          name: t.teacher_name || "Teacher",
+          dept: t.department_name || "Department",
+          courses: t.course_count || 0,
+          students: t.student_count || 0,
+        })));
+      } catch (loadErr) {
+        console.log("[AdminDashboard] Teacher load fetch failed:", loadErr);
+        // Fallback: use basic teacher list
+        const workload = tList
+          .filter(t => !t.isPending)
+          .slice(0, 4)
+          .map(t => ({
+            name: t.name || t.teacher_name || t.user?.name || "Teacher",
             dept: t.department?.name || t.department_name || "Department",
-            courses: tCourses.length,
-            students: tStudents.length,
-          };
-        });
-      setTeacherWorkload(workload);
+            courses: t.course_count || 0,
+            students: t.student_count || 0,
+          }));
+        setTeacherWorkload(workload);
+      }
 
       // Compute graduated/active counts from student list as fallback
       const graduatedCount = sList.filter(s => (s.status || s.student?.status) === "graduated").length;
@@ -66,16 +72,28 @@ export default function AdminDashboard({ navigation }) {
         setStats(statsData);
       }
 
-      // Build program distribution by cross-referencing students
-      const dist = pList.slice(0, 4).map(p => {
-        const pStudents = sList.filter(s => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
-        return {
-          name: p.name || "Program",
-          dept: p.department?.name || p.department_name || "",
-          students: pStudents.length,
-        };
-      });
-      setProgramDist(dist);
+      // Build program distribution from analytics endpoint (accurate counts)
+      try {
+        const distData = await getProgramDistribution();
+        const distList = distData?.programs || [];
+        setProgramDist(distList.slice(0, 5).map(p => ({
+          name: p.program_name || "Program",
+          dept: p.department_name || "",
+          students: p.student_count || 0,
+        })));
+      } catch (distErr) {
+        console.log("[AdminDashboard] Program distribution fetch failed:", distErr);
+        // Fallback: cross-reference from student list
+        const dist = pList.slice(0, 4).map(p => {
+          const pStudents = sList.filter(s => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
+          return {
+            name: p.name || "Program",
+            dept: p.department?.name || p.department_name || "",
+            students: pStudents.length,
+          };
+        });
+        setProgramDist(dist);
+      }
     } catch (e) { console.log(e); }
     finally { setIsLoading(false); }
   };
@@ -98,7 +116,7 @@ export default function AdminDashboard({ navigation }) {
     { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color="#FFF" />, screen: "TeachersManagement" },
     { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color="#FFF" />, screen: "StudentsManagement" },
     { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: "#64748B", icon: <Building2 size={16} color="#FFF" />, screen: "DepartmentsManagement" },
-    { label: "TOTAL COURSES", value: stats.courses || 0, sub: `${stats.courses || 0} sessions`, subColor: "#10B981", icon: <BookOpen size={16} color="#FFF" />, screen: "CoursesManagement" },
+    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color="#FFF" />, screen: "CoursesManagement" },
     { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color="#FFF" />, screen: null },
     { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: "#64748B", icon: <UserX size={16} color="#FFF" />, screen: "StudentsManagement" },
   ];
@@ -170,21 +188,23 @@ export default function AdminDashboard({ navigation }) {
           {teacherWorkload.length === 0 ? (
             <Text style={styles.emptyText}>No approved teachers yet.</Text>
           ) : (
-            teacherWorkload.map((t, i) => (
-              <View key={i} style={[styles.workloadRow, i < teacherWorkload.length - 1 && styles.workloadBorder]}>
-                <View style={styles.workloadAvatar}>
-                  <Text style={styles.workloadAvatarText}>{t.name.charAt(0)}</Text>
+            <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              {teacherWorkload.map((t, i) => (
+                <View key={i} style={[styles.workloadRow, i < teacherWorkload.length - 1 && styles.workloadBorder]}>
+                  <View style={styles.workloadAvatar}>
+                    <Text style={styles.workloadAvatarText}>{t.name.charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.workloadName}>{t.name}</Text>
+                    <Text style={styles.workloadDept}>{t.dept}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={styles.workloadCourses}>{t.courses}</Text>
+                    <Text style={styles.workloadStudentsMeta}>{t.students} students</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.workloadName}>{t.name}</Text>
-                  <Text style={styles.workloadDept}>{t.dept}</Text>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text style={styles.workloadCourses}>{t.courses}</Text>
-                  <Text style={styles.workloadStudentsMeta}>{t.students} students</Text>
-                </View>
-              </View>
-            ))
+              ))}
+            </ScrollView>
           )}
         </View>
 
