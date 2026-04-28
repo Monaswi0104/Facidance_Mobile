@@ -78,7 +78,7 @@ export default function LoginScreen({ navigation }) {
 
             {/* AI Badge */}
             <View style={styles.aiBadge}>
-              <Sparkles size={10} color="#10B981" style={{ marginRight: 4 }} />
+              <Sparkles size={13} color="#10B981" style={{ marginRight: 5 }} />
               <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
             </View>
 
@@ -262,13 +262,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(16,185,129,0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     alignSelf: "flex-start",
     marginBottom: 14,
   },
-  aiBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  aiBadgeText: { fontSize: 13, fontWeight: "700", color: "#10B981" },
 
   heroTitle: {
     fontSize: 24,
