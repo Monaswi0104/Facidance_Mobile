@@ -145,7 +145,7 @@ export default function StudentTabs({ navigation: rootNav }) {
 const s = StyleSheet.create({
   headerWrapper: {
     backgroundColor: "#FFFFFF",
-    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 4 : 50,
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) : 50,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
