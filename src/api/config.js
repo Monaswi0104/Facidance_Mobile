@@ -12,6 +12,7 @@ export const AUTH_URL = `${PROD_URL}/auth`;        // auth router prefix="/auth"
 export const ADMIN_URL = `${PROD_URL}/admin-api`;  // nginx /admin-api/ → admin:8001
 export const TEACHER_URL = `${PROD_URL}/teacher-api`; // nginx /teacher-api/ → teacher:8002
 export const STUDENT_URL = `${PROD_URL}/student-api`; // nginx /student-api/ → student:8003
+export const WEB_URL = PROD_URL; // Direct to Next.js for specific web-only APIs
 
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";

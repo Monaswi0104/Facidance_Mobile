@@ -1,4 +1,4 @@
-import { apiFetch, STUDENT_URL } from "./config";
+import { apiFetch, STUDENT_URL, WEB_URL } from "./config";
 
 // Student profile
 export async function getStudentMe() {
@@ -57,10 +57,10 @@ export async function uploadFacePhotos(images, studentId) {
     }
   });
 
-  const res = await apiFetch("/student/upload-photos", {
+  const res = await apiFetch("/api/student/upload-photos", {
     method: "POST",
     body: formData,
-  }, STUDENT_URL);
+  }, WEB_URL);
   const json = await res.json();
   if (!res.ok) {
     throw new Error(json.error || json.detail || "Failed to upload photos");
