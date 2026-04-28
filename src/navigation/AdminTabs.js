@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { Theme } from "../theme/Theme";
 import { LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Layers } from "lucide-react-native";
@@ -46,6 +46,28 @@ export default function AdminTabs({ navigation: rootNav }) {
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
     const activeIndex = state.index;
+    const scrollViewRef = useRef(null);
+    const tabLayouts = useRef({});
+
+    const scrollToTab = (index, animated = true) => {
+      const layout = tabLayouts.current[index];
+      if (layout && scrollViewRef.current) {
+        try {
+          const { width: screenWidth } = Dimensions.get("window");
+          const scrollX = layout.x - screenWidth / 2 + layout.width / 2;
+          scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated });
+        } catch (e) {
+          console.log("[AdminTabs] Scroll error:", e);
+        }
+      }
+    };
+
+    // Auto-scroll to active tab whenever it changes
+    useEffect(() => {
+      const timer = setTimeout(() => scrollToTab(activeIndex), 150);
+      return () => clearTimeout(timer);
+    }, [activeIndex]);
+
     return (
       <View style={s.headerWrapper}>
         {/* Top row: Logo + Logout */}
@@ -63,15 +85,24 @@ export default function AdminTabs({ navigation: rootNav }) {
         </View>
 
         {/* Nav pills row */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.navRow}>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.navRow}
+        >
           {TAB_CONFIG.map((tab, i) => {
             const isActive = activeIndex === i;
             const Icon = tab.Icon;
             return (
               <TouchableOpacity
                 key={tab.name}
+                onLayout={(e) => { tabLayouts.current[i] = e.nativeEvent.layout; }}
                 style={[s.navPill, isActive && s.navPillActive]}
-                onPress={() => navigation.navigate(tab.name)}
+                onPress={() => {
+                  navigation.navigate(tab.name);
+                  setTimeout(() => scrollToTab(i), 100);
+                }}
                 activeOpacity={0.7}
               >
                 <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />

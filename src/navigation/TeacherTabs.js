@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { Theme } from "../theme/Theme";
 import { LayoutDashboard, BookOpen, Users, Camera, BarChart2 } from "lucide-react-native";
@@ -68,14 +68,26 @@ export default function TeacherTabs({ navigation: rootNav }) {
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
     const activeIndex = state.index;
-    const scrollRef = useRef(null);
-    const pillLayouts = useRef([]);
+    const scrollViewRef = useRef(null);
+    const tabLayouts = useRef({});
 
-    useEffect(() => {
-      if (scrollRef.current && pillLayouts.current[activeIndex]) {
-        const { x } = pillLayouts.current[activeIndex];
-        scrollRef.current.scrollTo({ x: Math.max(0, x - 14), animated: true });
+    const scrollToTab = (index, animated = true) => {
+      const layout = tabLayouts.current[index];
+      if (layout && scrollViewRef.current) {
+        try {
+          const { width: screenWidth } = Dimensions.get("window");
+          const scrollX = layout.x - screenWidth / 2 + layout.width / 2;
+          scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated });
+        } catch (e) {
+          console.log("[TeacherTabs] Scroll error:", e);
+        }
       }
+    };
+
+    // Auto-scroll to active tab whenever it changes
+    useEffect(() => {
+      const timer = setTimeout(() => scrollToTab(activeIndex), 150);
+      return () => clearTimeout(timer);
     }, [activeIndex]);
 
     return (
@@ -95,16 +107,24 @@ export default function TeacherTabs({ navigation: rootNav }) {
         </View>
 
         {/* Nav pills row */}
-        <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.navRow}>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.navRow}
+        >
           {TAB_CONFIG.map((tab, i) => {
             const isActive = activeIndex === i;
             const Icon = tab.Icon;
             return (
               <TouchableOpacity
                 key={tab.name}
+                onLayout={(e) => { tabLayouts.current[i] = e.nativeEvent.layout; }}
                 style={[s.navPill, isActive && s.navPillActive]}
-                onPress={() => navigation.navigate(tab.name)}
-                onLayout={(e) => { pillLayouts.current[i] = e.nativeEvent.layout; }}
+                onPress={() => {
+                  navigation.navigate(tab.name);
+                  setTimeout(() => scrollToTab(i), 100);
+                }}
                 activeOpacity={0.7}
               >
                 <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
@@ -122,17 +142,8 @@ export default function TeacherTabs({ navigation: rootNav }) {
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
-          // For screens nested inside a Stack (CoursesStack, AttendanceStack),
-          // navigation belongs to the Stack, so getParent() gives the Tab navigator.
-          // For direct Tab screens (TeacherDashboard, etc.), navigation IS the Tab navigator,
-          // and getParent() would wrongly return the Auth Stack.
-          // Detect by checking if the current state has our tab route names.
-          const currentState = navigation.getState();
-          const isTabNav = currentState?.routes?.some(r => r.name === "TeacherDashboard");
-          const tabNav = isTabNav ? navigation : navigation.getParent();
-          const state = tabNav.getState();
-          const activeRouteName = state.routes[state.index].name;
-          return <CustomHeader navigation={tabNav} state={state} />;
+          const state = navigation.getState();
+          return <CustomHeader navigation={navigation} state={state} />;
         },
       }}
     >
