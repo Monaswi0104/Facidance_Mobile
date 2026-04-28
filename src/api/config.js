@@ -17,7 +17,7 @@ export const WEB_URL = PROD_URL; // Direct to Next.js for specific web-only APIs
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";
 
-export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL) {
+export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retries = 2) {
   const token = await getToken();
 
   const headers = {
@@ -31,40 +31,54 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL) {
     delete headers["Content-Type"];
   }
 
-  try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      ...options,
-      headers,
-    });
+  let backoffDelay = 1000; // start with 1 second
 
-    console.log(`[API ${options.method || 'GET'} ${endpoint}] Status:`, response.status);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    if (response.status === 401) {
-      throw new Error("UNAUTHORIZED");
-    }
+      console.log(`[API ${options.method || 'GET'} ${endpoint}] Status:`, response.status);
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.log(`[API FAIL] Response text:`, text.substring(0, 200));
-      // Re-construct the response as a simple object since 'Response' constructor might not be globally available in React Native
-      return { 
-        ok: false, 
-        status: response.status, 
-        headers: response.headers, 
-        text: async () => text, 
-        json: async () => {
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            return { error: text || `HTTP Error ${response.status}` };
-          }
+      if (response.status === 401) {
+        throw new Error("UNAUTHORIZED");
+      }
+
+      if (!response.ok) {
+        // We only retry on 5xx server errors or network errors. 4xx are returned as-is.
+        if (response.status >= 500 && attempt < retries) {
+          throw new Error(`SERVER_ERROR_${response.status}`);
         }
-      };
-    }
 
-    return response;
-  } catch (err) {
-    console.error(`[API NETWORK ERROR] ${options.method || 'GET'} ${endpoint} failed:`, err.message);
-    throw err;
+        const text = await response.text();
+        console.log(`[API FAIL] Response text:`, text.substring(0, 200));
+        return { 
+          ok: false, 
+          status: response.status, 
+          headers: response.headers, 
+          text: async () => text, 
+          json: async () => {
+            try {
+              return JSON.parse(text);
+            } catch (e) {
+              return { error: text || `HTTP Error ${response.status}` };
+            }
+          }
+        };
+      }
+
+      return response;
+    } catch (err) {
+      if (attempt < retries && err.message !== "UNAUTHORIZED") {
+        console.warn(`[API RETRY ${attempt + 1}/${retries}] ${options.method || 'GET'} ${endpoint} failed (${err.message}). Retrying in ${backoffDelay}ms...`);
+        await new Promise(res => setTimeout(res, backoffDelay));
+        backoffDelay *= 2; // Exponential backoff
+        continue;
+      }
+      console.error(`[API NETWORK ERROR] ${options.method || 'GET'} ${endpoint} failed completely after ${attempt + 1} attempts:`, err.message);
+      throw err;
+    }
   }
 }
