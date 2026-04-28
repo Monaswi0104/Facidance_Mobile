@@ -186,6 +186,13 @@ export default function ProgramsManagement() {
                 </View>
                 <Text style={styles.statNumber}>{uniqueDepts.size}</Text>
               </View>
+              <View style={styles.statCard}>
+                <View style={styles.statTopRow}>
+                  <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color="#FFF" /></View>
+                </View>
+                <Text style={styles.statNumber}>{totalStudents}</Text>
+              </View>
             </View>
 
             {/* Inline Add Form */}
