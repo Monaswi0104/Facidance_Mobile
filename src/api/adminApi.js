@@ -12,6 +12,12 @@ export async function getProgramDistribution() {
   return await res.json();
 }
 
+// Analytics – courses and students per teacher
+export async function getTeacherLoad() {
+  const res = await apiFetch("/admin/analytics/teacher-load", {}, ADMIN_URL);
+  return await res.json();
+}
+
 // Teachers
 export async function getTeachers() {
   const res = await apiFetch("/admin/teachers", {}, ADMIN_URL);
