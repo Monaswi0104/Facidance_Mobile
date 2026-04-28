@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform } from "react-native";
 import { clearAuth } from "../api/authStorage";
@@ -13,6 +14,7 @@ import AttendanceSession from "../screens/teacher/AttendanceSession";
 import StudentEnrollment from "../screens/teacher/StudentEnrollment";
 import AttendanceReport from "../screens/teacher/AttendanceReport";
 
+const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const TAB_CONFIG = [
@@ -22,6 +24,26 @@ const TAB_CONFIG = [
   { name: "StudentEnrollment", label: "Students", Icon: Users },
   { name: "AttendanceReport", label: "Reports", Icon: BarChart2 },
 ];
+
+// Stack for MyCourses with nested CourseDetails
+function CoursesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MyCourses" component={MyCourses} />
+      <Stack.Screen name="CourseDetails" component={CourseDetails} />
+    </Stack.Navigator>
+  );
+}
+
+// Stack for AttendanceCamera with nested AttendanceSession
+function AttendanceStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
+      <Stack.Screen name="AttendanceSession" component={AttendanceSession} />
+    </Stack.Navigator>
+  );
+}
 
 export default function TeacherTabs({ navigation: rootNav }) {
 
@@ -45,7 +67,17 @@ export default function TeacherTabs({ navigation: rootNav }) {
 
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
-    const currentRouteName = state.routes[state.index].name;
+    const activeIndex = state.index;
+    const scrollRef = useRef(null);
+    const pillLayouts = useRef([]);
+
+    useEffect(() => {
+      if (scrollRef.current && pillLayouts.current[activeIndex]) {
+        const { x } = pillLayouts.current[activeIndex];
+        scrollRef.current.scrollTo({ x: Math.max(0, x - 14), animated: true });
+      }
+    }, [activeIndex]);
+
     return (
       <View style={s.headerWrapper}>
         {/* Top row: Logo + Logout */}
@@ -63,15 +95,16 @@ export default function TeacherTabs({ navigation: rootNav }) {
         </View>
 
         {/* Nav pills row */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.navRow}>
-          {TAB_CONFIG.map((tab) => {
-            const isActive = tab.name === currentRouteName;
+        <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.navRow}>
+          {TAB_CONFIG.map((tab, i) => {
+            const isActive = activeIndex === i;
             const Icon = tab.Icon;
             return (
               <TouchableOpacity
                 key={tab.name}
                 style={[s.navPill, isActive && s.navPillActive]}
                 onPress={() => navigation.navigate(tab.name)}
+                onLayout={(e) => { pillLayouts.current[i] = e.nativeEvent.layout; }}
                 activeOpacity={0.7}
               >
                 <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
@@ -85,29 +118,30 @@ export default function TeacherTabs({ navigation: rootNav }) {
   }
 
   return (
-    <Stack.Navigator
+    <Tab.Navigator
+      tabBar={() => null}
       screenOptions={{
-        header: ({ navigation, route }) => {
-          const state = navigation.getState();
-          // Only show custom header for main tabs, not for nested screens
-          const isMainTab = TAB_CONFIG.some(tab => tab.name === route.name);
-          if (!isMainTab) return null;
-          return <CustomHeader navigation={navigation} state={state} />;
+        header: ({ navigation }) => {
+          // For screens nested inside a Stack (CoursesStack, AttendanceStack),
+          // navigation belongs to the Stack, so getParent() gives the Tab navigator.
+          // For direct Tab screens (TeacherDashboard, etc.), navigation IS the Tab navigator,
+          // and getParent() would wrongly return the Auth Stack.
+          // Detect by checking if the current state has our tab route names.
+          const currentState = navigation.getState();
+          const isTabNav = currentState?.routes?.some(r => r.name === "TeacherDashboard");
+          const tabNav = isTabNav ? navigation : navigation.getParent();
+          const state = tabNav.getState();
+          const activeRouteName = state.routes[state.index].name;
+          return <CustomHeader navigation={tabNav} state={state} />;
         },
-        animation: "slide_from_right",
-        animationTypeForReplace: "push",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
       }}
     >
-      <Stack.Screen name="TeacherDashboard" component={TeacherDashboard} />
-      <Stack.Screen name="MyCourses" component={MyCourses} />
-      <Stack.Screen name="CourseDetails" component={CourseDetails} options={{ headerShown: false }} />
-      <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
-      <Stack.Screen name="AttendanceSession" component={AttendanceSession} options={{ headerShown: false }} />
-      <Stack.Screen name="AttendanceReport" component={AttendanceReport} />
-      <Stack.Screen name="StudentEnrollment" component={StudentEnrollment} />
-    </Stack.Navigator>
+      <Tab.Screen name="TeacherDashboard" component={TeacherDashboard} />
+      <Tab.Screen name="MyCourses" component={CoursesStack} />
+      <Tab.Screen name="AttendanceCamera" component={AttendanceStack} />
+      <Tab.Screen name="StudentEnrollment" component={StudentEnrollment} />
+      <Tab.Screen name="AttendanceReport" component={AttendanceReport} />
+    </Tab.Navigator>
   );
 }
 
