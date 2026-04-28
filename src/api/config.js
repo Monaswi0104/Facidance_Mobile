@@ -17,7 +17,23 @@ export const WEB_URL = PROD_URL; // Direct to Next.js for specific web-only APIs
 // Authenticated fetch wrapper — automatically injects JWT token
 import { getToken } from "./authStorage";
 
+const apiCache = new Map();
+const CACHE_TTL = 30000; // 30 seconds
+
 export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retries = 2) {
+  const isGet = !options.method || options.method.toUpperCase() === "GET";
+  const cacheKey = `${baseUrl}${endpoint}`;
+
+  if (isGet && apiCache.has(cacheKey)) {
+    const cached = apiCache.get(cacheKey);
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`[API CACHE HIT] GET ${endpoint}`);
+      return cached.response.clone(); // Return a clone so .json() works multiple times
+    } else {
+      apiCache.delete(cacheKey);
+    }
+  }
+
   const token = await getToken();
 
   const headers = {
@@ -67,6 +83,13 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
             }
           }
         };
+      }
+
+      if (response.ok && isGet) {
+        apiCache.set(cacheKey, {
+          timestamp: Date.now(),
+          response: response.clone()
+        });
       }
 
       return response;
