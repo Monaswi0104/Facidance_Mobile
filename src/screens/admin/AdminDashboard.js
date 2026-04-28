@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert
+  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert, RefreshControl
 } from "react-native";
 import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents, getTeacherLoad, getProgramDistribution } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
@@ -15,12 +15,13 @@ export default function AdminDashboard({ navigation }) {
   const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0, attendance_rate: 0, graduated: 0 });
   const [userName, setUserName] = useState("Admin");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [teacherWorkload, setTeacherWorkload] = useState([]);
   const [programDist, setProgramDist] = useState([]);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const [statsData, user, teachersList, programsList, coursesList, studentsList] = await Promise.all([
         getAdminStats(),
         getUser(),
@@ -98,7 +99,13 @@ export default function AdminDashboard({ navigation }) {
     finally { setIsLoading(false); }
   };
 
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false);
+    setIsRefreshing(false);
+  }, []);
+
+  useFocusEffect(useCallback(() => { loadData(true); }, []));
 
   useEffect(() => {
     const backAction = () => {
@@ -126,7 +133,13 @@ export default function AdminDashboard({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.headerSection}>

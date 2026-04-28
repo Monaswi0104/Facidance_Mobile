@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert
+  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert, RefreshControl
 } from "react-native";
 import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { getUser, clearAuth } from "../../api/authStorage";
@@ -16,34 +16,40 @@ export default function StudentDashboard({ navigation }) {
   const [stats, setStats] = useState({ courses: 0, avgAttendance: "—", avgRaw: 0, attended: 0, totalSessions: 0 });
   const [userName, setUserName] = useState("Student");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      const load = async () => {
-        try {
-          setIsLoading(true);
-          const [courses, user, statsRes] = await Promise.all([getStudentCourses(), getUser(), getStudentStats()]);
-          if (user?.name) setUserName(user.name);
-          
-          const courseList = Array.isArray(courses) ? courses : (courses?.courses || []);
-          const rawPct = statsRes?.attendance_percentage ?? 0;
-          
-          setStats({
-            courses: statsRes?.total_courses ?? courseList.length,
-            avgAttendance: rawPct != null ? `${rawPct.toFixed(1)}%` : "—",
-            avgRaw: rawPct,
-            attended: statsRes?.total_present ?? 0,
-            totalSessions: 0,
-          });
-        } catch (e) {
-          console.log("Student dashboard load error:", e);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      load();
-    }, [])
-  );
+  const loadData = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      const [courses, user, statsRes] = await Promise.all([getStudentCourses(), getUser(), getStudentStats()]);
+      if (user?.name) setUserName(user.name);
+      
+      const courseList = Array.isArray(courses) ? courses : (courses?.courses || []);
+      const rawPct = statsRes?.attendance_percentage ?? 0;
+      
+      setStats({
+        courses: statsRes?.total_courses ?? courseList.length,
+        avgAttendance: rawPct != null ? `${rawPct.toFixed(1)}%` : "—",
+        avgRaw: rawPct,
+        attended: statsRes?.total_present ?? 0,
+        totalSessions: 0,
+      });
+    } catch (e) {
+      console.log("Student dashboard load error:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false);
+    setIsRefreshing(false);
+  }, [loadData]);
+
+  useFocusEffect(useCallback(() => {
+    loadData(true);
+  }, [loadData]));
 
   // Back button prompts logout
   useEffect(() => {
@@ -77,7 +83,13 @@ export default function StudentDashboard({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>

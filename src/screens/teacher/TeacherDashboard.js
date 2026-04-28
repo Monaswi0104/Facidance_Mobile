@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert, Linking
+  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert, Linking, RefreshControl
 } from "react-native";
 import { getTeacherCourses, getTeacherStats, getTeacherReports, getCourseStudents, getTeacherMe } from "../../api/teacherApi";
 import { getUser, clearAuth } from "../../api/authStorage";
@@ -19,20 +19,20 @@ export default function TeacherDashboard({ navigation }) {
   const [stats, setStats] = useState({ courses: 0, students: 0, semesters: 0, attendance: 0 });
   const [userName, setUserName] = useState("Teacher");
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [courses, setCourses] = useState([]);
   const [atRiskStudents, setAtRiskStudents] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
 
-  useFocusEffect(useCallback(() => {
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        const [coursesData, statsData, user, meData] = await Promise.all([
-          getTeacherCourses(),
-          getTeacherStats().catch(() => null),
-          getUser(),
-          getTeacherMe().catch(() => null),
-        ]);
+  const loadData = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      const [coursesData, statsData, user, meData] = await Promise.all([
+        getTeacherCourses(),
+        getTeacherStats().catch(() => null),
+        getUser(),
+        getTeacherMe().catch(() => null),
+      ]);
 
         const tempCourses = Array.isArray(coursesData) ? coursesData : (coursesData?.courses || []);
         console.log("[TeacherDashboard] meData:", JSON.stringify(meData));
@@ -114,9 +114,17 @@ export default function TeacherDashboard({ navigation }) {
         setRecentActivity(activities.slice(0, 4));
       } catch (e) { console.log("[TeacherDashboard] Error:", e); }
       finally { setIsLoading(false); }
-    };
-    load();
-  }, []));
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false);
+    setIsRefreshing(false);
+  }, [loadData]);
+
+  useFocusEffect(useCallback(() => {
+    loadData(true);
+  }, [loadData]));
 
   // Back button prompts logout
   useEffect(() => {
@@ -153,9 +161,13 @@ export default function TeacherDashboard({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-
-
+      <ScrollView 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
