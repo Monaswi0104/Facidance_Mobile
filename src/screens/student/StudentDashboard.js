@@ -222,9 +222,9 @@ const styles = StyleSheet.create({
 
   // Welcome
   welcomeSection: { marginBottom: 18, marginTop: 4 },
-  welcomeTitle: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  welcomeName: { fontSize: 16, fontWeight: "600", color: "#475569", marginTop: 2 },
-  welcomeSubtitle: { fontSize: 13, color: "#64748B", marginTop: 3, marginBottom: 12 },
+  welcomeTitle: { fontSize: 18, fontWeight: "700", color: "#64748B", marginBottom: 2 },
+  welcomeName: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
+  welcomeSubtitle: { fontSize: 13, color: "#64748B", marginBottom: 12 },
   headerButtons: { flexDirection: "row", gap: 8 },
   headerBtnOutline: {
     flexDirection: "row", alignItems: "center",
