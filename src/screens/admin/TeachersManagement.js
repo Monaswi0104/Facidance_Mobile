@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions
+  SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions, TextInput
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star } from "lucide-react-native";
+import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 
 export default function TeachersManagement() {
   const [approved, setApproved] = useState([]);
@@ -19,6 +19,7 @@ export default function TeachersManagement() {
 
   const [selectedTeacherForDept, setSelectedTeacherForDept] = useState(null);
   const [selectedDeptId, setSelectedDeptId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadTeachers = async () => {
     try {
@@ -117,6 +118,19 @@ export default function TeachersManagement() {
     ]);
   };
 
+  const filterTeachers = (teacherList) => {
+    if (!searchQuery) return teacherList;
+    const lowerQuery = searchQuery.toLowerCase();
+    return teacherList.filter(t => 
+      t.name?.toLowerCase().includes(lowerQuery) ||
+      t.email?.toLowerCase().includes(lowerQuery) ||
+      t.dept?.toLowerCase().includes(lowerQuery)
+    );
+  };
+
+  const filteredApproved = filterTeachers(approved);
+  const filteredPending = filterTeachers(pending);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -147,7 +161,19 @@ export default function TeachersManagement() {
         {isLoading ? (
           <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
         ) : (
-          <View style={styles.cardsRow}>
+          <View>
+            <View style={styles.searchBar}>
+              <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search name, email, or department..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            
+            <View style={styles.cardsRow}>
             {/* Pending Approvals Card */}
             <View style={[styles.sectionCard, { marginRight: 6 }]}>
               <View style={styles.sectionHeaderRow}>
@@ -159,17 +185,17 @@ export default function TeachersManagement() {
                   <Text style={styles.sectionSubtitle}>Assign a department to approve</Text>
                 </View>
                 <View style={[styles.countBadge, { backgroundColor: "#FEF2F2" }]}>
-                  <Text style={[styles.countText, { color: "#EF4444" }]}>{pending.length} pending</Text>
+                  <Text style={[styles.countText, { color: "#EF4444" }]}>{filteredPending.length} pending</Text>
                 </View>
               </View>
 
-              {pending.length === 0 ? (
+              {filteredPending.length === 0 ? (
                 <View style={styles.emptyBox}>
                   <Star size={24} color="#CBD5E1" style={{ marginBottom: 8 }} />
                   <Text style={styles.emptyText}>No pending registrations.</Text>
                 </View>
               ) : (
-                pending.map((t) => {
+                filteredPending.map((t) => {
                   const isExpanded = selectedTeacherForDept === t.id;
                   return (
                     <View key={t.id} style={[styles.teacherRow, isExpanded && styles.teacherRowExpanded]}>
@@ -231,15 +257,18 @@ export default function TeachersManagement() {
                   <Text style={styles.sectionTitle}>Approved Teachers</Text>
                   <Text style={styles.sectionSubtitle}>Assigned to departments</Text>
                 </View>
-                <View style={[styles.countBadge, { backgroundColor: "#F0FDF4" }]}>
-                  <Text style={[styles.countText, { color: "#10B981" }]}>{approved.length} active</Text>
+                <View style={[styles.countBadge, { backgroundColor: "#D1FAE5" }]}>
+                  <Text style={[styles.countText, { color: "#059669" }]}>{filteredApproved.length} approved</Text>
                 </View>
               </View>
 
-              {approved.length === 0 ? (
-                <Text style={styles.emptyText}>No approved teachers yet.</Text>
+              {filteredApproved.length === 0 ? (
+                <View style={styles.emptyBox}>
+                  <User size={24} color="#CBD5E1" style={{ marginBottom: 8 }} />
+                  <Text style={styles.emptyText}>No approved teachers.</Text>
+                </View>
               ) : (
-                approved.map((t) => (
+                filteredApproved.map((t) => (
                   <TouchableOpacity key={t.id} style={styles.teacherRow} activeOpacity={0.7} onPress={() => setSelectedTeacher(t)}>
                     <View style={styles.teacherMainRow}>
                       <View style={styles.avatar}>
@@ -266,7 +295,8 @@ export default function TeachersManagement() {
               )}
             </View>
           </View>
-        )}
+        </View>
+      )}
 
       </ScrollView>
 
@@ -364,6 +394,16 @@ const styles = StyleSheet.create({
   statPill: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: "center", backgroundColor: "#FFF" },
   statPillLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 2 },
   statPillValue: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+
+  // Search Bar
+  searchBar: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFF", borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 1, borderColor: "#E2E8F0",
+    marginBottom: 20,
+  },
+  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
 
   // Cards Row
   cardsRow: { flexDirection: "column" },

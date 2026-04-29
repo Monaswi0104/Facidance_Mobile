@@ -7,7 +7,7 @@ import { Picker } from "@react-native-picker/picker";
 import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2 } from "lucide-react-native";
+import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -18,6 +18,7 @@ export default function CoursesManagement() {
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState({
@@ -112,6 +113,15 @@ export default function CoursesManagement() {
   };
 
   const filteredPrograms = form.departmentId ? programs.filter(p => p.departmentId === form.departmentId || p.department_id === form.departmentId) : programs;
+
+  const filteredCourses = courses.filter(c => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return c.name?.toLowerCase().includes(q) || 
+           c.code?.toLowerCase().includes(q) || 
+           c.teacher?.toLowerCase().includes(q) || 
+           c.program?.toLowerCase().includes(q);
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -242,21 +252,33 @@ export default function CoursesManagement() {
               </View>
             )}
 
+            {/* Search Bar */}
+            <View style={styles.searchBar}>
+              <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search courses, teachers, or programs..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
             {/* All Courses Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
                 <View style={styles.listHeaderIcon}><BookOpen size={12} color="#FFF" /></View>
                 <Text style={styles.listTitle}>All Courses</Text>
                 <View style={styles.listCountBadge}>
-                  <Text style={styles.listCountText}>{courses.length} total</Text>
+                  <Text style={styles.listCountText}>{filteredCourses.length} total</Text>
                 </View>
               </View>
 
-              {courses.length === 0 ? (
-                <Text style={styles.emptyText}>No courses yet.</Text>
+              {filteredCourses.length === 0 ? (
+                <Text style={styles.emptyText}>No courses found.</Text>
               ) : (
-                courses.map((c, i) => (
-                  <TouchableOpacity key={c.id} style={[styles.courseRow, i < courses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
+                filteredCourses.map((c, i) => (
+                  <TouchableOpacity key={c.id} style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
                     <View style={styles.courseAvatar}>
                       <BookOpen size={14} color={Theme.colors.primaryDark} />
                     </View>
@@ -386,6 +408,16 @@ const styles = StyleSheet.create({
   formSubmitBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   formSubmitText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
 
+  // Search Bar
+  searchBar: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFF", borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 1, borderColor: "#E2E8F0",
+    marginBottom: 16,
+  },
+  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+
   // List Card
   listCard: {
     backgroundColor: "#FFF", borderRadius: 14, padding: 16,
@@ -423,8 +455,7 @@ const styles = StyleSheet.create({
   detailInfoSub: { fontSize: 11, color: "#64748B", marginTop: 1 },
   detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 10, marginVertical: 8, borderWidth: 1, borderColor: "#E2E8F0" },
   detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 14 },
-  detailStatNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
-  detailStatLabel: { fontSize: 10, fontWeight: "600", color: "#94A3B8" },
+  detailStatNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A", marginTop: 8 },
   closeBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   closeBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
 });
