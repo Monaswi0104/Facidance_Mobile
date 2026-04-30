@@ -6,7 +6,7 @@ import {
 import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User } from "lucide-react-native";
+import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User, ChevronLeft } from "lucide-react-native";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -85,6 +85,12 @@ export default function CourseDetails({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+
+        {/* Change Course Button */}
+        <TouchableOpacity style={styles.changeCourseBtn} onPress={() => navigation.goBack()}>
+          <ChevronLeft size={16} color="#475569" />
+          <Text style={styles.changeCourseText}>Change Course</Text>
+        </TouchableOpacity>
 
         {/* Course Header */}
         <View style={styles.headerCard}>
@@ -260,6 +266,8 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
 
   // Header Card
+  changeCourseBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: "#F1F5F9", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: "#E2E8F0" },
+  changeCourseText: { fontSize: 13, fontWeight: "600", color: "#475569", marginLeft: 4 },
   headerCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   headerTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
   headerBadge: { width: 44, height: 44, borderRadius: 12, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
