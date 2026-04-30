@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { Theme } from "../theme/Theme";
-import { LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Layers } from "lucide-react-native";
+import { LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Layers, LogOut } from "lucide-react-native";
 
 import AdminDashboard from "../screens/admin/AdminDashboard";
 import TeachersManagement from "../screens/admin/TeachersManagement";
@@ -77,10 +77,7 @@ export default function AdminTabs({ navigation: rootNav }) {
             <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <TouchableOpacity onPress={confirmLogout} style={s.logoutBtn} activeOpacity={0.7}>
-            <View style={s.logoutDoor} />
-            <View style={s.logoutArrow}>
-              <Text style={s.logoutArrowText}>→</Text>
-            </View>
+            <LogOut size={18} color="#EF4444" style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         </View>
 
@@ -190,22 +187,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
   },
-  logoutDoor: {
-    width: 12,
-    height: 14,
-    borderWidth: 2,
-    borderColor: "#EF4444",
-    borderRightWidth: 0,
-    borderRadius: 2,
-    marginRight: -2,
-  },
-  logoutArrow: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoutArrowText: {
-    fontSize: 14,
-    color: "#EF4444",
-    fontWeight: "900",
   },
 });
