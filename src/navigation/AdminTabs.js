@@ -187,5 +187,4 @@ const s = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
   },
-  },
 });
