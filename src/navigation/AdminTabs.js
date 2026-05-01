@@ -17,7 +17,7 @@ const Tab = createBottomTabNavigator();
 const TAB_CONFIG = [
   { name: "AdminDashboard", label: "Overview", Icon: LayoutDashboard },
   { name: "TeachersManagement", label: "Teachers", Icon: Users },
-  { name: "DepartmentsManagement", label: "Depts", Icon: Building2 },
+  { name: "DepartmentsManagement", label: "Departments", Icon: Building2 },
   { name: "ProgramsManagement", label: "Programs", Icon: Layers },
   { name: "CoursesManagement", label: "Courses", Icon: BookOpen },
   { name: "StudentsManagement", label: "Students", Icon: GraduationCap },
