@@ -124,21 +124,21 @@ export default function DepartmentsManagement() {
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
-                  <Text style={styles.statLabel}>TOTAL{"\n"}DEPTS</Text>
+                  <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>TOTAL{"\n"}DEPARTMENTS</Text>
                   <View style={styles.statIconBg}><Building2 size={14} color="#FFF" /></View>
                 </View>
                 <Text style={styles.statNumber}>{departments.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
-                  <Text style={styles.statLabel}>ACTIVE{"\n"}PROGRAMS</Text>
+                  <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>ACTIVE{"\n"}PROGRAMS</Text>
                   <View style={styles.statIconBg}><GraduationCap size={14} color="#FFF" /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalPrograms}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
-                  <Text style={styles.statLabel}>FACULTY{"\n"}MEMBERS</Text>
+                  <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>FACULTY{"\n"}MEMBERS</Text>
                   <View style={styles.statIconBg}><Users size={14} color="#FFF" /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalTeachers}</Text>
