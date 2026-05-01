@@ -77,7 +77,7 @@ export default function AdminTabs({ navigation: rootNav }) {
             <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <TouchableOpacity onPress={confirmLogout} style={s.logoutBtn} activeOpacity={0.7}>
-            <LogOut size={18} color="#EF4444" style={{ marginLeft: 2 }} />
+            <LogOut size={20} color="#EF4444" style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         </View>
 
@@ -116,8 +116,7 @@ export default function AdminTabs({ navigation: rootNav }) {
     <Tab.Navigator
       tabBar={() => null}
       screenOptions={{
-        header: ({ navigation, route, options }) => {
-          // Get parent state to know active tab index
+        header: ({ navigation }) => {
           const state = navigation.getState();
           return <CustomHeader navigation={navigation} state={state} />;
         },
@@ -157,8 +156,8 @@ const s = StyleSheet.create({
   navPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 20,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
@@ -169,7 +168,7 @@ const s = StyleSheet.create({
     borderColor: Theme.colors.primaryDark,
   },
   navPillText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: "#64748B",
   },
@@ -177,8 +176,8 @@ const s = StyleSheet.create({
     color: "#FFF",
   },
   logoutBtn: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 10,
     backgroundColor: "#FEF2F2",
     borderWidth: 1,

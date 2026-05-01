@@ -99,7 +99,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
             <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <TouchableOpacity onPress={confirmLogout} style={s.logoutBtn} activeOpacity={0.7}>
-            <LogOut size={18} color="#EF4444" style={{ marginLeft: 2 }} />
+            <LogOut size={20} color="#EF4444" style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         </View>
 
@@ -124,7 +124,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
                 }}
                 activeOpacity={0.7}
               >
-                <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
+                <Icon size={20} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
                 <Text style={[s.navPillText, isActive && s.navPillTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
