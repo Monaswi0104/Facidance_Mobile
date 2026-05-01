@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert, RefreshControl
+  SafeAreaView, Dimensions, BackHandler, Alert, RefreshControl
 } from "react-native";
 import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
-import { BookOpen, BarChart3, Clock, ChevronRight, ArrowUpRight, CheckCircle, Lightbulb, AlertTriangle, User } from "lucide-react-native";
+import { BookOpen, BarChart3, Clock, ArrowUpRight, CheckCircle, Lightbulb, AlertTriangle, User } from "lucide-react-native";
+import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get('window');
 
@@ -116,7 +117,11 @@ export default function StudentDashboard({ navigation }) {
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator color={Theme.colors.accent} size="small" style={{ marginVertical: 20 }} />
+          <View style={styles.statsRow}>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </View>
         ) : (
           <View style={styles.statsRow}>
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("StudentCoursesTab")}>
@@ -154,62 +159,70 @@ export default function StudentDashboard({ navigation }) {
         )}
 
         {/* How Attendance Works */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>How Attendance Works</Text>
-          <Text style={styles.sectionSubtitle}>Understand how your presence is tracked during class</Text>
-          {[
-            "Join a class when your teacher invites you.",
-            "Upload or capture your face images (front, left, right) from your profile.",
-            "Your teacher trains the system using your facial data before the session.",
-            "Each class session lasts around 45 minutes.",
-            "Attendance is automatically captured every 2 minutes using AI.",
-            "Missing more than 2 captures may mark you absent.",
-            "Stay present and visible throughout the class to remain marked present.",
-          ].map((text, i) => (
-            <View key={i} style={styles.stepRow}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>{String(i + 1).padStart(2, "0")}</Text>
+        {isLoading ? (
+          <SectionCardSkeleton rows={7} />
+        ) : (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>How Attendance Works</Text>
+            <Text style={styles.sectionSubtitle}>Understand how your presence is tracked during class</Text>
+            {[
+              "Join a class when your teacher invites you.",
+              "Upload or capture your face images (front, left, right) from your profile.",
+              "Your teacher trains the system using your facial data before the session.",
+              "Each class session lasts around 45 minutes.",
+              "Attendance is automatically captured every 2 minutes using AI.",
+              "Missing more than 2 captures may mark you absent.",
+              "Stay present and visible throughout the class to remain marked present.",
+            ].map((text, i) => (
+              <View key={i} style={styles.stepRow}>
+                <View style={styles.stepBadge}>
+                  <Text style={styles.stepBadgeText}>{String(i + 1).padStart(2, "0")}</Text>
+                </View>
+                <Text style={styles.stepText}>{text}</Text>
               </View>
-              <Text style={styles.stepText}>{text}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
 
         {/* Attendance Insights */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Attendance Insights</Text>
-          <Text style={styles.sectionSubtitle}>Your current standing</Text>
+        {isLoading ? (
+          <SectionCardSkeleton rows={3} />
+        ) : (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Attendance Insights</Text>
+            <Text style={styles.sectionSubtitle}>Your current standing</Text>
 
-          {/* Big Percentage */}
-          <View style={styles.insightCircleCard}>
-            <Text style={styles.insightRateLabel}>OVERALL RATE</Text>
-            <Text style={[styles.insightBigPercent, { color: getAttendanceColor(stats.avgRaw) }]}>
-              {stats.avgAttendance}
-            </Text>
-            <View style={styles.insightProgressTrack}>
-              <View style={[styles.insightProgressFill, { width: `${Math.min(stats.avgRaw, 100)}%`, backgroundColor: getAttendanceColor(stats.avgRaw) }]} />
+            {/* Big Percentage */}
+            <View style={styles.insightCircleCard}>
+              <Text style={styles.insightRateLabel}>OVERALL RATE</Text>
+              <Text style={[styles.insightBigPercent, { color: getAttendanceColor(stats.avgRaw) }]}>
+                {stats.avgAttendance}
+              </Text>
+              <View style={styles.insightProgressTrack}>
+                <View style={[styles.insightProgressFill, { width: `${Math.min(stats.avgRaw, 100)}%`, backgroundColor: getAttendanceColor(stats.avgRaw) }]} />
+              </View>
+              <Text style={styles.insightTarget}>Target: 75% minimum</Text>
             </View>
-            <Text style={styles.insightTarget}>Target: 75% minimum</Text>
+
+            {/* Tips */}
+            {[
+              { icon: Lightbulb, color: "#F59E0B", text: "Submit attendance as soon as a batch opens." },
+              { icon: Lightbulb, color: "#F59E0B", text: "Ensure good lighting when taking your face photo." },
+              { icon: AlertTriangle, color: "#F59E0B", text: "Contact your teacher if you notice any discrepancy." },
+            ].map((tip, i) => (
+              <View key={i} style={styles.tipRow}>
+                <tip.icon size={14} color={tip.color} style={{ marginRight: 8 }} />
+                <Text style={styles.tipText}>{tip.text}</Text>
+              </View>
+            ))}
+
+            {/* Full History */}
+            <TouchableOpacity style={styles.fullHistoryBtn} onPress={() => navigation.navigate("AttendanceHistory")}>
+              <ArrowUpRight size={14} color="#475569" style={{ marginRight: 6 }} />
+              <Text style={styles.fullHistoryText}>Full History</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Tips */}
-          {[
-            { icon: Lightbulb, color: "#F59E0B", text: "Submit attendance as soon as a batch opens." },
-            { icon: Lightbulb, color: "#F59E0B", text: "Ensure good lighting when taking your face photo." },
-            { icon: AlertTriangle, color: "#F59E0B", text: "Contact your teacher if you notice any discrepancy." },
-          ].map((tip, i) => (
-            <View key={i} style={styles.tipRow}>
-              <tip.icon size={14} color={tip.color} style={{ marginRight: 8 }} />
-              <Text style={styles.tipText}>{tip.text}</Text>
-            </View>
-          ))}
-
-          {/* Full History */}
-          <TouchableOpacity style={styles.fullHistoryBtn} onPress={() => navigation.navigate("AttendanceHistory")}>
-            <ArrowUpRight size={14} color="#475569" style={{ marginRight: 6 }} />
-            <Text style={styles.fullHistoryText}>Full History</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>

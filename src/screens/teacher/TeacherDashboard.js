@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  SafeAreaView, Dimensions, ActivityIndicator, BackHandler, Alert, Linking, RefreshControl
+  SafeAreaView, Dimensions, BackHandler, Alert, Linking, RefreshControl
 } from "react-native";
 import { getTeacherCourses, getTeacherStats, getTeacherReports, getCourseStudents, getTeacherMe } from "../../api/teacherApi";
 import { getUser, clearAuth } from "../../api/authStorage";
@@ -9,9 +9,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
 import {
   BookOpen, Users, Calendar, CheckCircle, AlertTriangle,
-  Mail, ChevronRight, TrendingUp, Clock, ArrowUpRight,
-  ScanLine, BarChart2, UserPlus, LayoutDashboard, BookMarked
+  Mail, TrendingUp, Clock, ArrowUpRight,
+  ScanLine, BarChart2, UserPlus, BookMarked
 } from "lucide-react-native";
+import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -190,7 +191,12 @@ export default function TeacherDashboard({ navigation }) {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 30 }} />
+          <View style={styles.statsGrid}>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </View>
         ) : (
           <>
             <View style={styles.statsGrid}>
@@ -253,7 +259,9 @@ export default function TeacherDashboard({ navigation }) {
             )}
 
             {/* Course Overview */}
-            {courses.length > 0 && (
+            {isLoading ? (
+              <SectionCardSkeleton rows={3} />
+            ) : courses.length > 0 ? (
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
@@ -291,10 +299,12 @@ export default function TeacherDashboard({ navigation }) {
                   </View>
                 ))}
               </View>
-            )}
+            ) : null}
 
             {/* Recent Activity */}
-            {recentActivity.length > 0 && (
+            {isLoading ? (
+              <SectionCardSkeleton rows={4} />
+            ) : recentActivity.length > 0 ? (
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
@@ -326,7 +336,7 @@ export default function TeacherDashboard({ navigation }) {
                   </View>
                 ))}
               </View>
-            )}
+            ) : null}
 
             {/* Quick Actions Grid */}
             <View style={styles.quickGrid}>

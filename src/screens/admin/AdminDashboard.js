@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  BackHandler, SafeAreaView, Dimensions, ActivityIndicator, Alert, RefreshControl
+  BackHandler, SafeAreaView, Dimensions, Alert, RefreshControl
 } from "react-native";
 import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents, getTeacherLoad, getProgramDistribution } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme } from "../../theme/Theme";
 import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight } from "lucide-react-native";
+import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -161,7 +162,14 @@ export default function AdminDashboard({ navigation }) {
 
         {/* Stat Cards 3x2 Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <View style={styles.statsGrid}>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </View>
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (
@@ -187,74 +195,82 @@ export default function AdminDashboard({ navigation }) {
         )}
 
         {/* Teacher Workload */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={styles.sectionTitle}>Teacher Workload</Text>
-              <Text style={styles.sectionSubtitle}>Courses and students per teacher</Text>
+        {isLoading ? (
+          <SectionCardSkeleton rows={4} />
+        ) : (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <View>
+                <Text style={styles.sectionTitle}>Teacher Workload</Text>
+                <Text style={styles.sectionSubtitle}>Courses and students per teacher</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
+                <Text style={styles.viewAllText}>View all ›</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
-              <Text style={styles.viewAllText}>View all ›</Text>
-            </TouchableOpacity>
-          </View>
 
-          {teacherWorkload.length === 0 ? (
-            <Text style={styles.emptyText}>No approved teachers yet.</Text>
-          ) : (
-            <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
-              {teacherWorkload.map((t, i) => (
-                <View key={i} style={[styles.workloadRow, i < teacherWorkload.length - 1 && styles.workloadBorder]}>
-                  <View style={styles.workloadAvatar}>
-                    <Text style={styles.workloadAvatarText}>{t.name.charAt(0)}</Text>
+            {teacherWorkload.length === 0 ? (
+              <Text style={styles.emptyText}>No approved teachers yet.</Text>
+            ) : (
+              <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                {teacherWorkload.map((t, i) => (
+                  <View key={i} style={[styles.workloadRow, i < teacherWorkload.length - 1 && styles.workloadBorder]}>
+                    <View style={styles.workloadAvatar}>
+                      <Text style={styles.workloadAvatarText}>{t.name.charAt(0)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.workloadName}>{t.name}</Text>
+                      <Text style={styles.workloadDept}>{t.dept}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.workloadCourses}>{t.courses}</Text>
+                      <Text style={styles.workloadStudentsMeta}>{t.students} students</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.workloadName}>{t.name}</Text>
-                    <Text style={styles.workloadDept}>{t.dept}</Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={styles.workloadCourses}>{t.courses}</Text>
-                    <Text style={styles.workloadStudentsMeta}>{t.students} students</Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          )}
-        </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
 
         {/* Program Distribution */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={styles.sectionTitle}>Program Distribution</Text>
-              <Text style={styles.sectionSubtitle}>Students enrolled per program (top 4)</Text>
+        {isLoading ? (
+          <SectionCardSkeleton rows={4} />
+        ) : (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <View>
+                <Text style={styles.sectionTitle}>Program Distribution</Text>
+                <Text style={styles.sectionSubtitle}>Students enrolled per program (top 4)</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate("ProgramsManagement")} activeOpacity={0.7}>
+                <Text style={styles.viewAllText}>View all ›</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate("ProgramsManagement")} activeOpacity={0.7}>
-              <Text style={styles.viewAllText}>View all ›</Text>
-            </TouchableOpacity>
-          </View>
 
-          {programDist.length === 0 ? (
-            <Text style={styles.emptyText}>No programs configured yet.</Text>
-          ) : (
-            programDist.map((p, i) => {
-              const pct = maxProgramStudents > 0 ? (p.students / maxProgramStudents) * 100 : 0;
-              return (
-                <View key={i} style={[styles.programRow, i < programDist.length - 1 && styles.workloadBorder]}>
-                  <View style={styles.programRowTop}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.programName} numberOfLines={1}>{p.name}</Text>
-                      <Text style={styles.programDept}>{p.dept}</Text>
+            {programDist.length === 0 ? (
+              <Text style={styles.emptyText}>No programs configured yet.</Text>
+            ) : (
+              programDist.map((p, i) => {
+                const pct = maxProgramStudents > 0 ? (p.students / maxProgramStudents) * 100 : 0;
+                return (
+                  <View key={i} style={[styles.programRow, i < programDist.length - 1 && styles.workloadBorder]}>
+                    <View style={styles.programRowTop}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.programName} numberOfLines={1}>{p.name}</Text>
+                        <Text style={styles.programDept}>{p.dept}</Text>
+                      </View>
+                      <Text style={styles.programCount}>{p.students}</Text>
                     </View>
-                    <Text style={styles.programCount}>{p.students}</Text>
+                    <View style={styles.programBarTrack}>
+                      <View style={[styles.programBarFill, { width: `${Math.max(pct, 4)}%` }]} />
+                    </View>
                   </View>
-                  <View style={styles.programBarTrack}>
-                    <View style={[styles.programBarFill, { width: `${Math.max(pct, 4)}%` }]} />
-                  </View>
-                </View>
-              );
-            })
-          )}
-        </View>
+                );
+              })
+            )}
+          </View>
+        )}
 
         {/* Quick Navigation */}
         <View style={styles.sectionCard}>
