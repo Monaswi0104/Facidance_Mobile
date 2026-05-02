@@ -2,12 +2,13 @@ import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, TextInput, Dimensions } from "react-native";
 import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, User, Calendar, Hash, ChevronRight } from "lucide-react-native";
 
 const { width } = Dimensions.get('window');
 
 export default function MyCourses({ navigation }) {
+  const { colors, isDark } = useTheme();
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -144,37 +145,37 @@ export default function MyCourses({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   header: { marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
 
   // Search
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#FFF", borderRadius: 10,
+    backgroundColor: Theme.colors.background, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 10,
-    borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 18,
+    borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 18,
   },
-  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
 
   // Empty
-  emptyState: { alignItems: "center", padding: 40, backgroundColor: "#FFF", borderRadius: 14, borderWidth: 1, borderColor: "#E2E8F0" },
-  emptyTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B", marginBottom: 6 },
-  emptyText: { fontSize: 13, color: "#64748B", textAlign: "center" },
+  emptyState: { alignItems: "center", padding: 40, backgroundColor: Theme.colors.background, borderRadius: 14, borderWidth: 1, borderColor: Theme.colors.border },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 6 },
+  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center" },
 
   // Course Card
   courseCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#0F172A",
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -182,22 +183,22 @@ const styles = StyleSheet.create({
   },
   cardTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
   cardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  courseName: { fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 6 },
+  courseName: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 6 },
   badgeRow: { flexDirection: "row", alignItems: "center" },
   activeBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 6 },
   activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
-  codeBadge: { backgroundColor: "#F1F5F9", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: "#E2E8F0" },
-  codeBadgeText: { fontSize: 10, fontWeight: "600", color: "#475569" },
+  codeBadge: { backgroundColor: Theme.colors.muted, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: Theme.colors.border },
+  codeBadgeText: { fontSize: 10, fontWeight: "600", color: Theme.colors.textBody },
 
   // Details
   detailsList: { marginBottom: 12, paddingLeft: 2 },
   detailRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  detailText: { fontSize: 12, color: "#64748B" },
+  detailText: { fontSize: 12, color: Theme.colors.mutedForeground },
 
   // Footer
   cardFooter: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    borderTopWidth: 1, borderTopColor: "#F1F5F9", paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: Theme.colors.muted, paddingTop: 12,
   },
-  viewDetailsText: { fontSize: 13, color: "#64748B" },
+  viewDetailsText: { fontSize: 13, color: Theme.colors.mutedForeground },
 });

@@ -5,12 +5,13 @@ import {
 } from "react-native";
 import { getTeacherCourses, getCourseStudents, trainModel as trainModelApi } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
 export default function AttendanceCamera({ navigation }) {
+  const { colors, isDark } = useTheme();
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [students, setStudents] = useState([]);
@@ -194,7 +195,7 @@ export default function AttendanceCamera({ navigation }) {
                 <Text style={styles.statLabel}>UNTRAINED</Text>
                 <View style={styles.statIconBg}><AlertCircle size={14} color="#FFF" /></View>
               </View>
-              <Text style={[styles.statNumber, { color: "#EF4444" }]}>{notTrained}</Text>
+              <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{notTrained}</Text>
             </View>
           </View>
         )}
@@ -260,7 +261,7 @@ export default function AttendanceCamera({ navigation }) {
                   ) : (
                     <View style={styles.photoMissing}>
                       <XCircle size={11} color="#EF4444" style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: "#EF4444" }]}>Missing</Text>
+                      <Text style={[styles.badgeText, { color: Theme.colors.destructive }]}>Missing</Text>
                     </View>
                   )}
                 </View>
@@ -273,7 +274,7 @@ export default function AttendanceCamera({ navigation }) {
                     </View>
                   ) : (
                     <View style={styles.pendingBadge}>
-                      <Text style={[styles.badgeText, { color: "#94A3B8" }]}>Pending</Text>
+                      <Text style={[styles.badgeText, { color: Theme.colors.mutedForeground }]}>Pending</Text>
                     </View>
                   )}
                 </View>
@@ -303,81 +304,81 @@ export default function AttendanceCamera({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   header: { marginBottom: 18, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
 
   // Section Card
   sectionCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 18,
     marginBottom: 16,
-    shadowColor: "#0F172A",
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
   },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   sectionIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  sectionHeaderText: { fontSize: 15, fontWeight: "700", color: "#1E293B" },
-  sectionSubText: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
+  sectionHeaderText: { fontSize: 15, fontWeight: "700", color: Theme.colors.foreground },
+  sectionSubText: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 1 },
 
   // Search
-  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 12 },
-  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.secondary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
 
   // Course Items
-  courseItem: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 10, padding: 14, marginBottom: 8 },
-  courseItemName: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 3 },
-  courseItemMeta: { fontSize: 11, color: "#64748B" },
+  courseItem: { borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 10, padding: 14, marginBottom: 8 },
+  courseItemName: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 3 },
+  courseItemMeta: { fontSize: 11, color: Theme.colors.mutedForeground },
 
   // Selected Course Banner
   selectedBanner: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
     borderLeftWidth: 4,
     borderLeftColor: Theme.colors.accent,
   },
   selectedLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.accent, letterSpacing: 0.5, marginBottom: 3 },
-  selectedName: { fontSize: 17, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
-  selectedMeta: { fontSize: 11, color: "#64748B" },
-  changeCourseBtn: { backgroundColor: "#F1F5F9", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0", alignItems: "center" },
-  changeCourseBtnText: { fontSize: 11, fontWeight: "600", color: "#475569", textAlign: "center" },
+  selectedName: { fontSize: 17, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 2 },
+  selectedMeta: { fontSize: 11, color: Theme.colors.mutedForeground },
+  changeCourseBtn: { backgroundColor: Theme.colors.muted, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: Theme.colors.border, alignItems: "center" },
+  changeCourseBtnText: { fontSize: 11, fontWeight: "600", color: Theme.colors.textBody, textAlign: "center" },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
   statCard: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 12,
     padding: 12,
     marginHorizontal: 3,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
-  statLabel: { fontSize: 7, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, flex: 1, marginRight: 6 },
-  statNumber: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
+  statLabel: { fontSize: 7, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 6 },
+  statNumber: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground },
   statIconBg: { width: 26, height: 26, borderRadius: 7, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Action Buttons
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   trainBtnOutline: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     paddingVertical: 13,
     borderRadius: 12,
     alignItems: "center",
@@ -411,30 +412,30 @@ const styles = StyleSheet.create({
   captureBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
 
   // Table
-  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
-  tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
-  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
+  tableSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2, marginBottom: 14 },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
-  tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
-  studentEmail: { fontSize: 10, color: "#94A3B8" },
-  cellNum: { fontSize: 13, fontWeight: "600", color: "#475569", textAlign: "center" },
+  tableBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  studentName: { fontSize: 12, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
+  cellNum: { fontSize: 13, fontWeight: "600", color: Theme.colors.textBody, textAlign: "center" },
 
   // Badges
   photoAvailable: { flexDirection: "row", alignItems: "center" },
   photoMissing: { flexDirection: "row", alignItems: "center" },
   trainedBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
-  pendingBadge: { backgroundColor: "#F8FAFC", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  pendingBadge: { backgroundColor: Theme.colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: Theme.colors.border },
   badgeText: { fontSize: 9, fontWeight: "700" },
 
   // Info
-  infoCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
-  infoTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  infoStep: { fontSize: 12, color: "#64748B", lineHeight: 20, marginBottom: 2 },
+  infoCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 16 },
+  infoTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
+  infoStep: { fontSize: 12, color: Theme.colors.mutedForeground, lineHeight: 20, marginBottom: 2 },
   infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
   infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
 
-  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 16 },
+  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 16 },
 });

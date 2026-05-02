@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { AlertTriangle, RefreshCw } from 'lucide-react-native';
-import { Theme } from '../theme/Theme';
+import { Theme, useTheme } from "../theme/Theme";
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#0f172a',
     marginBottom: 8,
     textAlign: 'center',
   },

@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User, ChevronLeft } from "lucide-react-native";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -13,6 +13,7 @@ import Share from "react-native-share";
 const { width } = Dimensions.get("window");
 
 export default function CourseDetails({ route, navigation }) {
+  const { colors, isDark } = useTheme();
   const { course } = route.params;
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -237,7 +238,7 @@ export default function CourseDetails({ route, navigation }) {
                       ) : (
                         <>
                           <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                          <Text style={[styles.modalDetailValue, { color: Theme.colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}
                     </View>
@@ -262,82 +263,82 @@ export default function CourseDetails({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header Card
-  changeCourseBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: "#F1F5F9", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: "#E2E8F0" },
-  changeCourseText: { fontSize: 13, fontWeight: "600", color: "#475569", marginLeft: 4 },
-  headerCard: { backgroundColor: "#FFF", borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  changeCourseBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: Theme.colors.muted, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: Theme.colors.border },
+  changeCourseText: { fontSize: 13, fontWeight: "600", color: Theme.colors.textBody, marginLeft: 4 },
+  headerCard: { backgroundColor: Theme.colors.background, borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: Theme.colors.border, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   headerTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
   headerBadge: { width: 44, height: 44, borderRadius: 12, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  headerTitle: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginBottom: 3 },
-  headerProgram: { fontSize: 12, color: "#64748B", textTransform: "uppercase" },
-  codeBadge: { backgroundColor: "#F1F5F9", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginLeft: 8, borderWidth: 1, borderColor: "#E2E8F0" },
-  codeBadgeText: { fontSize: 12, fontWeight: "700", color: "#475569" },
+  headerTitle: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 3 },
+  headerProgram: { fontSize: 12, color: Theme.colors.mutedForeground, textTransform: "uppercase" },
+  codeBadge: { backgroundColor: Theme.colors.muted, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginLeft: 8, borderWidth: 1, borderColor: Theme.colors.border },
+  codeBadgeText: { fontSize: 12, fontWeight: "700", color: Theme.colors.textBody },
   headerMeta: { flexDirection: "row", flexWrap: "wrap" },
   metaItem: { flexDirection: "row", alignItems: "center", marginRight: 16 },
-  headerMetaText: { fontSize: 13, color: "#64748B" },
+  headerMetaText: { fontSize: 13, color: Theme.colors.mutedForeground },
 
   // Stats
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20 },
   statCard: {
     width: (width - 52) / 2,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 6 },
+  statLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   statRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  statNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
+  statNumber: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
   statIconBg: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center" },
 
   // Section
-  sectionTitle: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
-  sectionSubtitle: { fontSize: 13, color: "#94A3B8", marginTop: 2, marginBottom: 14 },
+  sectionTitle: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground },
+  sectionSubtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 2, marginBottom: 14 },
 
   // Search + Export
   searchExportRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Theme.colors.border, marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
   exportBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, flexDirection: "row", alignItems: "center" },
   exportBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
 
   // Table
-  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 14, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 6 },
-  tableHeaderText: { fontSize: 10, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 14, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 6 },
+  tableHeaderText: { fontSize: 10, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
   tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
-  studentName: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
-  studentEmail: { fontSize: 10, color: "#94A3B8" },
-  cellText: { fontSize: 12, color: "#64748B" },
-  emptyText: { fontSize: 14, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
+  studentName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
+  cellText: { fontSize: 12, color: Theme.colors.mutedForeground },
+  emptyText: { fontSize: 14, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 
   // Attendance mini bar
-  attendBarTrack: { width: "100%", height: 4, borderRadius: 2, backgroundColor: "#F1F5F9", overflow: "hidden", marginBottom: 3 },
+  attendBarTrack: { width: "100%", height: 4, borderRadius: 2, backgroundColor: Theme.colors.muted, overflow: "hidden", marginBottom: 3 },
   attendBarFill: { height: "100%", borderRadius: 2, backgroundColor: Theme.colors.accent },
-  attendText: { fontSize: 10, fontWeight: "700", color: "#475569" },
+  attendText: { fontSize: 10, fontWeight: "700", color: Theme.colors.textBody },
   
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
-  modalCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
-  modalHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 24, width: "100%", shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  modalHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
-  modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
-  modalEmail: { fontSize: 13, color: "#64748B" },
+  modalName: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 4 },
+  modalEmail: { fontSize: 13, color: Theme.colors.mutedForeground },
   modalDetailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: "#94A3B8", flex: 0.4 },
-  modalDetailValue: { fontSize: 14, fontWeight: "700", color: "#1E293B", flex: 0.6, textAlign: "right" },
-  modalCloseBtn: { backgroundColor: "#F1F5F9", paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
-  modalCloseBtnText: { fontSize: 15, fontWeight: "700", color: "#475569" },
+  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: Theme.colors.mutedForeground, flex: 0.4 },
+  modalDetailValue: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 0.6, textAlign: "right" },
+  modalCloseBtn: { backgroundColor: Theme.colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  modalCloseBtnText: { fontSize: 15, fontWeight: "700", color: Theme.colors.textBody },
 });

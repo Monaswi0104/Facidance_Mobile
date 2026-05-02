@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   // Welcome
   welcomeSection: { marginBottom: 18, marginTop: 8 },
   welcomeGreeting: { fontSize: 18, fontWeight: "700", color: "#64748B", marginBottom: 2 },
-  welcomeName: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 4 },
+  welcomeName: { fontSize: 22, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 4 },
   welcomeDesc: { fontSize: 13, color: "#64748B", marginBottom: 12 },
   headerBtns: { flexDirection: "row", gap: 8 },
   headerBtnOutline: {
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
   statLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, flex: 1, marginRight: 4 },
-  statNumber: { fontSize: 28, fontWeight: "800", color: "#0F172A" },
+  statNumber: { fontSize: 28, fontWeight: "800", color: Theme.colors.foreground },
   statIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
   statSub: { fontSize: 11, fontWeight: "600", color: "#10B981" },
 
@@ -417,14 +417,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground },
   sectionSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
   borderBottom: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
 
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   atRiskBadgeText: { fontSize: 11, fontWeight: "700", color: "#EF4444" },
   atRiskScroll: { maxHeight: 280 },
   atRiskRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 8 },
-  atRiskName: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
+  atRiskName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
   atRiskCourse: { fontSize: 11, color: "#94A3B8", marginTop: 1 },
   atRiskAttend: { fontSize: 12, fontWeight: "600", color: "#64748B", marginRight: 6 },
   percentBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
@@ -452,14 +452,14 @@ const styles = StyleSheet.create({
 
   // Course Overview
   courseRow: { paddingVertical: 14, flexDirection: "row", alignItems: "flex-start" },
-  courseName: { fontSize: 14, fontWeight: "700", color: "#0F172A", maxWidth: width * 0.42 },
+  courseName: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, maxWidth: width * 0.42 },
   activeChip: { backgroundColor: "#D1FAE5", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginLeft: 8 },
   activeChipText: { fontSize: 10, fontWeight: "700", color: "#059669" },
   courseBarTrack: { height: 5, borderRadius: 3, backgroundColor: "#F1F5F9", overflow: "hidden", marginBottom: 4 },
   courseBarFill: { height: "100%", borderRadius: 3 },
   courseAttendText: { fontSize: 11, fontWeight: "600" },
   courseMetaCol: { alignItems: "center", marginLeft: 14, minWidth: 44 },
-  courseMetaNum: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
+  courseMetaNum: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground },
   courseMetaLabel: { fontSize: 9, color: "#94A3B8", marginTop: 1 },
 
   // Recent Activity
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10,
     justifyContent: "center", alignItems: "center", marginRight: 12,
   },
-  activityTitle: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
+  activityTitle: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
   activityMeta: { fontSize: 11, color: "#64748B", marginTop: 2 },
   activityTime: { fontSize: 10, color: "#CBD5E1" },
 
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -506,6 +506,6 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.accentLight,
     justifyContent: "center", alignItems: "center", marginBottom: 12,
   },
-  quickTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A", marginBottom: 2 },
+  quickTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 2 },
   quickDesc: { fontSize: 11, color: "#94A3B8" },
 });

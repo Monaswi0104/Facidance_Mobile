@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
 
 const uploadSteps = [
@@ -12,6 +12,7 @@ const uploadSteps = [
 ];
 
 export default function ProfileUpload() {
+  const { colors, isDark } = useTheme();
 
   const [images, setImages] = useState({ front: null, left: null, right: null });
   const [isUploading, setIsUploading] = useState(false);
@@ -120,9 +121,9 @@ export default function ProfileUpload() {
                 <Text style={styles.faceActiveText}>Face recognition active</Text>
               </View>
             ) : (
-              <View style={[styles.faceActiveBadge, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
+              <View style={[styles.faceActiveBadge, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]}>
                 <X size={12} color="#EF4444" style={{ marginRight: 4 }} />
-                <Text style={[styles.faceActiveText, { color: "#EF4444" }]}>Face not registered</Text>
+                <Text style={[styles.faceActiveText, { color: Theme.colors.destructive }]}>Face not registered</Text>
               </View>
             )}
           </View>
@@ -236,7 +237,7 @@ export default function ProfileUpload() {
                   ) : (
                     <Upload size={13} color={uploadedCount < 3 ? "#94A3B8" : "#FFF"} style={{ marginRight: 4 }} />
                   )}
-                  <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: "#94A3B8" }]}>
+                  <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: Theme.colors.mutedForeground }]}>
                     {isUploaded ? "Photos Submitted" : "Submit Photos"}
                   </Text>
                 </>
@@ -251,37 +252,37 @@ export default function ProfileUpload() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { marginBottom: 18, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
 
   // Profile Card
   profileCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
-  profileTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  profileTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
   avatarLetter: { fontSize: 18, fontWeight: "800", color: "#FFF" },
-  profileName: { fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 1 },
-  profileEmail: { fontSize: 11, color: "#64748B", marginBottom: 6 },
+  profileName: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
+  profileEmail: { fontSize: 11, color: Theme.colors.mutedForeground, marginBottom: 6 },
   profileBadges: { flexDirection: "row", alignItems: "center" },
   studentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 8 },
   studentBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
-  joinText: { fontSize: 10, color: "#94A3B8" },
+  joinText: { fontSize: 10, color: Theme.colors.mutedForeground },
   faceActiveBadge: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#DCFCE7",
@@ -293,17 +294,17 @@ const styles = StyleSheet.create({
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   detailBox: { width: "48%", marginBottom: 14 },
   detailBoxHeader: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  detailBoxLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
-  detailBoxValue: { fontSize: 13, fontWeight: "600", color: "#0F172A" },
+  detailBoxLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
+  detailBoxValue: { fontSize: 13, fontWeight: "600", color: Theme.colors.foreground },
 
   // Face Recognition Card
   faceCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -311,14 +312,14 @@ const styles = StyleSheet.create({
   },
   faceCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
   faceCardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  faceCardTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
-  faceCardSubtitle: { fontSize: 11, color: "#94A3B8" },
+  faceCardTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground },
+  faceCardSubtitle: { fontSize: 11, color: Theme.colors.mutedForeground },
 
   // Upload Grid
   uploadGrid: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
   uploadCol: { width: "31%" },
-  colLabel: { fontSize: 12, fontWeight: "700", color: "#0F172A", marginBottom: 2 },
-  colDesc: { fontSize: 9, color: "#94A3B8", marginBottom: 10, minHeight: 24 },
+  colLabel: { fontSize: 12, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 2 },
+  colDesc: { fontSize: 9, color: Theme.colors.mutedForeground, marginBottom: 10, minHeight: 24 },
 
   // Camera / Upload Buttons
   cameraBtn: {
@@ -328,9 +329,9 @@ const styles = StyleSheet.create({
   cameraBtnText: { fontSize: 10, fontWeight: "600", color: "#FFF" },
   uploadBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingVertical: 10,
+    backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, paddingVertical: 10,
   },
-  uploadBtnText: { fontSize: 10, fontWeight: "600", color: "#475569" },
+  uploadBtnText: { fontSize: 10, fontWeight: "600", color: Theme.colors.textBody },
 
   // Preview
   previewBox: { height: 110, borderRadius: 8, overflow: "hidden", position: "relative" },
@@ -339,13 +340,13 @@ const styles = StyleSheet.create({
 
   // Footer
   faceFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  faceFooterText: { fontSize: 10, color: "#94A3B8", flex: 1, marginRight: 10 },
+  faceFooterText: { fontSize: 10, color: Theme.colors.mutedForeground, flex: 1, marginRight: 10 },
   submitBtn: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: Theme.colors.primaryDark,
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8,
   },
   submitBtnText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
-  submitBtnDisabled: { backgroundColor: "#F1F5F9" },
+  submitBtnDisabled: { backgroundColor: Theme.colors.muted },
   submitBtnSuccess: { backgroundColor: "#10B981" },
 });

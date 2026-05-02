@@ -6,12 +6,13 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
 export default function CoursesManagement() {
+  const { colors, isDark } = useTheme();
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -350,46 +351,46 @@ export default function CoursesManagement() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 12, color: "#64748B", marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3 },
   addBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   addBtnText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
   statCard: {
-    flex: 1, backgroundColor: "#FFF", borderRadius: 12, padding: 14, marginHorizontal: 3,
-    borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
+    flex: 1, backgroundColor: Theme.colors.background, borderRadius: 12, padding: 14, marginHorizontal: 3,
+    borderWidth: 1, borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
   },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-  statLabel: { fontSize: 7, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.3, flex: 1, marginRight: 4 },
-  statNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
+  statLabel: { fontSize: 7, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.3, flex: 1, marginRight: 4 },
+  statNumber: { fontSize: 22, fontWeight: "800", color: Theme.colors.foreground },
   statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Add Form
   addFormCard: {
-    backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 14,
-    borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+    backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 14,
+    borderWidth: 1, borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
   },
   addFormHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   addFormIconBg: { width: 28, height: 28, borderRadius: 7, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  addFormTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A", flex: 1 },
+  addFormTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 1 },
   formRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   formField: { flex: 0.48 },
   formFieldFull: { flex: 1 },
-  formLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.3, marginBottom: 4 },
+  formLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.3, marginBottom: 4 },
   pickerBox: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: Theme.colors.secondary,
     height: 54,
     justifyContent: "center",
     overflow: "hidden",
@@ -397,65 +398,65 @@ const styles = StyleSheet.create({
   picker: {
     width: "100%",
     height: 54,
-    color: "#0F172A",
-    backgroundColor: "#F8FAFC",
+    color: Theme.colors.foreground,
+    backgroundColor: Theme.colors.secondary,
     transform: [{ translateY: -2 }],
   },
-  formInput: { height: 54, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 10, fontSize: 12, color: "#0F172A", backgroundColor: "#F8FAFC" },
-  formActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F1F5F9" },
+  formInput: { height: 54, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, paddingHorizontal: 10, fontSize: 12, color: Theme.colors.foreground, backgroundColor: Theme.colors.secondary },
+  formActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: Theme.colors.muted },
   formCancelBtn: { paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
-  formCancelText: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },
+  formCancelText: { fontSize: 12, fontWeight: "600", color: Theme.colors.mutedForeground },
   formSubmitBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   formSubmitText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
 
   // Search Bar
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#FFF", borderRadius: 10,
+    backgroundColor: Theme.colors.background, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1, borderColor: "#E2E8F0",
+    borderWidth: 1, borderColor: Theme.colors.border,
     marginBottom: 16,
   },
-  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
 
   // List Card
   listCard: {
-    backgroundColor: "#FFF", borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+    backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
   },
   listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  listTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A", flex: 1 },
+  listTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 1 },
   listCountBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#CCFBF1" },
   listCountText: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryDark },
 
   // Course Rows
   courseRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   courseAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
-  courseName: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
-  courseMeta: { fontSize: 10, color: "#94A3B8" },
-  codeBadge: { backgroundColor: "#F1F5F9", paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3, marginRight: 6 },
-  codeText: { fontSize: 8, fontWeight: "700", color: "#64748B", letterSpacing: 0.3 },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
-  deleteBtnText: { fontSize: 10, fontWeight: "700", color: "#EF4444" },
-  emptyText: { fontSize: 12, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
+  courseName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
+  courseMeta: { fontSize: 10, color: Theme.colors.mutedForeground },
+  codeBadge: { backgroundColor: Theme.colors.muted, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3, marginRight: 6 },
+  codeText: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.3 },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnText: { fontSize: 10, fontWeight: "700", color: Theme.colors.destructive },
+  emptyText: { fontSize: 12, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
-  modalCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
-  detailHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
+  detailHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   detailHeaderIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
-  detailTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
-  detailSubtitle: { fontSize: 11, color: "#94A3B8", marginTop: 2 },
-  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: "#E2E8F0" },
-  detailInfoLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 1 },
-  detailInfoValue: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  detailInfoSub: { fontSize: 11, color: "#64748B", marginTop: 1 },
-  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 10, marginVertical: 8, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
+  detailSubtitle: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 2 },
+  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: Theme.colors.border },
+  detailInfoLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, marginBottom: 1 },
+  detailInfoValue: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
+  detailInfoSub: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 1 },
+  detailStatsRow: { flexDirection: "row", backgroundColor: Theme.colors.secondary, borderRadius: 10, marginVertical: 8, borderWidth: 1, borderColor: Theme.colors.border },
   detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 14 },
-  detailStatNumber: { fontSize: 24, fontWeight: "800", color: "#0F172A", marginTop: 8 },
+  detailStatNumber: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground, marginTop: 8 },
   closeBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   closeBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
 });

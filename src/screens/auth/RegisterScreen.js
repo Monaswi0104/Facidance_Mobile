@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#0F172A",
+    color: Theme.colors.foreground,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: "#0F172A",
+    color: Theme.colors.foreground,
   },
   eyeBtn: { paddingHorizontal: 14, paddingVertical: 12 },
   passwordHint: { fontSize: 12, color: "#94A3B8", marginTop: 5 },

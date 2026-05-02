@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
 import { getCourseAttendance, getCourse } from "../../api/studentApi";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, User, Mail, Calendar, GraduationCap, Info, CheckCircle, XCircle, ChevronLeft, BarChart3 } from "lucide-react-native";
 
 const { width } = Dimensions.get('window');
 
 export default function CourseAttendance({ route, navigation }) {
+  const { colors, isDark } = useTheme();
 
   const { course: initialCourse, tab: initialTab } = route.params;
   const [activeTab, setActiveTab] = useState(initialTab === 'Attendance' ? 'Attendance History' : 'Overview');
@@ -154,7 +155,7 @@ export default function CourseAttendance({ route, navigation }) {
           </View>
           <View style={styles.perfStatBox}>
             <Text style={styles.perfStatLabel}>Absent</Text>
-            <Text style={[styles.perfStatValue, { color: "#EF4444" }]}>{missed}</Text>
+            <Text style={[styles.perfStatValue, { color: Theme.colors.destructive }]}>{missed}</Text>
           </View>
         </View>
       </View>
@@ -209,7 +210,7 @@ export default function CourseAttendance({ route, navigation }) {
 
         {/* Back Button */}
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={20} color="#0F172A" />
+          <ChevronLeft size={20} color={Theme.colors.foreground} />
           <Text style={styles.backBtnText}>Back to Courses</Text>
         </TouchableOpacity>
 
@@ -251,8 +252,8 @@ export default function CourseAttendance({ route, navigation }) {
             <Text style={[styles.statNumber, { color: "#10B981" }]}>{attended}</Text>
           </View>
           <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#EF4444" }]}>
-            <Text style={[styles.statLabel, { color: "#EF4444" }]}>ABSENT</Text>
-            <Text style={[styles.statNumber, { color: "#EF4444" }]}>{missed}</Text>
+            <Text style={[styles.statLabel, { color: Theme.colors.destructive }]}>ABSENT</Text>
+            <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{missed}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>RATE</Text>
@@ -288,7 +289,7 @@ export default function CourseAttendance({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Back Button
@@ -297,41 +298,41 @@ const styles = StyleSheet.create({
     alignItems: "center", 
     marginBottom: 16,
     alignSelf: "flex-start",
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
     shadowRadius: 2,
     elevation: 1
   },
-  backBtnText: { fontSize: 14, fontWeight: "700", color: "#0F172A", marginLeft: 4 },
+  backBtnText: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, marginLeft: 4 },
 
   // Course Header
   courseHeader: {
     flexDirection: "row",
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
   headerIconBg: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  courseTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
-  courseProgram: { fontSize: 12, color: "#64748B" },
-  courseMeta: { fontSize: 11, color: "#94A3B8" },
-  codePill: { borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 6 },
-  codePillText: { fontSize: 10, fontWeight: "600", color: "#475569" },
+  courseTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 2 },
+  courseProgram: { fontSize: 12, color: Theme.colors.mutedForeground },
+  courseMeta: { fontSize: 11, color: Theme.colors.mutedForeground },
+  codePill: { borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 6 },
+  codePillText: { fontSize: 10, fontWeight: "600", color: Theme.colors.textBody },
   activePill: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7" },
   activePillText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
 
@@ -339,32 +340,32 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: "row", marginBottom: 14 },
   statBox: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 10,
     padding: 12,
     marginHorizontal: 2,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
   },
-  statLabel: { fontSize: 7, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 4 },
-  statNumber: { fontSize: 20, fontWeight: "800", color: "#0F172A" },
+  statLabel: { fontSize: 7, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, marginBottom: 4 },
+  statNumber: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground },
 
   // Tabs
-  tabsContainer: { flexDirection: "row", backgroundColor: "#FFF", borderRadius: 10, padding: 3, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 16 },
+  tabsContainer: { flexDirection: "row", backgroundColor: Theme.colors.background, borderRadius: 10, padding: 3, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 16 },
   tab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
-  activeTab: { backgroundColor: "#F8FAFC", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
-  tabText: { fontSize: 13, fontWeight: "600", color: "#94A3B8" },
-  activeTabText: { color: "#0F172A" },
+  activeTab: { backgroundColor: Theme.colors.secondary, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 13, fontWeight: "600", color: Theme.colors.mutedForeground },
+  activeTabText: { color: Theme.colors.foreground },
 
   // Section Card
   sectionCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -372,34 +373,34 @@ const styles = StyleSheet.create({
   },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   cardIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  cardTitle: { fontSize: 15, fontWeight: "700", color: "#0F172A" },
-  cardSubtitle: { fontSize: 11, color: "#94A3B8" },
+  cardTitle: { fontSize: 15, fontWeight: "700", color: Theme.colors.foreground },
+  cardSubtitle: { fontSize: 11, color: Theme.colors.mutedForeground },
 
   // Info Rows
   infoRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 14 },
-  infoLabel: { fontSize: 10, color: "#94A3B8", marginBottom: 1 },
-  infoValue: { fontSize: 13, fontWeight: "600", color: "#1E293B" },
-  infoBanner: { flexDirection: "row", alignItems: "flex-start", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "#E2E8F0" },
-  infoBannerText: { fontSize: 11, color: "#64748B", flex: 1, lineHeight: 16 },
+  infoLabel: { fontSize: 10, color: Theme.colors.mutedForeground, marginBottom: 1 },
+  infoValue: { fontSize: 13, fontWeight: "600", color: Theme.colors.foreground },
+  infoBanner: { flexDirection: "row", alignItems: "flex-start", backgroundColor: Theme.colors.secondary, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: Theme.colors.border },
+  infoBannerText: { fontSize: 11, color: Theme.colors.mutedForeground, flex: 1, lineHeight: 16 },
 
   // Performance
   progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  progressLabel: { fontSize: 12, color: "#64748B", fontWeight: "600" },
+  progressLabel: { fontSize: 12, color: Theme.colors.mutedForeground, fontWeight: "600" },
   progressPercent: { fontSize: 14, fontWeight: "800" },
   progressTrack: { height: 8, borderRadius: 4, backgroundColor: "#E2E8F0", overflow: "hidden", marginBottom: 8 },
   progressFill: { height: "100%", borderRadius: 4 },
-  perfStatsRow: { flexDirection: "row", justifyContent: "space-around", borderTopWidth: 1, borderTopColor: "#F1F5F9", paddingTop: 14 },
+  perfStatsRow: { flexDirection: "row", justifyContent: "space-around", borderTopWidth: 1, borderTopColor: Theme.colors.muted, paddingTop: 14 },
   perfStatBox: { alignItems: "center" },
-  perfStatLabel: { fontSize: 11, color: "#94A3B8", marginBottom: 4 },
-  perfStatValue: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  perfStatLabel: { fontSize: 11, color: Theme.colors.mutedForeground, marginBottom: 4 },
+  perfStatValue: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
 
   // Table / History
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9", marginBottom: 4 },
-  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
   historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 14 },
-  historyBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  historyDate: { fontSize: 13, color: "#1E293B", fontWeight: "500", flex: 1 },
+  historyBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  historyDate: { fontSize: 13, color: Theme.colors.foreground, fontWeight: "500", flex: 1 },
   statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   statusText: { fontSize: 11, fontWeight: "700" },
-  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center", paddingVertical: 20 },
+  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 });

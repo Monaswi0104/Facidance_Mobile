@@ -6,10 +6,11 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 
 export default function TeachersManagement() {
+  const { colors, isDark } = useTheme();
   const [approved, setApproved] = useState([]);
   const [pending, setPending] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -148,8 +149,8 @@ export default function TeachersManagement() {
               <Text style={styles.statPillValue}>{stats.total}</Text>
             </View>
             <View style={[styles.statPill, { borderColor: "#FECACA" }]}>
-              <Text style={[styles.statPillLabel, { color: "#EF4444" }]}>PENDING</Text>
-              <Text style={[styles.statPillValue, { color: "#EF4444" }]}>{stats.pending}</Text>
+              <Text style={[styles.statPillLabel, { color: Theme.colors.destructive }]}>PENDING</Text>
+              <Text style={[styles.statPillValue, { color: Theme.colors.destructive }]}>{stats.pending}</Text>
             </View>
             <View style={[styles.statPill, { borderColor: "#A7F3D0" }]}>
               <Text style={[styles.statPillLabel, { color: "#10B981" }]}>APPROVED</Text>
@@ -184,8 +185,8 @@ export default function TeachersManagement() {
                   <Text style={styles.sectionTitle}>Pending Approvals</Text>
                   <Text style={styles.sectionSubtitle}>Assign a department to approve</Text>
                 </View>
-                <View style={[styles.countBadge, { backgroundColor: "#FEF2F2" }]}>
-                  <Text style={[styles.countText, { color: "#EF4444" }]}>{filteredPending.length} pending</Text>
+                <View style={[styles.countBadge, { backgroundColor: "rgba(239,68,68,0.08)" }]}>
+                  <Text style={[styles.countText, { color: Theme.colors.destructive }]}>{filteredPending.length} pending</Text>
                 </View>
               </View>
 
@@ -383,101 +384,101 @@ export default function TeachersManagement() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 12, color: "#64748B", marginTop: 3, marginBottom: 12 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3, marginBottom: 12 },
   statsPills: { flexDirection: "row", gap: 6 },
-  statPill: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: "center", backgroundColor: "#FFF" },
-  statPillLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 2 },
-  statPillValue: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
+  statPill: { borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: "center", backgroundColor: Theme.colors.background },
+  statPillLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, marginBottom: 2 },
+  statPillValue: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
 
   // Search Bar
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#FFF", borderRadius: 10,
+    backgroundColor: Theme.colors.background, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1, borderColor: "#E2E8F0",
+    borderWidth: 1, borderColor: Theme.colors.border,
     marginBottom: 20,
   },
-  searchInput: { flex: 1, fontSize: 13, color: "#1E293B", padding: 0 },
+  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
 
   // Cards Row
   cardsRow: { flexDirection: "column" },
 
   // Section Card
   sectionCard: {
-    backgroundColor: "#FFF", borderRadius: 14, padding: 16, marginBottom: 14,
-    borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+    backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 14,
+    borderWidth: 1, borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
   },
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   sectionIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
-  sectionSubtitle: { fontSize: 10, color: "#94A3B8" },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
+  sectionSubtitle: { fontSize: 10, color: Theme.colors.mutedForeground },
   countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   countText: { fontSize: 10, fontWeight: "700" },
 
   // Empty
   emptyBox: { alignItems: "center", paddingVertical: 30 },
-  emptyText: { fontSize: 12, color: "#94A3B8", textAlign: "center" },
+  emptyText: { fontSize: 12, color: Theme.colors.mutedForeground, textAlign: "center" },
 
   // Teacher Rows
-  teacherRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  teacherRowExpanded: { backgroundColor: "#F8FAFC", paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 10, borderBottomWidth: 0, marginBottom: 6 },
+  teacherRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  teacherRowExpanded: { backgroundColor: Theme.colors.secondary, paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 10, borderBottomWidth: 0, marginBottom: 6 },
   teacherMainRow: { flexDirection: "row", alignItems: "center" },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
   avatarText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
-  teacherName: { fontSize: 13, fontWeight: "700", color: "#0F172A" },
-  teacherEmail: { fontSize: 10, color: "#94A3B8" },
-  deptLabel: { fontSize: 10, color: "#94A3B8" },
+  teacherName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
+  teacherEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
+  deptLabel: { fontSize: 10, color: Theme.colors.mutedForeground },
   deptValue: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryDark },
 
   // Buttons
   approveBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 4 },
   approveBtnText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
-  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2", justifyContent: "center", alignItems: "center" },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
-  deleteBtnText: { fontSize: 10, fontWeight: "700", color: "#EF4444" },
+  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", justifyContent: "center", alignItems: "center" },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnText: { fontSize: 10, fontWeight: "700", color: Theme.colors.destructive },
 
   // Assignment
   assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#E2E8F0" },
-  assignmentLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 6 },
+  assignmentLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   assignmentControls: { flexDirection: "row", alignItems: "center" },
-  pickerContainer: { flex: 1, height: 40, borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 8, marginRight: 8, justifyContent: "center", backgroundColor: "#FFF" },
-  picker: { width: "100%", color: "#0F172A" },
+  pickerContainer: { flex: 1, height: 40, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, marginRight: 8, justifyContent: "center", backgroundColor: Theme.colors.background },
+  picker: { width: "100%", color: Theme.colors.foreground },
   confirmBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
   confirmBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
 
   // Detail Modal
   detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
-  detailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
-  detailProfileSection: { alignItems: "center", marginBottom: 18, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  detailCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
+  detailProfileSection: { alignItems: "center", marginBottom: 18, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   detailAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginBottom: 10 },
   detailAvatarText: { fontSize: 22, fontWeight: "800", color: "#FFF" },
-  detailName: { fontSize: 20, fontWeight: "800", color: "#0F172A", textAlign: "center" },
+  detailName: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground, textAlign: "center" },
   roleBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 14, paddingVertical: 4, borderRadius: 16, marginTop: 6, borderWidth: 1, borderColor: "#CCFBF1" },
   roleBadgeText: { fontSize: 11, fontWeight: "700", color: Theme.colors.primaryDark },
   detailInfoList: { marginBottom: 14 },
-  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: "#E2E8F0" },
-  detailInfoLabel: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.4, marginBottom: 1 },
-  detailInfoValue: { fontSize: 14, fontWeight: "700", color: "#1E293B" },
-  detailStatsRow: { flexDirection: "row", backgroundColor: "#F8FAFC", borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: Theme.colors.border },
+  detailInfoLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, marginBottom: 1 },
+  detailInfoValue: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
+  detailStatsRow: { flexDirection: "row", backgroundColor: Theme.colors.secondary, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Theme.colors.border },
   detailStatBox: { flex: 1, alignItems: "center", paddingVertical: 14 },
-  detailStatNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
-  detailStatLabel: { fontSize: 10, fontWeight: "600", color: "#94A3B8" },
-  detailSectionTitle: { fontSize: 11, fontWeight: "800", color: "#94A3B8", letterSpacing: 0.5, marginBottom: 10 },
-  courseItem: { flexDirection: "row", backgroundColor: "#FFF", padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: "#E2E8F0" },
+  detailStatNumber: { fontSize: 22, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 2 },
+  detailStatLabel: { fontSize: 10, fontWeight: "600", color: Theme.colors.mutedForeground },
+  detailSectionTitle: { fontSize: 11, fontWeight: "800", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
+  courseItem: { flexDirection: "row", backgroundColor: Theme.colors.background, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: Theme.colors.border },
   courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
-  courseItemName: { fontSize: 13, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
+  courseItemName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
   courseItemCode: { fontSize: 11, fontWeight: "600", color: Theme.colors.primaryDark, marginBottom: 4 },
   courseItemTagsRow: { flexDirection: "row", flexWrap: "wrap" },
   courseTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4, marginBottom: 2 },
   courseTagText: { fontSize: 9, fontWeight: "700" },
-  detailEmpty: { fontSize: 12, color: "#94A3B8", textAlign: "center", paddingVertical: 14 },
+  detailEmpty: { fontSize: 12, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 14 },
   detailCloseBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   detailCloseBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
 });

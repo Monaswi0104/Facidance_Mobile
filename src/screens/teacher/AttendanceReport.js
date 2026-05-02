@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { getTeacherCourses, getTeacherReports, getCourseStudents } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle, Mail } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import RNFS from "react-native-fs";
@@ -14,6 +14,7 @@ import Share from "react-native-share";
 const { width } = Dimensions.get("window");
 
 export default function AttendanceReport() {
+  const { colors, isDark } = useTheme();
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [data, setData] = useState([]);
@@ -266,7 +267,7 @@ export default function AttendanceReport() {
                   <Text style={styles.statLabel}>BELOW 75%</Text>
                   <View style={styles.statIconBg}><TrendingDown size={16} color="#FFF" /></View>
                 </View>
-                <Text style={[styles.statNumber, { color: "#EF4444" }]}>{below75}</Text>
+                <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{below75}</Text>
               </View>
             </View>
 
@@ -303,7 +304,7 @@ export default function AttendanceReport() {
               {[
                 { label: "≥ 75%", count: data.filter(d => d.percent >= 75).length, color: "#10B981" },
                 { label: "50–74%", count: data.filter(d => d.percent >= 50 && d.percent < 75).length, color: "#F59E0B" },
-                { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: "#EF4444" },
+                { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: Theme.colors.destructive },
               ].map((seg, i) => (
                 <View key={i} style={styles.distRow}>
                   <View style={[styles.distDot, { backgroundColor: seg.color }]} />
@@ -432,7 +433,7 @@ export default function AttendanceReport() {
                     ) : (
                       <>
                         <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                        <Text style={[styles.modalDetailValue, { color: "#EF4444", flex: 0 }]}>Not Registered</Text>
+                        <Text style={[styles.modalDetailValue, { color: Theme.colors.destructive, flex: 0 }]}>Not Registered</Text>
                       </>
                     )}
                   </View>
@@ -457,121 +458,121 @@ export default function AttendanceReport() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F8FAFC" },
+  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   header: { marginBottom: 18, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: "#0F172A" },
-  subtitle: { fontSize: 13, color: "#64748B", marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
+  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
 
   // Config Card
-  configCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 18, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  configTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A", marginBottom: 2 },
-  configMeta: { fontSize: 12, color: "#94A3B8", marginBottom: 16 },
+  configCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 18, marginBottom: 18, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
+  configTitle: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 2 },
+  configMeta: { fontSize: 12, color: Theme.colors.mutedForeground, marginBottom: 16 },
 
-  labelText: { fontSize: 10, fontWeight: "700", color: "#64748B", letterSpacing: 0.5, marginBottom: 6, marginTop: 4 },
-  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 14 },
-  dropdownPlaceholder: { fontSize: 13, color: "#94A3B8", flex: 1 },
-  dropdownText: { fontSize: 13, color: "#1E293B", flex: 1, fontWeight: "500" },
+  labelText: { fontSize: 10, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6, marginTop: 4 },
+  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 14 },
+  dropdownPlaceholder: { fontSize: 13, color: Theme.colors.mutedForeground, flex: 1 },
+  dropdownText: { fontSize: 13, color: Theme.colors.foreground, flex: 1, fontWeight: "500" },
 
   // Date pickers
   dateRow: { flexDirection: "row", marginBottom: 6 },
-  dateBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#FFF", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: "#E2E8F0" },
-  dateBtnText: { fontSize: 13, color: "#1E293B" },
-  dateBtnPlaceholder: { fontSize: 13, color: "#94A3B8" },
+  dateBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: Theme.colors.border },
+  dateBtnText: { fontSize: 13, color: Theme.colors.foreground },
+  dateBtnPlaceholder: { fontSize: 13, color: Theme.colors.mutedForeground },
 
   // Actions
   actionsRow: { flexDirection: "row", marginTop: 10 },
   btnPrimary: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 18, paddingVertical: 11, borderRadius: 10, marginRight: 10, alignItems: "center" },
   btnPrimaryText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
-  btnStroke: { flexDirection: "row", backgroundColor: "#FFF", borderWidth: 1, borderColor: "#E2E8F0", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
-  btnStrokeText: { color: "#475569", fontSize: 13, fontWeight: "600" },
+  btnStroke: { flexDirection: "row", backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
+  btnStrokeText: { color: Theme.colors.textBody, fontSize: 13, fontWeight: "600" },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
   statCard: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 14,
     marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: Theme.colors.border,
+    shadowColor: Theme.colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  statLabel: { fontSize: 8, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5, flex: 1, marginRight: 6 },
+  statLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, flex: 1, marginRight: 6 },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 },
-  statNumber: { fontSize: 22, fontWeight: "800", color: "#0F172A" },
+  statNumber: { fontSize: 22, fontWeight: "800", color: Theme.colors.foreground },
   statIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Chart
-  chartCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  chartTitle: { fontSize: 16, fontWeight: "800", color: "#0F172A" },
-  chartSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2, marginBottom: 16 },
+  chartCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
+  chartTitle: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground },
+  chartSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2, marginBottom: 16 },
   chartScroll: { flexDirection: "row", paddingBottom: 10 },
   chartYAxis: { justifyContent: "space-between", paddingRight: 10, height: 150, paddingBottom: 20 },
-  yAxisText: { fontSize: 10, color: "#94A3B8" },
+  yAxisText: { fontSize: 10, color: Theme.colors.mutedForeground },
   barsContainer: { flexDirection: "row", height: 150, alignItems: "flex-end" },
   barCol: { width: 40, alignItems: "center", marginRight: 10 },
-  barTrack: { width: 28, height: 130, justifyContent: "flex-end", backgroundColor: "#F8FAFC", borderRadius: 4 },
+  barTrack: { width: 28, height: 130, justifyContent: "flex-end", backgroundColor: Theme.colors.secondary, borderRadius: 4 },
   barFill: { width: 28, borderRadius: 4 },
-  barLabel: { fontSize: 9, color: "#64748B", marginTop: 6 },
+  barLabel: { fontSize: 9, color: Theme.colors.mutedForeground, marginTop: 6 },
 
   // Distribution
-  distCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0" },
-  distRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  distCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 18, marginBottom: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
+  distRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   distDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
-  distLabel: { flex: 1, fontSize: 13, color: "#475569" },
-  distCount: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
+  distLabel: { flex: 1, fontSize: 13, color: Theme.colors.textBody },
+  distCount: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
 
   // Table
-  tableCard: { backgroundColor: "#FFF", borderRadius: 14, padding: 16, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 20 },
+  tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 20 },
   tableTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
-  tableTitle: { fontSize: 18, fontWeight: "800", color: "#0F172A" },
-  tableSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
-  sortedText: { fontSize: 11, color: "#94A3B8", fontStyle: "italic" },
-  tableHeaderRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  tableHeaderText: { fontSize: 9, fontWeight: "700", color: "#94A3B8", letterSpacing: 0.5 },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
+  tableSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2 },
+  sortedText: { fontSize: 11, color: Theme.colors.mutedForeground, fontStyle: "italic" },
+  tableHeaderRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-  studentName: { fontSize: 12, fontWeight: "700", color: "#1E293B", marginBottom: 1 },
-  studentEmail: { fontSize: 10, color: "#94A3B8" },
-  cellNum: { fontSize: 13, color: "#475569", textAlign: "center", fontWeight: "600" },
-  attendBarTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F1F5F9", overflow: "hidden", marginRight: 8 },
+  tableBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  studentName: { fontSize: 12, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
+  cellNum: { fontSize: 13, color: Theme.colors.textBody, textAlign: "center", fontWeight: "600" },
+  attendBarTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Theme.colors.muted, overflow: "hidden", marginRight: 8 },
   attendBarFill: { height: "100%", borderRadius: 3 },
   percentText: { fontSize: 11, fontWeight: "800", minWidth: 38, textAlign: "right" },
   reportEmailBtn: {
     width: 28, height: 28, borderRadius: 7,
-    backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0",
+    backgroundColor: Theme.colors.secondary, borderWidth: 1, borderColor: Theme.colors.border,
     justifyContent: "center", alignItems: "center",
   },
-  emptyText: { fontSize: 13, color: "#94A3B8", textAlign: "center" },
+  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center" },
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: "#FFF", borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#1E293B", marginBottom: 16 },
-  modalItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalContent: { backgroundColor: Theme.colors.background, borderRadius: 16, padding: 20 },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 16 },
+  modalItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   modalItemSelected: { backgroundColor: Theme.colors.accentLight, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 8 },
-  modalItemText: { fontSize: 15, color: "#334155" },
-  modalCloseBtn: { marginTop: 20, backgroundColor: "#F1F5F9", padding: 14, borderRadius: 12, alignItems: "center" },
-  modalCloseText: { fontSize: 15, fontWeight: "600", color: "#64748B" },
+  modalItemText: { fontSize: 15, color: Theme.colors.textSoft },
+  modalCloseBtn: { marginTop: 20, backgroundColor: Theme.colors.muted, padding: 14, borderRadius: 12, alignItems: "center" },
+  modalCloseText: { fontSize: 15, fontWeight: "600", color: Theme.colors.mutedForeground },
 
   // Student Details Modal
-  modalDetailCard: { backgroundColor: "#FFF", borderRadius: 20, padding: 24, width: "100%", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
-  modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
+  modalDetailCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 24, width: "100%", shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: Theme.colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
-  modalName: { fontSize: 18, fontWeight: "800", color: "#1E293B", marginBottom: 4 },
-  modalEmail: { fontSize: 13, color: "#64748B" },
+  modalName: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 4 },
+  modalEmail: { fontSize: 13, color: Theme.colors.mutedForeground },
   modalDetailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: "#94A3B8", flex: 0.4 },
-  modalDetailValue: { fontSize: 14, fontWeight: "700", color: "#1E293B", flex: 0.6, textAlign: "right" },
-  modalDetailCloseBtn: { backgroundColor: "#F1F5F9", paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
-  modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: "#475569" },
+  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: Theme.colors.mutedForeground, flex: 0.4 },
+  modalDetailValue: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 0.6, textAlign: "right" },
+  modalDetailCloseBtn: { backgroundColor: Theme.colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: Theme.colors.textBody },
 });
