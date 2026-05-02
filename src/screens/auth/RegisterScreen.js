@@ -80,7 +80,7 @@ export default function RegisterScreen({ navigation }) {
 
             {/* AI Badge */}
             <View style={styles.aiBadge}>
-              <Sparkles size={13} color=colors.success style={{ marginRight: 5 }} />
+              <Sparkles size={13} color={colors.success} style={{ marginRight: 5 }} />
               <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
             </View>
 
@@ -91,15 +91,15 @@ export default function RegisterScreen({ navigation }) {
             {/* Features */}
             <View style={styles.featureList}>
               <View style={styles.featureItem}>
-                <Sparkles size={10} color=colors.success />
+                <Sparkles size={10} color={colors.success} />
                 <Text style={styles.featureText}>AI face recognition attendance</Text>
               </View>
               <View style={styles.featureItem}>
-                <Shield size={10} color=colors.success />
+                <Shield size={10} color={colors.success} />
                 <Text style={styles.featureText}>Role-based secure access</Text>
               </View>
               <View style={styles.featureItem}>
-                <BarChart3 size={10} color=colors.success />
+                <BarChart3 size={10} color={colors.success} />
                 <Text style={styles.featureText}>Smart analytics & reporting</Text>
               </View>
             </View>
