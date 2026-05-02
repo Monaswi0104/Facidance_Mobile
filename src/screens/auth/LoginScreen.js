@@ -312,9 +312,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: -32,
+    marginTop: -45,
     paddingHorizontal: 24,
-    paddingTop: 30,
+    paddingTop: 20,
     paddingBottom: 36,
   },
   formTitle: {
