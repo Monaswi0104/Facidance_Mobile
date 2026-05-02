@@ -123,12 +123,12 @@ export default function AdminDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color={Theme.colors.primaryForeground} />, screen: "TeachersManagement" },
-    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color={Theme.colors.primaryForeground} />, screen: "StudentsManagement" },
-    { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: Theme.colors.mutedForeground, icon: <Building2 size={16} color={Theme.colors.primaryForeground} />, screen: "DepartmentsManagement" },
-    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color={Theme.colors.primaryForeground} />, screen: "CoursesManagement" },
-    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color={Theme.colors.primaryForeground} />, screen: null },
-    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: Theme.colors.mutedForeground, icon: <UserX size={16} color={Theme.colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color={colors.primaryForeground} />, screen: "TeachersManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: colors.mutedForeground, icon: <Building2 size={16} color={colors.primaryForeground} />, screen: "DepartmentsManagement" },
+    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color={colors.primaryForeground} />, screen: "CoursesManagement" },
+    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color={colors.primaryForeground} />, screen: null },
+    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: colors.mutedForeground, icon: <UserX size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
   ];
 
   const maxProgramStudents = Math.max(...programDist.map(p => p.students), 1);
@@ -152,11 +152,11 @@ export default function AdminDashboard({ navigation }) {
           </View>
           <View style={styles.headerBtns}>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={loadData} activeOpacity={0.7}>
-              <RefreshCw size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+              <RefreshCw size={13} color={colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnText}>Refresh</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
-              <Users size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+              <Users size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnFilledText}>Manage Teachers</Text>
             </TouchableOpacity>
           </View>
@@ -279,11 +279,11 @@ export default function AdminDashboard({ navigation }) {
           <Text style={styles.sectionTitle}>Quick Navigation</Text>
           <Text style={[styles.sectionSubtitle, { marginBottom: 14 }]}>Manage your institution</Text>
           {[
-            { title: "Teachers", desc: "Approve & manage", screen: "TeachersManagement", icon: <Users size={18} color={Theme.colors.primaryDark} /> },
-            { title: "Departments", desc: "Create & organize", screen: "DepartmentsManagement", icon: <Building2 size={18} color={Theme.colors.primaryDark} /> },
-            { title: "Programs", desc: "Academic structure", screen: "ProgramsManagement", icon: <BookOpen size={18} color={Theme.colors.primaryDark} /> },
-            { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={18} color={Theme.colors.primaryDark} /> },
-            { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={18} color={Theme.colors.primaryDark} /> },
+            { title: "Teachers", desc: "Approve & manage", screen: "TeachersManagement", icon: <Users size={18} color={colors.primaryDark} /> },
+            { title: "Departments", desc: "Create & organize", screen: "DepartmentsManagement", icon: <Building2 size={18} color={colors.primaryDark} /> },
+            { title: "Programs", desc: "Academic structure", screen: "ProgramsManagement", icon: <BookOpen size={18} color={colors.primaryDark} /> },
+            { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={18} color={colors.primaryDark} /> },
+            { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={18} color={colors.primaryDark} /> },
           ].map((action, i) => (
             <TouchableOpacity key={i} style={styles.navRow} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen)}>
               <View style={styles.navIconBg}>{action.icon}</View>
@@ -291,7 +291,7 @@ export default function AdminDashboard({ navigation }) {
                 <Text style={styles.navTitle}>{action.title}</Text>
                 <Text style={styles.navDesc}>{action.desc}</Text>
               </View>
-              <ChevronRight size={16} color={Theme.colors.mutedForeground} />
+              <ChevronRight size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           ))}
         </View>

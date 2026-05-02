@@ -103,15 +103,15 @@ export default function StudentDashboard({ navigation }) {
           </View>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={() => navigation.navigate("AttendanceHistory")}>
-              <BarChart3 size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+              <BarChart3 size={13} color={colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnOutlineText}>History</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("StudentCoursesTab")}>
-              <BookOpen size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+              <BookOpen size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnFilledText}>Courses</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={() => navigation.navigate("ProfileUpload")}>
-              <User size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+              <User size={13} color={colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnOutlineText}>Profile</Text>
             </TouchableOpacity>
           </View>
@@ -129,7 +129,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("StudentCoursesTab")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>MY COURSES</Text>
-                <View style={styles.statIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{stats.courses}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -141,7 +141,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("AttendanceHistory")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
-                <View style={styles.statIconBg}><BarChart3 size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><BarChart3 size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: getAttendanceColor(stats.avgRaw) }]}>{stats.avgAttendance}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -153,7 +153,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("AttendanceHistory")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>CLASSES{"\n"}ATTENDED</Text>
-                <View style={styles.statIconBg}><Clock size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><Clock size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{stats.attended}</Text>
             </TouchableOpacity>
@@ -220,7 +220,7 @@ export default function StudentDashboard({ navigation }) {
 
             {/* Full History */}
             <TouchableOpacity style={styles.fullHistoryBtn} onPress={() => navigation.navigate("AttendanceHistory")}>
-              <ArrowUpRight size={14} color={Theme.colors.textBody} style={{ marginRight: 6 }} />
+              <ArrowUpRight size={14} color={colors.textBody} style={{ marginRight: 6 }} />
               <Text style={styles.fullHistoryText}>Full History</Text>
             </TouchableOpacity>
           </View>

@@ -150,8 +150,8 @@ export default function TeachersManagement() {
               <Text style={styles.statPillValue}>{stats.total}</Text>
             </View>
             <View style={[styles.statPill, { borderColor: "#FECACA" }]}>
-              <Text style={[styles.statPillLabel, { color: Theme.colors.destructive }]}>PENDING</Text>
-              <Text style={[styles.statPillValue, { color: Theme.colors.destructive }]}>{stats.pending}</Text>
+              <Text style={[styles.statPillLabel, { color: colors.destructive }]}>PENDING</Text>
+              <Text style={[styles.statPillValue, { color: colors.destructive }]}>{stats.pending}</Text>
             </View>
             <View style={[styles.statPill, { borderColor: "#A7F3D0" }]}>
               <Text style={[styles.statPillLabel, { color: "#10B981" }]}>APPROVED</Text>
@@ -161,15 +161,15 @@ export default function TeachersManagement() {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View>
             <View style={styles.searchBar}>
-              <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+              <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search name, email, or department..."
-                placeholderTextColor={Theme.colors.mutedForeground}
+                placeholderTextColor={colors.mutedForeground}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -180,20 +180,20 @@ export default function TeachersManagement() {
             <View style={[styles.sectionCard, { marginRight: 6 }]}>
               <View style={styles.sectionHeaderRow}>
                 <View style={styles.sectionIconBg}>
-                  <Clock size={14} color={Theme.colors.primaryForeground} />
+                  <Clock size={14} color={colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Pending Approvals</Text>
                   <Text style={styles.sectionSubtitle}>Assign a department to approve</Text>
                 </View>
                 <View style={[styles.countBadge, { backgroundColor: "rgba(239,68,68,0.08)" }]}>
-                  <Text style={[styles.countText, { color: Theme.colors.destructive }]}>{filteredPending.length} pending</Text>
+                  <Text style={[styles.countText, { color: colors.destructive }]}>{filteredPending.length} pending</Text>
                 </View>
               </View>
 
               {filteredPending.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <Star size={24} color={Theme.colors.mutedForeground} style={{ marginBottom: 8 }} />
+                  <Star size={24} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
                   <Text style={styles.emptyText}>No pending registrations.</Text>
                 </View>
               ) : (
@@ -237,7 +237,7 @@ export default function TeachersManagement() {
                               </Picker>
                             </View>
                             <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
-                              <CheckCircle size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+                              <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
                               <Text style={styles.confirmBtnText}>Confirm</Text>
                             </TouchableOpacity>
                           </View>
@@ -253,7 +253,7 @@ export default function TeachersManagement() {
             <View style={[styles.sectionCard, { marginLeft: 6 }]}>
               <View style={styles.sectionHeaderRow}>
                 <View style={[styles.sectionIconBg]}>
-                  <CheckCircle size={14} color={Theme.colors.primaryForeground} />
+                  <CheckCircle size={14} color={colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Approved Teachers</Text>
@@ -266,7 +266,7 @@ export default function TeachersManagement() {
 
               {filteredApproved.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <User size={24} color={Theme.colors.mutedForeground} style={{ marginBottom: 8 }} />
+                  <User size={24} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
                   <Text style={styles.emptyText}>No approved teachers.</Text>
                 </View>
               ) : (
@@ -279,7 +279,7 @@ export default function TeachersManagement() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.teacherName}>{t.name}</Text>
                         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 1 }}>
-                          <Mail size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                          <Mail size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                           <Text style={styles.teacherEmail} numberOfLines={1}>{t.email}</Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
@@ -318,14 +318,14 @@ export default function TeachersManagement() {
 
             <View style={styles.detailInfoList}>
               <View style={styles.detailInfoItem}>
-                <Mail size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
+                <Mail size={16} color={colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Email</Text>
                   <Text style={styles.detailInfoValue}>{selectedTeacher?.email}</Text>
                 </View>
               </View>
               <View style={styles.detailInfoItem}>
-                <Building2 size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
+                <Building2 size={16} color={colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Department</Text>
                   <Text style={styles.detailInfoValue}>{selectedTeacher?.dept}</Text>
@@ -338,7 +338,7 @@ export default function TeachersManagement() {
                 <Text style={styles.detailStatNumber}>{selectedTeacher?.courses?.length || 0}</Text>
                 <Text style={styles.detailStatLabel}>Courses</Text>
               </View>
-              <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: Theme.colors.border }]}>
+              <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: colors.border }]}>
                 <Text style={styles.detailStatNumber}>{selectedTeacher?.courses?.reduce((a, c) => a + (c.students || 0), 0) || 0}</Text>
                 <Text style={styles.detailStatLabel}>Students</Text>
               </View>
@@ -350,14 +350,14 @@ export default function TeachersManagement() {
                 selectedTeacher.courses.map((c, idx) => (
                   <View key={c.id || idx} style={styles.courseItem}>
                     <View style={styles.courseItemLeft}>
-                      <BookOpen size={14} color={Theme.colors.primaryDark} />
+                      <BookOpen size={14} color={colors.primaryDark} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.courseItemName}>{c.name}</Text>
                       <Text style={styles.courseItemCode}>{c.code}</Text>
                       <View style={styles.courseItemTagsRow}>
                         <View style={[styles.courseTag, { backgroundColor: "#F0FDFA" }]}>
-                          <Text style={[styles.courseTagText, { color: Theme.colors.primaryDark }]}>{c.program}</Text>
+                          <Text style={[styles.courseTagText, { color: colors.primaryDark }]}>{c.program}</Text>
                         </View>
                         <View style={[styles.courseTag, { backgroundColor: "#F0FDF4" }]}>
                           <Text style={[styles.courseTagText, { color: "#10B981" }]}>{c.semester}</Text>

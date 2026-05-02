@@ -111,37 +111,37 @@ export default function DepartmentsManagement() {
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
             {showAddForm ? (
-              <><X size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
+              <><X size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (
-              <><Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Department</Text></>
+              <><Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Department</Text></>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <>
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>TOTAL{"\n"}DEPARTMENTS</Text>
-                  <View style={styles.statIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><Building2 size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{departments.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>ACTIVE{"\n"}PROGRAMS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalPrograms}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>FACULTY{"\n"}MEMBERS</Text>
-                  <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalTeachers}</Text>
               </View>
@@ -151,10 +151,10 @@ export default function DepartmentsManagement() {
             {showAddForm && (
               <View style={styles.addFormCard}>
                 <View style={styles.addFormHeader}>
-                  <View style={styles.addFormIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.addFormIconBg}><Building2 size={14} color={colors.primaryForeground} /></View>
                   <Text style={styles.addFormTitle}>Add New Department</Text>
                   <TouchableOpacity onPress={() => { setShowAddForm(false); setNewName(""); }}>
-                    <X size={16} color={Theme.colors.mutedForeground} />
+                    <X size={16} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.addFormLabel}>DEPARTMENT NAME</Text>
@@ -162,12 +162,12 @@ export default function DepartmentsManagement() {
                   <TextInput
                     style={styles.addFormInput}
                     placeholder="e.g. Computer Science"
-                    placeholderTextColor={Theme.colors.mutedForeground}
+                    placeholderTextColor={colors.mutedForeground}
                     value={newName}
                     onChangeText={setNewName}
                   />
                   <TouchableOpacity style={styles.addFormBtn} onPress={handleAdd} disabled={isCreating}>
-                    <Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} />
+                    <Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} />
                     <Text style={styles.addFormBtnText}>{isCreating ? "..." : "Add"}</Text>
                   </TouchableOpacity>
                 </View>
@@ -177,7 +177,7 @@ export default function DepartmentsManagement() {
             {/* All Departments Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><Building2 size={12} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.listHeaderIcon}><Building2 size={12} color={colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Departments</Text>
                 <View style={styles.listCountBadge}>
                   <Text style={styles.listCountText}>{departments.length} total</Text>
@@ -190,15 +190,15 @@ export default function DepartmentsManagement() {
                 departments.map((d, i) => (
                   <TouchableOpacity key={d.id} style={[styles.deptRow, i < departments.length - 1 && styles.deptRowBorder]} onPress={() => setSelectedDept(d)} activeOpacity={0.7}>
                     <View style={styles.deptAvatar}>
-                      <Building2 size={14} color={Theme.colors.primaryDark} />
+                      <Building2 size={14} color={colors.primaryDark} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.deptName}>{d.name}</Text>
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <GraduationCap size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                        <GraduationCap size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.deptMeta}>{d.programs} programs</Text>
                         <Text style={[styles.deptMeta, { marginHorizontal: 6 }]}>·</Text>
-                        <Users size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                        <Users size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.deptMeta}>{d.teachers} teachers</Text>
                       </View>
                     </View>
@@ -220,7 +220,7 @@ export default function DepartmentsManagement() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.detailHeader}>
-              <View style={styles.detailHeaderIcon}><Building2 size={20} color={Theme.colors.primaryForeground} /></View>
+              <View style={styles.detailHeaderIcon}><Building2 size={20} color={colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedDept?.name}</Text>
                 <Text style={styles.detailSubtitle}>{selectedDept?.programs} Programs • {selectedDept?.teachers} Teachers</Text>
@@ -233,7 +233,7 @@ export default function DepartmentsManagement() {
               {selectedDept?.programsList?.length > 0 ? (
                 selectedDept.programsList.map((p, idx) => (
                   <View key={p.id || idx} style={styles.subItem}>
-                    <GraduationCap size={14} color={Theme.colors.textBody} style={{ marginRight: 10 }} />
+                    <GraduationCap size={14} color={colors.textBody} style={{ marginRight: 10 }} />
                     <Text style={styles.subItemText}>{p.name}</Text>
                   </View>
                 ))

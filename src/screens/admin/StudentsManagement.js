@@ -180,27 +180,27 @@ export default function StudentsManagement() {
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{students.length}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>ACTIVE</Text>
-                <View style={styles.statIconBg}><CheckCircle size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: "#10B981" }]}>{totalActive}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>GRADUATED</Text>
-                <View style={styles.statIconBg}><RefreshCw size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><RefreshCw size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{totalGraduated}</Text>
             </View>
@@ -210,11 +210,11 @@ export default function StudentsManagement() {
         {/* Search + Program Filter */}
         <View style={styles.searchFilterRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+            <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search name, email, program..."
-              placeholderTextColor={Theme.colors.mutedForeground}
+              placeholderTextColor={colors.mutedForeground}
               value={search}
               onChangeText={setSearch}
             />
@@ -223,7 +223,7 @@ export default function StudentsManagement() {
             <Text style={styles.programDropdownText} numberOfLines={1}>
               {selectedProgram === "all" ? "All Programs" : selectedProgram}
             </Text>
-            <ChevronDown size={14} color={Theme.colors.textBody} />
+            <ChevronDown size={14} color={colors.textBody} />
           </TouchableOpacity>
         </View>
 
@@ -299,7 +299,7 @@ export default function StudentsManagement() {
                   </View>
                   {s.courseCount > 0 && (
                     <View style={styles.courseCountBadge}>
-                      <BookOpen size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                      <BookOpen size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                       <Text style={styles.courseCountText}>{s.courseCount}</Text>
                     </View>
                   )}
@@ -308,10 +308,10 @@ export default function StudentsManagement() {
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("view", s)}>
-                    <Eye size={14} color={Theme.colors.textBody} />
+                    <Eye size={14} color={colors.textBody} />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("edit", s)}>
-                    <Edit2 size={14} color={Theme.colors.textBody} />
+                    <Edit2 size={14} color={colors.textBody} />
                   </TouchableOpacity>
                   {s.status !== "graduated" ? (
                     <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
@@ -341,7 +341,7 @@ export default function StudentsManagement() {
             {/* View Details Modal */}
             {modalType === "view" && selectedStudent && (
               <ScrollView>
-                <View style={styles.modalHeader}><Eye size={20} color={Theme.colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Student Details</Text></View>
+                <View style={styles.modalHeader}><Eye size={20} color={colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Student Details</Text></View>
                 <View style={styles.viewRow}><Text style={styles.viewLabel}>Name:</Text><Text style={styles.viewValue}>{selectedStudent.name}</Text></View>
                 <View style={styles.viewRow}><Text style={styles.viewLabel}>Email:</Text><Text style={styles.viewValue}>{selectedStudent.email}</Text></View>
                 <View style={styles.viewRow}><Text style={styles.viewLabel}>Primary Program:</Text><Text style={styles.viewValue}>{selectedStudent.primaryProgram || "—"}</Text></View>
@@ -374,7 +374,7 @@ export default function StudentsManagement() {
             {/* Edit Modal */}
             {modalType === "edit" && selectedStudent && (
               <View>
-                 <View style={styles.modalHeader}><Edit2 size={20} color={Theme.colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Edit Student</Text></View>
+                 <View style={styles.modalHeader}><Edit2 size={20} color={colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Edit Student</Text></View>
                  <Text style={styles.inputLabel}>Name</Text>
                  <TextInput style={styles.modalInput} value={editForm.name} onChangeText={(t) => setEditForm({...editForm, name: t})} />
                  <Text style={styles.inputLabel}>Email</Text>
@@ -394,7 +394,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleEdit} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Save</Text>}
+                     {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Save</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -403,12 +403,12 @@ export default function StudentsManagement() {
             {/* Graduate Confirmation */}
             {modalType === "graduate" && selectedStudent && (
               <View>
-                 <View style={styles.modalHeader}><Users size={20} color={Theme.colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Mark as Graduated</Text></View>
+                 <View style={styles.modalHeader}><Users size={20} color={colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Mark as Graduated</Text></View>
                  <Text style={styles.confirmText}>Are you sure you want to mark <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text> as graduated?</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#6D28D9'}]} onPress={handleGraduate} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
+                     {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -422,7 +422,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#059669'}]} onPress={handleActivate} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Activate</Text>}
+                     {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Activate</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -431,12 +431,12 @@ export default function StudentsManagement() {
             {/* Delete Confirmation */}
             {modalType === "delete" && selectedStudent && (
               <View>
-                 <View style={styles.modalHeader}><Trash2 size={20} color={Theme.colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Delete Student</Text></View>
+                 <View style={styles.modalHeader}><Trash2 size={20} color={colors.foreground} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Delete Student</Text></View>
                  <Text style={styles.confirmText}>Are you sure you want to delete <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text>? This action cannot be undone.</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#DC2626'}]} onPress={handleDelete} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Delete</Text>}
+                     {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Delete</Text>}
                    </TouchableOpacity>
                  </View>
               </View>

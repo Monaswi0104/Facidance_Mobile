@@ -78,10 +78,10 @@ export default function CourseDetails({ route, navigation }) {
   };
 
   const statCards = [
-    { label: "TOTAL STUDENTS", value: students.length, icon: <Users size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
-    { label: "FACE REGISTERED", value: faceRegistered, icon: <ScanFace size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
-    { label: "TOTAL SESSIONS", value: totalSessions, icon: <Clock size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
-    { label: "AVG ATTENDANCE", value: `${avgAttendance}%`, icon: <TrendingUp size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
+    { label: "TOTAL STUDENTS", value: students.length, icon: <Users size={18} color={colors.primaryForeground} />, bg: colors.primaryDark },
+    { label: "FACE REGISTERED", value: faceRegistered, icon: <ScanFace size={18} color={colors.primaryForeground} />, bg: colors.primaryDark },
+    { label: "TOTAL SESSIONS", value: totalSessions, icon: <Clock size={18} color={colors.primaryForeground} />, bg: colors.primaryDark },
+    { label: "AVG ATTENDANCE", value: `${avgAttendance}%`, icon: <TrendingUp size={18} color={colors.primaryForeground} />, bg: colors.primaryDark },
   ];
 
   return (
@@ -90,7 +90,7 @@ export default function CourseDetails({ route, navigation }) {
 
         {/* Change Course Button */}
         <TouchableOpacity style={styles.changeCourseBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={16} color={Theme.colors.textBody} />
+          <ChevronLeft size={16} color={colors.textBody} />
           <Text style={styles.changeCourseText}>Change Course</Text>
         </TouchableOpacity>
 
@@ -98,7 +98,7 @@ export default function CourseDetails({ route, navigation }) {
         <View style={styles.headerCard}>
           <View style={styles.headerTop}>
             <View style={styles.headerBadge}>
-              <BookOpen size={22} color={Theme.colors.primaryForeground} />
+              <BookOpen size={22} color={colors.primaryForeground} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>{course.name}</Text>
@@ -112,12 +112,12 @@ export default function CourseDetails({ route, navigation }) {
           </View>
           <View style={styles.headerMeta}>
             <View style={styles.metaItem}>
-              <Building size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 5 }} />
+              <Building size={13} color={colors.mutedForeground} style={{ marginRight: 5 }} />
               <Text style={styles.headerMetaText}>{course.department}</Text>
             </View>
             {!!course.semester && (
               <View style={styles.metaItem}>
-                <Calendar size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 5 }} />
+                <Calendar size={13} color={colors.mutedForeground} style={{ marginRight: 5 }} />
                 <Text style={styles.headerMetaText}>{course.semester}</Text>
               </View>
             )}
@@ -126,7 +126,7 @@ export default function CourseDetails({ route, navigation }) {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (
@@ -147,12 +147,12 @@ export default function CourseDetails({ route, navigation }) {
 
         <View style={styles.searchExportRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+            <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
-              placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
+              placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} />
           </View>
           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-            <Download size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+            <Download size={14} color={colors.primaryForeground} style={{ marginRight: 4 }} />
             <Text style={styles.exportBtnText}>Export</Text>
           </TouchableOpacity>
         </View>
@@ -182,7 +182,7 @@ export default function CourseDetails({ route, navigation }) {
                   {s.faceRegistered ? (
                     <CheckCircle size={16} color="#10B981" />
                   ) : (
-                    <XCircle size={16} color={Theme.colors.mutedForeground} />
+                    <XCircle size={16} color={colors.mutedForeground} />
                   )}
                 </View>
 
@@ -239,7 +239,7 @@ export default function CourseDetails({ route, navigation }) {
                       ) : (
                         <>
                           <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: Theme.colors.destructive, flex: 0 }]}>Not Registered</Text>
+                          <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}
                     </View>

@@ -107,7 +107,7 @@ export default function AttendanceCamera({ navigation }) {
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionIconBg}>
-                <BookOpen size={16} color={Theme.colors.primaryForeground} />
+                <BookOpen size={16} color={colors.primaryForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sectionHeaderText}>Select Course</Text>
@@ -116,14 +116,14 @@ export default function AttendanceCamera({ navigation }) {
             </View>
 
             <View style={styles.searchBar}>
-              <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+              <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
               <TextInput style={styles.searchInput}
                 placeholder="Search by course name, department, program, or semester..."
-                placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
+                placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} />
             </View>
 
             {isLoading ? (
-              <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
             ) : filteredCourses.length === 0 ? (
               <Text style={styles.emptyText}>No courses found.</Text>
             ) : (
@@ -167,36 +167,36 @@ export default function AttendanceCamera({ navigation }) {
 
         {/* Stats Grid */}
         {isLoadingStudents ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{students.length}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>TRAINED</Text>
-                <View style={styles.statIconBg}><ScanFace size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><ScanFace size={14} color={colors.primaryForeground} /></View>
               </View>
-              <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{trained}</Text>
+              <Text style={[styles.statNumber, { color: colors.accent }]}>{trained}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>PHOTOS</Text>
-                <View style={styles.statIconBg}><Camera size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><Camera size={14} color={colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{withPhotos}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>UNTRAINED</Text>
-                <View style={styles.statIconBg}><AlertCircle size={14} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><AlertCircle size={14} color={colors.primaryForeground} /></View>
               </View>
-              <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{notTrained}</Text>
+              <Text style={[styles.statNumber, { color: colors.destructive }]}>{notTrained}</Text>
             </View>
           </View>
         )}
@@ -209,10 +209,10 @@ export default function AttendanceCamera({ navigation }) {
             disabled={isTraining}
             activeOpacity={0.8}>
             {isTraining ? (
-              <ActivityIndicator size="small" color={Theme.colors.accent} />
+              <ActivityIndicator size="small" color={colors.accent} />
             ) : (
               <>
-                <Cpu size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+                <Cpu size={14} color={colors.accent} style={{ marginRight: 6 }} />
                 <Text style={styles.trainBtnOutlineText}>Train Recognition Model</Text>
               </>
             )}
@@ -227,7 +227,7 @@ export default function AttendanceCamera({ navigation }) {
               notTrainedCount: notTrained,
             })}
             activeOpacity={0.8}>
-            <Play size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
+            <Play size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
             <Text style={styles.captureBtnText}>Capture Attendance</Text>
           </TouchableOpacity>
         </View>
@@ -262,7 +262,7 @@ export default function AttendanceCamera({ navigation }) {
                   ) : (
                     <View style={styles.photoMissing}>
                       <XCircle size={11} color="#EF4444" style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: Theme.colors.destructive }]}>Missing</Text>
+                      <Text style={[styles.badgeText, { color: colors.destructive }]}>Missing</Text>
                     </View>
                   )}
                 </View>
@@ -275,7 +275,7 @@ export default function AttendanceCamera({ navigation }) {
                     </View>
                   ) : (
                     <View style={styles.pendingBadge}>
-                      <Text style={[styles.badgeText, { color: Theme.colors.mutedForeground }]}>Pending</Text>
+                      <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>Pending</Text>
                     </View>
                   )}
                 </View>
@@ -287,7 +287,7 @@ export default function AttendanceCamera({ navigation }) {
         {/* Info Card */}
         <View style={styles.infoCard}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            <Info size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+            <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
             <Text style={styles.infoTitle}>How cumulative attendance works</Text>
           </View>
           <Text style={styles.infoStep}>• Face recognition runs centrally via CCTV/webcam</Text>

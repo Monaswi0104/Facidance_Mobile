@@ -70,49 +70,49 @@ export default function CourseAttendance({ route, navigation }) {
       {/* Course Details & Instructor side by side */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+          <View style={styles.cardIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Course Details</Text>
             <Text style={styles.cardSubtitle}>Academic information</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <Calendar size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+          <Calendar size={12} color={colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Academic Period</Text>
             <Text style={styles.infoValue}>{course.year} · {course.semester}</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <GraduationCap size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+          <GraduationCap size={12} color={colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Program</Text>
             <Text style={styles.infoValue}>{course.program}</Text>
           </View>
         </View>
         <View style={styles.infoBanner}>
-          <Info size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Info size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
           <Text style={styles.infoBannerText}>To mark attendance, use the <Text style={{ fontWeight: "700" }}>entry code shared by your teacher</Text> in class.</Text>
         </View>
       </View>
 
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><User size={14} color={Theme.colors.primaryForeground} /></View>
+          <View style={styles.cardIconBg}><User size={14} color={colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Instructor</Text>
             <Text style={styles.cardSubtitle}>Course teacher details</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <User size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+          <User size={12} color={colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Name</Text>
             <Text style={styles.infoValue}>{course.teacher}</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <Mail size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+          <Mail size={12} color={colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Email</Text>
             <Text style={styles.infoValue}>{course.teacherEmail || "Not Provided"}</Text>
@@ -123,7 +123,7 @@ export default function CourseAttendance({ route, navigation }) {
       {/* Performance Summary */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><BarChart3 size={14} color={Theme.colors.primaryForeground} /></View>
+          <View style={styles.cardIconBg}><BarChart3 size={14} color={colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Performance Summary</Text>
             <Text style={styles.cardSubtitle}>Your overall attendance for this course</Text>
@@ -156,7 +156,7 @@ export default function CourseAttendance({ route, navigation }) {
           </View>
           <View style={styles.perfStatBox}>
             <Text style={styles.perfStatLabel}>Absent</Text>
-            <Text style={[styles.perfStatValue, { color: Theme.colors.destructive }]}>{missed}</Text>
+            <Text style={[styles.perfStatValue, { color: colors.destructive }]}>{missed}</Text>
           </View>
         </View>
       </View>
@@ -166,7 +166,7 @@ export default function CourseAttendance({ route, navigation }) {
   const renderHistory = () => (
     <View style={styles.sectionCard}>
       <View style={styles.cardHeaderRow}>
-        <View style={styles.cardIconBg}><Calendar size={14} color={Theme.colors.primaryForeground} /></View>
+        <View style={styles.cardIconBg}><Calendar size={14} color={colors.primaryForeground} /></View>
         <View>
           <Text style={styles.cardTitle}>Attendance History</Text>
           <Text style={styles.cardSubtitle}>All session records for this course</Text>
@@ -211,7 +211,7 @@ export default function CourseAttendance({ route, navigation }) {
 
         {/* Back Button */}
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={20} color={Theme.colors.foreground} />
+          <ChevronLeft size={20} color={colors.foreground} />
           <Text style={styles.backBtnText}>Back to Courses</Text>
         </TouchableOpacity>
 
@@ -219,15 +219,15 @@ export default function CourseAttendance({ route, navigation }) {
         <View style={styles.courseHeader}>
           <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
             <View style={styles.headerIconBg}>
-              <BookOpen size={18} color={Theme.colors.primaryForeground} />
+              <BookOpen size={18} color={colors.primaryForeground} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.courseTitle} numberOfLines={2}>{course.name}</Text>
               <Text style={styles.courseProgram}>{course.program}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                <User size={11} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
+                <User size={11} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.courseMeta}>{course.teacher}</Text>
-                <Calendar size={11} color={Theme.colors.mutedForeground} style={{ marginLeft: 10, marginRight: 4 }} />
+                <Calendar size={11} color={colors.mutedForeground} style={{ marginLeft: 10, marginRight: 4 }} />
                 <Text style={styles.courseMeta}>{course.semester} · {course.year}</Text>
               </View>
             </View>
@@ -253,8 +253,8 @@ export default function CourseAttendance({ route, navigation }) {
             <Text style={[styles.statNumber, { color: "#10B981" }]}>{attended}</Text>
           </View>
           <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#EF4444" }]}>
-            <Text style={[styles.statLabel, { color: Theme.colors.destructive }]}>ABSENT</Text>
-            <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{missed}</Text>
+            <Text style={[styles.statLabel, { color: colors.destructive }]}>ABSENT</Text>
+            <Text style={[styles.statNumber, { color: colors.destructive }]}>{missed}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>RATE</Text>
@@ -279,7 +279,7 @@ export default function CourseAttendance({ route, navigation }) {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderHistory()
         )}

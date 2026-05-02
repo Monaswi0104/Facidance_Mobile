@@ -66,11 +66,11 @@ export default function MyCourses({ navigation }) {
 
         {/* Search */}
         <View style={styles.searchBar}>
-          <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+          <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by course name, code or teacher..."
-            placeholderTextColor={Theme.colors.mutedForeground}
+            placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
           />
@@ -78,7 +78,7 @@ export default function MyCourses({ navigation }) {
 
         {/* Course Cards */}
         {isLoading ? (
-          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No Courses Found</Text>
@@ -95,7 +95,7 @@ export default function MyCourses({ navigation }) {
               {/* Card Top Row */}
               <View style={styles.cardTopRow}>
                 <View style={styles.cardIconBg}>
-                  <BookOpen size={16} color={Theme.colors.primaryForeground} />
+                  <BookOpen size={16} color={colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
@@ -108,25 +108,25 @@ export default function MyCourses({ navigation }) {
                     </View>
                   </View>
                 </View>
-                <ChevronRight size={18} color={Theme.colors.mutedForeground} />
+                <ChevronRight size={18} color={colors.mutedForeground} />
               </View>
 
               {/* Details */}
               <View style={styles.detailsList}>
                 <View style={styles.detailRow}>
-                  <User size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+                  <User size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.teacher}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Calendar size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+                  <Calendar size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.semester} · {item.year}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <BookOpen size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+                  <BookOpen size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.program}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Hash size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+                  <Hash size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.code}</Text>
                 </View>
               </View>
@@ -134,7 +134,7 @@ export default function MyCourses({ navigation }) {
               {/* View Details Footer */}
               <View style={styles.cardFooter}>
                 <Text style={styles.viewDetailsText}>View details</Text>
-                <ChevronRight size={14} color={Theme.colors.mutedForeground} />
+                <ChevronRight size={14} color={colors.mutedForeground} />
               </View>
             </TouchableOpacity>
           ))

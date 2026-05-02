@@ -156,10 +156,10 @@ export default function TeacherDashboard({ navigation }) {
   };
 
   const statCards = [
-    { label: "MY COURSES", value: stats.courses, icon: <BookOpen size={18} color={Theme.colors.primaryForeground} />, sub: stats.semesters ? `${stats.semesters} semester` : "" },
-    { label: "TOTAL STUDENTS", value: stats.students, icon: <Users size={18} color={Theme.colors.primaryForeground} />, sub: stats.students > 0 ? "enrolled" : "" },
-    { label: "ACTIVE SEMESTERS", value: stats.semesters, icon: <Calendar size={18} color={Theme.colors.primaryForeground} />, sub: "" },
-    { label: "TOTAL ATTENDANCE", value: stats.attendance, icon: <CheckCircle size={18} color={Theme.colors.primaryForeground} />, sub: atRiskStudents.length > 0 ? `${atRiskStudents.length} at risk` : "", subColor: atRiskStudents.length > 0 ? "#EF4444" : "#10B981" },
+    { label: "MY COURSES", value: stats.courses, icon: <BookOpen size={18} color={colors.primaryForeground} />, sub: stats.semesters ? `${stats.semesters} semester` : "" },
+    { label: "TOTAL STUDENTS", value: stats.students, icon: <Users size={18} color={colors.primaryForeground} />, sub: stats.students > 0 ? "enrolled" : "" },
+    { label: "ACTIVE SEMESTERS", value: stats.semesters, icon: <Calendar size={18} color={colors.primaryForeground} />, sub: "" },
+    { label: "TOTAL ATTENDANCE", value: stats.attendance, icon: <CheckCircle size={18} color={colors.primaryForeground} />, sub: atRiskStudents.length > 0 ? `${atRiskStudents.length} at risk` : "", subColor: atRiskStudents.length > 0 ? "#EF4444" : "#10B981" },
   ];
 
   return (

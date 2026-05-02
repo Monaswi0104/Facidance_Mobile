@@ -168,13 +168,13 @@ export default function AttendanceReport() {
           <Text style={styles.labelText}>COURSE *</Text>
           <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)} disabled={isLoading}>
             {isLoading ? (
-              <ActivityIndicator size="small" color={Theme.colors.accent} />
+              <ActivityIndicator size="small" color={colors.accent} />
             ) : (
               <>
                 <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedCourse ? `${selectedCourse.name} ${selectedCourse.code !== "—" ? `(${selectedCourse.code})` : ""}` : "Choose a course..."}
                 </Text>
-                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
+                <ChevronDown size={16} color={colors.mutedForeground} />
               </>
             )}
           </TouchableOpacity>
@@ -184,14 +184,14 @@ export default function AttendanceReport() {
               <Text style={styles.labelText}>START DATE (OPTIONAL)</Text>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
                 <Text style={startDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(startDate)}</Text>
-                <Calendar size={14} color={Theme.colors.mutedForeground} />
+                <Calendar size={14} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.labelText}>END DATE (OPTIONAL)</Text>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
                 <Text style={endDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(endDate)}</Text>
-                <Calendar size={14} color={Theme.colors.mutedForeground} />
+                <Calendar size={14} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -227,17 +227,17 @@ export default function AttendanceReport() {
               disabled={!selectedCourse || isReportLoading}
               onPress={() => { if (selectedCourse) loadReport(selectedCourse.id); }}>
               {isReportLoading ? (
-                <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
               ) : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <FileText size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
+                  <FileText size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.btnPrimaryText}>Generate Report</Text>
                 </View>
               )}
             </TouchableOpacity>
             {reportGenerated && (
               <TouchableOpacity style={styles.btnStroke} onPress={exportCSV}>
-                <Download size={14} color={Theme.colors.textBody} style={{ marginRight: 6 }} />
+                <Download size={14} color={colors.textBody} style={{ marginRight: 6 }} />
                 <Text style={styles.btnStrokeText}>Export CSV</Text>
               </TouchableOpacity>
             )}
@@ -252,23 +252,23 @@ export default function AttendanceReport() {
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL{"\n"}STUDENTS</Text>
-                  <View style={styles.statIconBg}><Users size={16} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><Users size={16} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{data.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>AVERAGE{"\n"}ATTENDANCE</Text>
-                  <View style={styles.statIconBg}><TrendingUp size={16} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><TrendingUp size={16} color={colors.primaryForeground} /></View>
                 </View>
-                <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{avgPercent}%</Text>
+                <Text style={[styles.statNumber, { color: colors.accent }]}>{avgPercent}%</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>BELOW 75%</Text>
-                  <View style={styles.statIconBg}><TrendingDown size={16} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><TrendingDown size={16} color={colors.primaryForeground} /></View>
                 </View>
-                <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{below75}</Text>
+                <Text style={[styles.statNumber, { color: colors.destructive }]}>{below75}</Text>
               </View>
             </View>
 
@@ -305,7 +305,7 @@ export default function AttendanceReport() {
               {[
                 { label: "≥ 75%", count: data.filter(d => d.percent >= 75).length, color: "#10B981" },
                 { label: "50–74%", count: data.filter(d => d.percent >= 50 && d.percent < 75).length, color: "#F59E0B" },
-                { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: Theme.colors.destructive },
+                { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: colors.destructive },
               ].map((seg, i) => (
                 <View key={i} style={styles.distRow}>
                   <View style={[styles.distDot, { backgroundColor: seg.color }]} />
@@ -334,7 +334,7 @@ export default function AttendanceReport() {
               </View>
 
               {isReportLoading ? (
-                <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
+                <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
               ) : data.length === 0 ? (
                 <Text style={[styles.emptyText, { paddingVertical: 20 }]}>No attendance data found.</Text>
               ) : (
@@ -359,7 +359,7 @@ export default function AttendanceReport() {
                           onPress={(e) => { e.stopPropagation?.(); sendEmail(s); }}
                           activeOpacity={0.6}
                         >
-                          <Mail size={13} color={Theme.colors.mutedForeground} />
+                          <Mail size={13} color={colors.mutedForeground} />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -382,8 +382,8 @@ export default function AttendanceReport() {
                 const isSelected = selectedCourse?.id === c.id;
                 return (
                   <TouchableOpacity key={c.id} style={[styles.modalItem, isSelected && styles.modalItemSelected]} onPress={() => handleCourseSelect(c)}>
-                    <Text style={[styles.modalItemText, isSelected && { color: Theme.colors.primaryDark, fontWeight: "700" }]}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
-                    {isSelected && <CheckCircle size={18} color={Theme.colors.primaryDark} />}
+                    <Text style={[styles.modalItemText, isSelected && { color: colors.primaryDark, fontWeight: "700" }]}>{c.name} {c.code !== "—" ? `(${c.code})` : ""}</Text>
+                    {isSelected && <CheckCircle size={18} color={colors.primaryDark} />}
                   </TouchableOpacity>
                 );
               })}
@@ -403,7 +403,7 @@ export default function AttendanceReport() {
               <>
                 <View style={styles.modalHeaderInfoSection}>
                   <View style={styles.modalAvatar}>
-                    <User size={22} color={Theme.colors.primaryDark} />
+                    <User size={22} color={colors.primaryDark} />
                   </View>
                   <View style={styles.modalHeaderInfo}>
                     <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -418,7 +418,7 @@ export default function AttendanceReport() {
 
                 <View style={styles.modalDetailRow}>
                   <Text style={styles.modalDetailLabel}>Status:</Text>
-                  <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
+                  <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : colors.accent }]}>
                     {(selectedStudent.status || "active").toUpperCase()}
                   </Text>
                 </View>
@@ -434,7 +434,7 @@ export default function AttendanceReport() {
                     ) : (
                       <>
                         <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                        <Text style={[styles.modalDetailValue, { color: Theme.colors.destructive, flex: 0 }]}>Not Registered</Text>
+                        <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                       </>
                     )}
                   </View>

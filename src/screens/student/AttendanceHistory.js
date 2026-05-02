@@ -98,28 +98,28 @@ export default function AttendanceHistory({ route }) {
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={styles.statLabel}>TOTAL CLASSES</Text>
-            <View style={styles.statIconBg}><Calendar size={14} color={Theme.colors.primaryForeground} /></View>
+            <View style={styles.statIconBg}><Calendar size={14} color={colors.primaryForeground} /></View>
           </View>
           <Text style={styles.statNumber} numberOfLines={1} adjustsFontSizeToFit>{stats.total}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={[styles.statLabel, { color: "#10B981" }]}>PRESENT</Text>
-            <View style={styles.statIconBg}><CheckCircle size={14} color={Theme.colors.primaryForeground} /></View>
+            <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
           </View>
           <Text style={[styles.statNumber, { color: "#10B981" }]} numberOfLines={1} adjustsFontSizeToFit>{stats.present}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
-            <Text style={[styles.statLabel, { color: Theme.colors.destructive }]}>ABSENT</Text>
-            <View style={styles.statIconBg}><XCircle size={14} color={Theme.colors.primaryForeground} /></View>
+            <Text style={[styles.statLabel, { color: colors.destructive }]}>ABSENT</Text>
+            <View style={styles.statIconBg}><XCircle size={14} color={colors.primaryForeground} /></View>
           </View>
-          <Text style={[styles.statNumber, { color: Theme.colors.destructive }]} numberOfLines={1} adjustsFontSizeToFit>{stats.absent}</Text>
+          <Text style={[styles.statNumber, { color: colors.destructive }]} numberOfLines={1} adjustsFontSizeToFit>{stats.absent}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
-            <View style={styles.statIconBg}><TrendingUp size={14} color={Theme.colors.primaryForeground} /></View>
+            <View style={styles.statIconBg}><TrendingUp size={14} color={colors.primaryForeground} /></View>
           </View>
           <Text style={[styles.statNumber, { color: getBarColor(parseFloat(stats.rate)) }]} numberOfLines={1} adjustsFontSizeToFit>{stats.rate}%</Text>
         </View>
@@ -168,11 +168,11 @@ export default function AttendanceHistory({ route }) {
       {/* Search + Filters */}
       <View style={styles.filterRow}>
         <View style={styles.searchBar}>
-          <Search size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Search size={13} color={colors.mutedForeground} style={{ marginRight: 6 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search courses..."
-            placeholderTextColor={Theme.colors.mutedForeground}
+            placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
           />
@@ -197,7 +197,7 @@ export default function AttendanceHistory({ route }) {
             <Text style={styles.sectionTitle}>Attendance Records</Text>
             <Text style={styles.sectionSubtitle}>{filteredRecords.length} records</Text>
           </View>
-          <Text style={{ fontSize: 10, color: Theme.colors.mutedForeground }}>Sorted by most recent</Text>
+          <Text style={{ fontSize: 10, color: colors.mutedForeground }}>Sorted by most recent</Text>
         </View>
 
         {/* Table Header */}
@@ -248,7 +248,7 @@ export default function AttendanceHistory({ route }) {
             <Text style={styles.subtitle}>Review and analyze your attendance across all courses.</Text>
           </View>
           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-            <Download size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+            <Download size={13} color={colors.textBody} style={{ marginRight: 4 }} />
             <Text style={styles.exportBtnText}>Export CSV</Text>
           </TouchableOpacity>
         </View>
@@ -270,7 +270,7 @@ export default function AttendanceHistory({ route }) {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderRecords()
         )}

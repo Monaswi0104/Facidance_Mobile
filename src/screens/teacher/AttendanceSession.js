@@ -328,7 +328,7 @@ export default function AttendanceSession({ route, navigation }) {
     return (
       <SafeAreaView style={s.safeArea}>
         <View style={s.centerContainer}>
-          <CameraIcon size={48} color={Theme.colors.mutedForeground} />
+          <CameraIcon size={48} color={colors.mutedForeground} />
           <Text style={s.permTitle}>Camera Permission Required</Text>
           <Text style={s.permSubtitle}>Please grant camera access to capture attendance.</Text>
         </View>
@@ -349,7 +349,7 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.subtitle}>{course.name}</Text>
           </View>
           <TouchableOpacity style={s.historyBtn} onPress={() => setShowHistory(!showHistory)} activeOpacity={0.7}>
-            <History size={14} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+            <History size={14} color={colors.textBody} style={{ marginRight: 4 }} />
             <Text style={s.historyBtnText}>{showHistory ? "Hide" : "View"} History</Text>
           </TouchableOpacity>
         </View>
@@ -369,11 +369,11 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.statLabel}>TOTAL STUDENTS</Text>
           </View>
           <View style={s.statCard}>
-            <Text style={[s.statNumber, { color: Theme.colors.accent }]}>{localTrainedCount || trainedCount}</Text>
+            <Text style={[s.statNumber, { color: colors.accent }]}>{localTrainedCount || trainedCount}</Text>
             <Text style={s.statLabel}>TRAINED</Text>
           </View>
           <View style={s.statCard}>
-            <Text style={[s.statNumber, { color: Theme.colors.destructive }]}>{localUntrainedCount}</Text>
+            <Text style={[s.statNumber, { color: colors.destructive }]}>{localUntrainedCount}</Text>
             <Text style={s.statLabel}>NOT TRAINED</Text>
           </View>
         </View>
@@ -384,7 +384,7 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.historyTitle}>Attendance History</Text>
             <Text style={s.historySubtitle}>Past sessions for this course</Text>
             {isLoadingHistory ? (
-              <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
             ) : historyDates.length === 0 ? (
               <View style={s.emptyResultsContainer}>
                 <Text style={s.emptyResultsTitle}>No attendance history yet</Text>
@@ -449,7 +449,7 @@ export default function AttendanceSession({ route, navigation }) {
             {isCapturing && (
               <View style={s.cameraOverlayTop}>
                 <View style={s.capturingBadge}>
-                  <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
+                  <ActivityIndicator size="small" color={colors.primaryForeground} />
                   <Text style={s.capturingText}>Recognizing faces...</Text>
                 </View>
               </View>
@@ -466,7 +466,7 @@ export default function AttendanceSession({ route, navigation }) {
             {/* "Ready" overlay */}
             {!sessionActive && allRecognizedStudents.size === 0 && (
               <View style={s.startOverlay}>
-                <CameraIcon size={28} color={Theme.colors.primaryForeground} />
+                <CameraIcon size={28} color={colors.primaryForeground} />
                 <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
                 <Text style={s.startOverlaySubtitle}>
                   45-minute session · auto-capture every 2 min{"\n"}· cumulative recognition
@@ -486,7 +486,7 @@ export default function AttendanceSession({ route, navigation }) {
               disabled={localTrainedCount === 0}
               activeOpacity={0.8}
             >
-              <Play size={16} color={Theme.colors.primaryForeground} style={{ marginRight: 8 }} />
+              <Play size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />
               <Text style={s.startBtnText}>Start 45-Min Session</Text>
             </TouchableOpacity>
           ) : (
@@ -498,7 +498,7 @@ export default function AttendanceSession({ route, navigation }) {
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={s.resumeBtn} onPress={resumeSession} activeOpacity={0.8}>
-                  <Play size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
+                  <Play size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={s.resumeBtnText}>Resume</Text>
                 </TouchableOpacity>
               )}
@@ -517,7 +517,7 @@ export default function AttendanceSession({ route, navigation }) {
                 disabled={isCapturing}
                 activeOpacity={0.8}
               >
-                <Zap size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
+                <Zap size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
                 <Text style={s.manualCaptureBtnText}>{isCapturing ? "Scanning..." : "Scan Now"}</Text>
               </TouchableOpacity>
             </View>
@@ -551,7 +551,7 @@ export default function AttendanceSession({ route, navigation }) {
 
           {recognizedCount === 0 ? (
             <View style={s.emptyResultsContainer}>
-              <ScanFace size={32} color={Theme.colors.mutedForeground} />
+              <ScanFace size={32} color={colors.mutedForeground} />
               <Text style={s.emptyResultsTitle}>No recognitions yet</Text>
               <Text style={s.emptyResultsSubtitle}>Start a session to track attendance.</Text>
             </View>
@@ -586,10 +586,10 @@ export default function AttendanceSession({ route, navigation }) {
                 activeOpacity={0.8}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
+                  <ActivityIndicator size="small" color={colors.primaryForeground} />
                 ) : (
                   <>
-                    <Send size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 8 }} />
+                    <Send size={14} color={colors.primaryForeground} style={{ marginRight: 8 }} />
                     <Text style={s.submitBtnText}>
                       Submit Attendance · {recognizedCount}/{students.length} ({attendanceRate}%)
                     </Text>
@@ -603,7 +603,7 @@ export default function AttendanceSession({ route, navigation }) {
         {/* Info Card */}
         <View style={s.infoCard}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            <Info size={14} color={Theme.colors.accent} style={{ marginRight: 6 }} />
+            <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
             <Text style={s.infoTitle}>How cumulative attendance works</Text>
           </View>
           {[

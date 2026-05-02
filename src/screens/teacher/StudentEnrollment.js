@@ -277,21 +277,21 @@ export default function StudentEnrollment() {
               <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{students.length}</Text>
-                <View style={styles.statIconBg}><Users size={16} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><Users size={16} color={colors.primaryForeground} /></View>
               </View>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>FACE REGISTERED</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{faceRegistered}</Text>
-                <View style={styles.statIconBg}><ScanFace size={16} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><ScanFace size={16} color={colors.primaryForeground} /></View>
               </View>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>NOT{"\n"}REGISTERED</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{notRegistered}</Text>
-                <View style={styles.statIconBg}><UserX size={16} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.statIconBg}><UserX size={16} color={colors.primaryForeground} /></View>
               </View>
             </View>
           </View>
@@ -301,7 +301,7 @@ export default function StudentEnrollment() {
         <View style={styles.sectionCard}>
           <View style={styles.importHeader}>
             <View style={styles.importIconBadge}>
-              <Upload size={18} color={Theme.colors.primaryForeground} />
+              <Upload size={18} color={colors.primaryForeground} />
             </View>
             <View style={{ flex: 1, flexShrink: 1 }}>
               <Text style={styles.importTitle}>Import Students</Text>
@@ -325,7 +325,7 @@ export default function StudentEnrollment() {
                 <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedProgram ? selectedProgram.name : "Select program..."}
                 </Text>
-                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
+                <ChevronDown size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
@@ -334,7 +334,7 @@ export default function StudentEnrollment() {
                 <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedCourse ? selectedCourse.name : "Select course..."}
                 </Text>
-                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
+                <ChevronDown size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -343,9 +343,9 @@ export default function StudentEnrollment() {
             <Text style={styles.importInfoText}>Newly imported students will receive login credentials via email.</Text>
             <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
               disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
-              {isImporting ? <ActivityIndicator color={Theme.colors.primaryForeground} size="small" /> : (
+              {isImporting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <FileUp size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
+                  <FileUp size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.submitBtnText}>Import Students</Text>
                 </View>
               )}
@@ -356,13 +356,13 @@ export default function StudentEnrollment() {
         {/* Search & Filter */}
         <View style={styles.searchFilterRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+            <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
-              placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
+              placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} />
           </View>
           <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilterInfo(true)}>
             <Text style={styles.filterBtnText} numberOfLines={1}>{filterCourse ? filterCourse.name : "All Courses"}</Text>
-            <ChevronDown size={14} color={Theme.colors.mutedForeground} />
+            <ChevronDown size={14} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -380,7 +380,7 @@ export default function StudentEnrollment() {
           </View>
 
           {isLoading ? (
-             <ActivityIndicator size="large" color={Theme.colors.accent} style={{ marginVertical: 40 }} />
+             <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
           ) : filteredStudents.length === 0 ? (
             <Text style={styles.emptyText}>No students found.</Text>
           ) : (
@@ -401,7 +401,7 @@ export default function StudentEnrollment() {
                     </View>
                   ) : (
                     <View style={styles.faceNo}>
-                      <Text style={[styles.faceText, { color: Theme.colors.mutedForeground }]}>Pending</Text>
+                      <Text style={[styles.faceText, { color: colors.mutedForeground }]}>Pending</Text>
                     </View>
                   )}
                 </View>
@@ -480,7 +480,7 @@ export default function StudentEnrollment() {
                 <>
                   <View style={styles.modalHeaderInfoSection}>
                     <View style={styles.modalAvatar}>
-                      <User size={22} color={Theme.colors.primaryDark} />
+                      <User size={22} color={colors.primaryDark} />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -500,7 +500,7 @@ export default function StudentEnrollment() {
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : Theme.colors.accent }]}>
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : colors.accent }]}>
                        {(selectedStudent.status || "active").toUpperCase()}
                     </Text>
                   </View>
@@ -516,7 +516,7 @@ export default function StudentEnrollment() {
                       ) : (
                         <>
                           <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: Theme.colors.destructive, flex: 0 }]}>Not Registered</Text>
+                          <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}
                     </View>

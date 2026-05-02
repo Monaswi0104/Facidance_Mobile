@@ -137,37 +137,37 @@ export default function CoursesManagement() {
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
             {showAddForm ? (
-              <><X size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
+              <><X size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (
-              <><Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Course</Text></>
+              <><Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Course</Text></>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <>
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL COURSES</Text>
-                  <View style={styles.statIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{courses.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>PROGRAMS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{programs.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>FACULTY</Text>
-                  <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{teachers.length}</Text>
               </View>
@@ -177,10 +177,10 @@ export default function CoursesManagement() {
             {showAddForm && (
               <View style={styles.addFormCard}>
                 <View style={styles.addFormHeader}>
-                  <View style={styles.addFormIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.addFormIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
                   <Text style={styles.addFormTitle}>Add New Course</Text>
                   <TouchableOpacity onPress={() => setShowAddForm(false)}>
-                    <X size={16} color={Theme.colors.mutedForeground} />
+                    <X size={16} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
 
@@ -189,18 +189,18 @@ export default function CoursesManagement() {
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>FILTER BY DEPARTMENT</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker} dropdownIconColor={Theme.colors.foreground}>
-                        <Picker.Item label="All Departments" value={null} color={Theme.colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color={Theme.colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                      <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker} dropdownIconColor={colors.foreground}>
+                        <Picker.Item label="All Departments" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
+                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>TEACHER *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker} dropdownIconColor={Theme.colors.foreground}>
-                        <Picker.Item label="Select Teacher" value={null} color={Theme.colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color={Theme.colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                      <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
+                        <Picker.Item label="Select Teacher" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
+                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -210,9 +210,9 @@ export default function CoursesManagement() {
                   <View style={styles.formFieldFull}>
                     <Text style={styles.formLabel}>PROGRAM *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker} dropdownIconColor={Theme.colors.foreground}>
-                        <Picker.Item label="Select Program" value={null} color={Theme.colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color={Theme.colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                      <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
+                        <Picker.Item label="Select Program" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
+                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -222,14 +222,14 @@ export default function CoursesManagement() {
                 <View style={styles.formRow}>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>ACADEMIC YEAR *</Text>
-                    <TextInput style={styles.formInput} placeholder="e.g. 2024-2025" placeholderTextColor={Theme.colors.mutedForeground} value={form.academicYear} onChangeText={(t) => setForm({ ...form, academicYear: t })} />
+                    <TextInput style={styles.formInput} placeholder="e.g. 2024-2025" placeholderTextColor={colors.mutedForeground} value={form.academicYear} onChangeText={(t) => setForm({ ...form, academicYear: t })} />
                   </View>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>SEMESTER *</Text>
                     <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker} dropdownIconColor={Theme.colors.foreground}>
-                        <Picker.Item label="Select" value={null} color={Theme.colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color={Theme.colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                      <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
+                        <Picker.Item label="Select" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
+                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -238,7 +238,7 @@ export default function CoursesManagement() {
                 <View style={styles.formRow}>
                   <View style={styles.formFieldFull}>
                     <Text style={styles.formLabel}>COURSE NAME *</Text>
-                    <TextInput style={styles.formInput} placeholder="e.g. Data Structures" placeholderTextColor={Theme.colors.mutedForeground} value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} />
+                    <TextInput style={styles.formInput} placeholder="e.g. Data Structures" placeholderTextColor={colors.mutedForeground} value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} />
                   </View>
                 </View>
 
@@ -256,11 +256,11 @@ export default function CoursesManagement() {
 
             {/* Search Bar */}
             <View style={styles.searchBar}>
-              <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
+              <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search courses, teachers, or programs..."
-                placeholderTextColor={Theme.colors.mutedForeground}
+                placeholderTextColor={colors.mutedForeground}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -269,7 +269,7 @@ export default function CoursesManagement() {
             {/* All Courses Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><BookOpen size={12} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.listHeaderIcon}><BookOpen size={12} color={colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Courses</Text>
                 <View style={styles.listCountBadge}>
                   <Text style={styles.listCountText}>{filteredCourses.length} total</Text>
@@ -282,7 +282,7 @@ export default function CoursesManagement() {
                 filteredCourses.map((c, i) => (
                   <TouchableOpacity key={c.id} style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
                     <View style={styles.courseAvatar}>
-                      <BookOpen size={14} color={Theme.colors.primaryDark} />
+                      <BookOpen size={14} color={colors.primaryDark} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.courseName}>{c.name}</Text>
@@ -292,7 +292,7 @@ export default function CoursesManagement() {
                             <Text style={styles.codeText}>{c.code}</Text>
                           </View>
                         )}
-                        <User size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 2 }} />
+                        <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
                         <Text style={styles.courseMeta}>{c.teacher}</Text>
                         {c.year !== "—" && <Text style={styles.courseMeta}> · {c.year}</Text>}
                         {c.semester !== "—" && <Text style={styles.courseMeta}> · {c.semester}</Text>}
@@ -315,7 +315,7 @@ export default function CoursesManagement() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.detailHeader}>
-              <View style={styles.detailHeaderIcon}><BookOpen size={20} color={Theme.colors.primaryForeground} /></View>
+              <View style={styles.detailHeaderIcon}><BookOpen size={20} color={colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedCourse?.name}</Text>
                 <Text style={styles.detailSubtitle}>{selectedCourse?.code}</Text>
@@ -324,11 +324,11 @@ export default function CoursesManagement() {
 
             <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.5 }} showsVerticalScrollIndicator={false}>
               {[
-                { icon: <User size={16} color={Theme.colors.mutedForeground} />, label: "Teacher", value: selectedCourse?.teacher, sub: selectedCourse?.teacherEmail },
-                { icon: <Building2 size={16} color={Theme.colors.mutedForeground} />, label: "Department", value: selectedCourse?.department },
-                { icon: <GraduationCap size={16} color={Theme.colors.mutedForeground} />, label: "Program", value: selectedCourse?.program },
-                { icon: <Calendar size={16} color={Theme.colors.mutedForeground} />, label: "Year & Semester", value: `${selectedCourse?.year || "—"} • ${selectedCourse?.semester || "—"}` },
-                { icon: <Key size={16} color={Theme.colors.mutedForeground} />, label: "Entry Code", value: selectedCourse?.entryCode, highlight: true },
+                { icon: <User size={16} color={colors.mutedForeground} />, label: "Teacher", value: selectedCourse?.teacher, sub: selectedCourse?.teacherEmail },
+                { icon: <Building2 size={16} color={colors.mutedForeground} />, label: "Department", value: selectedCourse?.department },
+                { icon: <GraduationCap size={16} color={colors.mutedForeground} />, label: "Program", value: selectedCourse?.program },
+                { icon: <Calendar size={16} color={colors.mutedForeground} />, label: "Year & Semester", value: `${selectedCourse?.year || "—"} • ${selectedCourse?.semester || "—"}` },
+                { icon: <Key size={16} color={colors.mutedForeground} />, label: "Entry Code", value: selectedCourse?.entryCode, highlight: true },
               ].map((item, idx) => (
                 <View key={idx} style={styles.detailInfoItem}>
                   <View style={{ marginRight: 12 }}>{item.icon}</View>

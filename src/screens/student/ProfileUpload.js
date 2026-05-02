@@ -70,7 +70,7 @@ export default function ProfileUpload() {
     return (
       <SafeAreaView style={styles.safeArea}>
          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={Theme.colors.accent} />
+            <ActivityIndicator size="large" color={colors.accent} />
          </View>
       </SafeAreaView>
     );
@@ -111,7 +111,7 @@ export default function ProfileUpload() {
                   <Text style={styles.studentBadgeText}>Student</Text>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Calendar size={11} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                  <Calendar size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                   <Text style={styles.joinText}>Joined {joinedDate}</Text>
                 </View>
               </View>
@@ -124,7 +124,7 @@ export default function ProfileUpload() {
             ) : (
               <View style={[styles.faceActiveBadge, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]}>
                 <X size={12} color="#EF4444" style={{ marginRight: 4 }} />
-                <Text style={[styles.faceActiveText, { color: Theme.colors.destructive }]}>Face not registered</Text>
+                <Text style={[styles.faceActiveText, { color: colors.destructive }]}>Face not registered</Text>
               </View>
             )}
           </View>
@@ -133,28 +133,28 @@ export default function ProfileUpload() {
           <View style={styles.detailsGrid}>
             <View style={styles.detailBox}>
               <View style={styles.detailBoxHeader}>
-                <User size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
+                <User size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.detailBoxLabel}>FULL NAME</Text>
               </View>
               <Text style={styles.detailBoxValue}>{name}</Text>
             </View>
             <View style={styles.detailBox}>
               <View style={styles.detailBoxHeader}>
-                <Mail size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
+                <Mail size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.detailBoxLabel}>EMAIL</Text>
               </View>
               <Text style={styles.detailBoxValue} numberOfLines={1}>{email}</Text>
             </View>
             <View style={styles.detailBox}>
               <View style={styles.detailBoxHeader}>
-                <GraduationCap size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
+                <GraduationCap size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.detailBoxLabel}>PROGRAM</Text>
               </View>
               <Text style={styles.detailBoxValue}>{program}</Text>
             </View>
             <View style={styles.detailBox}>
               <View style={styles.detailBoxHeader}>
-                <Building2 size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
+                <Building2 size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.detailBoxLabel}>DEPARTMENT</Text>
               </View>
               <Text style={styles.detailBoxValue}>{department}</Text>
@@ -166,7 +166,7 @@ export default function ProfileUpload() {
         <View style={styles.faceCard}>
           <View style={styles.faceCardHeader}>
             <View style={styles.faceCardIconBg}>
-              <Camera size={16} color={Theme.colors.primaryForeground} />
+              <Camera size={16} color={colors.primaryForeground} />
             </View>
             <View>
               <Text style={styles.faceCardTitle}>Face Recognition Setup</Text>
@@ -185,7 +185,7 @@ export default function ProfileUpload() {
                   <View style={styles.previewBox}>
                     <Image source={{ uri: images[step.key] }} style={styles.previewImg} />
                     <TouchableOpacity style={styles.clearBtn} onPress={() => setImages(prev => ({ ...prev, [step.key]: null }))}>
-                      <X size={12} color={Theme.colors.primaryForeground} />
+                      <X size={12} color={colors.primaryForeground} />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -195,7 +195,7 @@ export default function ProfileUpload() {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
                     }}>
-                      <Camera size={12} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+                      <Camera size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
                       <Text style={styles.cameraBtnText}>Use Camera</Text>
                     </TouchableOpacity>
 
@@ -204,7 +204,7 @@ export default function ProfileUpload() {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
                     }}>
-                      <Upload size={12} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
+                      <Upload size={12} color={colors.textBody} style={{ marginRight: 4 }} />
                       <Text style={styles.uploadBtnText}>Upload Image</Text>
                     </TouchableOpacity>
                   </View>
@@ -216,7 +216,7 @@ export default function ProfileUpload() {
           {/* Footer */}
           <View style={styles.faceFooter}>
             <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-              <Shield size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
+              <Shield size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
               <Text style={styles.faceFooterText}>Photos are stored securely and used only for AI attendance verification.</Text>
             </View>
             <TouchableOpacity
@@ -230,15 +230,15 @@ export default function ProfileUpload() {
               activeOpacity={0.8}
             >
               {isUploading ? (
-                <ActivityIndicator color={Theme.colors.primaryForeground} size="small" />
+                <ActivityIndicator color={colors.primaryForeground} size="small" />
               ) : (
                 <>
                   {isUploaded ? (
-                    <CheckCircle size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+                    <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
                   ) : (
-                    <Upload size={13} color={uploadedCount < 3 ? Theme.colors.mutedForeground : Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
+                    <Upload size={13} color={uploadedCount < 3 ? colors.mutedForeground : colors.primaryForeground} style={{ marginRight: 4 }} />
                   )}
-                  <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: Theme.colors.mutedForeground }]}>
+                  <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: colors.mutedForeground }]}>
                     {isUploaded ? "Photos Submitted" : "Submit Photos"}
                   </Text>
                 </>

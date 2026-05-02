@@ -161,37 +161,37 @@ export default function ProgramsManagement() {
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
             {showAddForm ? (
-              <><X size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
+              <><X size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (
-              <><Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Program</Text></>
+              <><Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Program</Text></>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.accent} style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
         ) : (
           <>
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL PROGRAMS</Text>
-                  <View style={styles.statIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{programs.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>DEPARTMENTS LINKED</Text>
-                  <View style={styles.statIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><Building2 size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{uniqueDepts.size}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color={colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalStudents}</Text>
               </View>
@@ -201,10 +201,10 @@ export default function ProgramsManagement() {
             {showAddForm && (
               <View style={styles.addFormCard}>
                 <View style={styles.addFormHeader}>
-                  <View style={styles.addFormIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
+                  <View style={styles.addFormIconBg}><BookOpen size={14} color={colors.primaryForeground} /></View>
                   <Text style={styles.addFormTitle}>Add New Program</Text>
                   <TouchableOpacity onPress={() => { setShowAddForm(false); setNewName(""); }}>
-                    <X size={16} color={Theme.colors.mutedForeground} />
+                    <X size={16} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.addFormFields}>
@@ -213,7 +213,7 @@ export default function ProgramsManagement() {
                     <TextInput
                       style={styles.addFormInput}
                       placeholder="e.g. Bachelor of Computer Science"
-                      placeholderTextColor={Theme.colors.mutedForeground}
+                      placeholderTextColor={colors.mutedForeground}
                       value={newName}
                       onChangeText={setNewName}
                     />
@@ -228,18 +228,18 @@ export default function ProgramsManagement() {
                         onValueChange={(v) => setSelectedDeptId(v)}
                         style={styles.picker}
                         mode="dropdown"
-                        dropdownIconColor={Theme.colors.foreground}
-                        itemStyle={{ fontSize: 13, color: Theme.colors.foreground }}
+                        dropdownIconColor={colors.foreground}
+                        itemStyle={{ fontSize: 13, color: colors.foreground }}
                       >
-                        <Picker.Item label="Select a department" value={null} color={Theme.colors.mutedForeground} />
+                        <Picker.Item label="Select a department" value={null} color={colors.mutedForeground} />
                         {departments.map(d => (
-                          <Picker.Item key={d.id} label={d.name} value={d.id} color={Theme.colors.foreground} />
+                          <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} />
                         ))}
                       </Picker>
                     </View>
                   </View>
                   <TouchableOpacity style={styles.addFormBtn} onPress={handleAdd} disabled={isCreating}>
-                    <Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} />
+                    <Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} />
                     <Text style={styles.addFormBtnText}>{isCreating ? "..." : "Add"}</Text>
                   </TouchableOpacity>
                 </View>
@@ -249,7 +249,7 @@ export default function ProgramsManagement() {
             {/* All Programs Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><BookOpen size={12} color={Theme.colors.primaryForeground} /></View>
+                <View style={styles.listHeaderIcon}><BookOpen size={12} color={colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Programs</Text>
                 <View style={styles.listCountBadge}>
                   <Text style={styles.listCountText}>{programs.length} total</Text>
@@ -262,12 +262,12 @@ export default function ProgramsManagement() {
                 programs.map((p, i) => (
                   <TouchableOpacity key={p.id} style={[styles.progRow, i < programs.length - 1 && styles.progRowBorder]} activeOpacity={0.7} onPress={() => setSelectedProgram(p)}>
                     <View style={styles.progAvatar}>
-                      <BookOpen size={14} color={Theme.colors.primaryDark} />
+                      <BookOpen size={14} color={colors.primaryDark} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.progName}>{p.name}</Text>
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                        <Building2 size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
+                        <Building2 size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.progMeta}>{p.dept}</Text>
                         <View style={styles.progIdBadge}>
                           <Text style={styles.progIdText}>PROG_ID</Text>
@@ -291,7 +291,7 @@ export default function ProgramsManagement() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.detailHeader}>
-              <View style={styles.detailHeaderIcon}><BookOpen size={20} color={Theme.colors.primaryForeground} /></View>
+              <View style={styles.detailHeaderIcon}><BookOpen size={20} color={colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedProgram?.name}</Text>
                 <Text style={styles.detailSubtitle}>{selectedProgram?.dept}</Text>
@@ -300,14 +300,14 @@ export default function ProgramsManagement() {
 
             <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.45 }} showsVerticalScrollIndicator={false}>
               <View style={styles.detailInfoItem}>
-                <Building2 size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
+                <Building2 size={16} color={colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Department</Text>
                   <Text style={styles.detailInfoValue}>{selectedProgram?.dept}</Text>
                 </View>
               </View>
               <View style={styles.detailInfoItem}>
-                <Key size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
+                <Key size={16} color={colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Program ID</Text>
                   <Text style={[styles.detailInfoValue, { fontSize: 11, letterSpacing: 0.3 }]}>{selectedProgram?.id}</Text>
@@ -319,7 +319,7 @@ export default function ProgramsManagement() {
                   <Text style={styles.detailStatNumber}>{selectedProgram?.totalCourses || selectedProgram?.courses?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Courses</Text>
                 </View>
-                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: Theme.colors.border }]}>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: colors.border }]}>
                   <Text style={styles.detailStatNumber}>{selectedProgram?.teachers?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Faculty</Text>
                 </View>
@@ -330,13 +330,13 @@ export default function ProgramsManagement() {
                   <Text style={styles.sectionLabel}>Courses</Text>
                   {selectedProgram.courses.map((c, idx) => (
                     <View key={c.id || idx} style={styles.courseItem}>
-                      <View style={styles.courseItemLeft}><BookOpen size={14} color={Theme.colors.primaryDark} /></View>
+                      <View style={styles.courseItemLeft}><BookOpen size={14} color={colors.primaryDark} /></View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.courseItemName}>{c.name}</Text>
                         <Text style={styles.courseItemCode}>{c.code}</Text>
                         <View style={styles.courseTagsRow}>
                           <View style={[styles.courseTag, { backgroundColor: "#F0FDFA" }]}>
-                            <Text style={[styles.courseTagText, { color: Theme.colors.primaryDark }]}>{c.semester}</Text>
+                            <Text style={[styles.courseTagText, { color: colors.primaryDark }]}>{c.semester}</Text>
                           </View>
                           <View style={[styles.courseTag, { backgroundColor: "#FEF3C7" }]}>
                             <Text style={[styles.courseTagText, { color: "#D97706" }]}>{c.teacher}</Text>
