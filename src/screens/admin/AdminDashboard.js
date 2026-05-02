@@ -379,12 +379,12 @@ const styles = StyleSheet.create({
   programName: { fontSize: 13, fontWeight: "600", color: Theme.colors.foreground },
   programDept: { fontSize: 10, color: Theme.colors.mutedForeground, marginTop: 1 },
   programCount: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground },
-  programBarTrack: { height: 6, borderRadius: 3, backgroundColor: "#E2E8F0", overflow: "hidden" },
+  programBarTrack: { height: 6, borderRadius: 3, backgroundColor: Theme.colors.border, overflow: "hidden" },
   programBarFill: { height: "100%", borderRadius: 3, backgroundColor: Theme.colors.primaryDark },
 
   // Quick Nav
   navRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  navIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 12 },
+  navIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 12 },
   navTitle: { fontSize: 14, fontWeight: "600", color: Theme.colors.foreground },
   navDesc: { fontSize: 11, color: Theme.colors.mutedForeground },
 
