@@ -254,7 +254,7 @@ const createStyles = (colors) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: colors.background,
+    backgroundColor: "#fff",
   },
   brandName: { color: colors.primaryForeground, fontSize: 20, fontWeight: "800" },
   brandSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500" },
