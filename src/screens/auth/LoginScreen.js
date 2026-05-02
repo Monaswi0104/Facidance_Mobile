@@ -1,4 +1,4 @@
-import React, {  useState , useMemo } from "react";
+import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
@@ -6,15 +6,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loginUser } from "../../api/authApi";
-import { Theme, useTheme } from "../../theme/Theme";
+import { Theme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3 } from "lucide-react-native";
 
 const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
 
 export default function LoginScreen({ navigation }) {
-  const { colors, isDark } = useTheme();
-  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const insets = useSafeAreaInsets();
   const topPadding = Platform.OS === 'android'
     ? Math.max(insets.top, StatusBar.currentHeight || 0)
@@ -49,9 +47,9 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle="light-content" backgroundColor={isDark ? '#0f172a' : colors.primary} />
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: isDark ? '#0f172a' : colors.primary }} />
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.colors.primary} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: Theme.colors.primary }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -80,7 +78,7 @@ export default function LoginScreen({ navigation }) {
 
             {/* AI Badge */}
             <View style={styles.aiBadge}>
-              <Sparkles size={13} color={colors.success} style={{ marginRight: 5 }} />
+              <Sparkles size={13} color="#10B981" style={{ marginRight: 5 }} />
               <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
             </View>
 
@@ -91,15 +89,15 @@ export default function LoginScreen({ navigation }) {
             {/* Features */}
             <View style={styles.featureList}>
               <View style={styles.featureItem}>
-                <Sparkles size={10} color={colors.success} />
+                <Sparkles size={10} color="#10B981" />
                 <Text style={styles.featureText}>AI face recognition attendance</Text>
               </View>
               <View style={styles.featureItem}>
-                <Shield size={10} color={colors.success} />
+                <Shield size={10} color="#10B981" />
                 <Text style={styles.featureText}>Role-based secure access</Text>
               </View>
               <View style={styles.featureItem}>
-                <BarChart3 size={10} color={colors.success} />
+                <BarChart3 size={10} color="#10B981" />
                 <Text style={styles.featureText}>Smart analytics & reporting</Text>
               </View>
             </View>
@@ -166,9 +164,9 @@ export default function LoginScreen({ navigation }) {
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)}
               >
                 {isPasswordVisible ? (
-                  <EyeOff size={18} color={colors.mutedForeground} />
+                  <EyeOff size={18} color={Theme.colors.mutedForeground} />
                 ) : (
-                  <Eye size={18} color={colors.mutedForeground} />
+                  <Eye size={18} color={Theme.colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -182,11 +180,11 @@ export default function LoginScreen({ navigation }) {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color={colors.primaryForeground} />
+              <ActivityIndicator color="#fff" />
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={styles.signInText}>Sign in</Text>
-                <ArrowRight size={16} color={colors.primaryForeground} style={{ marginLeft: 6 }} />
+                <ArrowRight size={16} color={Theme.colors.primaryForeground} style={{ marginLeft: 6 }} />
               </View>
             )}
           </TouchableOpacity>
@@ -220,8 +218,8 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const createStyles = (colors, isDark) => StyleSheet.create({
-  screenWrapper: { flex: 1, backgroundColor: isDark ? '#0f172a' : colors.primary },
+const styles = StyleSheet.create({
+  screenWrapper: { flex: 1, backgroundColor: Theme.colors.primary },
   scrollContent: { flexGrow: 1 },
 
   // Hero
@@ -238,11 +236,11 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: isDark ? "rgba(15,23,42,0.92)" : "rgba(0,49,53,0.80)",
+    backgroundColor: "rgba(0,49,53,0.80)",
   },
   heroInner: {
     justifyContent: "flex-end",
-    paddingBottom: 20,
+    paddingBottom: 32,
   },
   brandRow: {
     flexDirection: "row",
@@ -256,7 +254,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#fff",
   },
-  brandName: { color: colors.primaryForeground, fontSize: 20, fontWeight: "800" },
+  brandName: { color: "#fff", fontSize: 20, fontWeight: "800" },
   brandSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500" },
 
   // AI Badge
@@ -270,12 +268,12 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 14,
   },
-  aiBadgeText: { fontSize: 13, fontWeight: "700", color: colors.success },
+  aiBadgeText: { fontSize: 13, fontWeight: "700", color: "#10B981" },
 
   heroTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: colors.primaryForeground,
+    color: "#fff",
     letterSpacing: -0.5,
     marginBottom: 6,
   },
@@ -304,52 +302,52 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     borderTopColor: "rgba(255,255,255,0.10)",
   },
   statItem: { alignItems: "center" },
-  statValue: { fontSize: 18, fontWeight: "800", color: colors.success },
+  statValue: { fontSize: 18, fontWeight: "800", color: "#10B981" },
   statLabel: { fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 1 },
 
   // Form
   formSection: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: -16,
     paddingHorizontal: 24,
-    paddingTop: 22,
+    paddingTop: 28,
     paddingBottom: 36,
   },
   formTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: colors.foreground,
+    color: Theme.colors.foreground,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   formSubtitle: {
     fontSize: 14,
-    color: colors.mutedForeground,
+    color: Theme.colors.mutedForeground,
     marginBottom: 26,
   },
   fieldGroup: { marginBottom: 18 },
   fieldLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: colors.textBody,
+    color: Theme.colors.textBody,
     letterSpacing: 0.8,
     marginBottom: 7,
   },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: "#fff",
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: Theme.colors.border,
     borderRadius: 10,
     overflow: "hidden",
   },
   inputWrapFocused: {
-    borderColor: colors.accent,
-    shadowColor: colors.accent,
+    borderColor: Theme.colors.accent,
+    shadowColor: Theme.colors.accent,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -360,7 +358,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: colors.foreground,
+    color: Theme.colors.foreground,
   },
   eyeBtn: { paddingHorizontal: 14, paddingVertical: 12 },
 
@@ -368,40 +366,40 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   signInBtn: {
     borderRadius: 10,
     marginTop: 6,
-    backgroundColor: colors.primaryDark,
+    backgroundColor: Theme.colors.primaryDark,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.primaryDark,
+    shadowColor: Theme.colors.primaryDark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
   },
   signInBtnDisabled: { opacity: 0.7 },
-  signInText: { color: colors.primaryForeground, fontSize: 16, fontWeight: "700" },
+  signInText: { color: "#fff", fontSize: 16, fontWeight: "700" },
 
   // Divider
   dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { paddingHorizontal: 16, color: colors.mutedForeground, fontSize: 13 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Theme.colors.border },
+  dividerText: { paddingHorizontal: 16, color: Theme.colors.mutedForeground, fontSize: 13 },
 
   // CTA Box
   ctaBox: {
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: Theme.colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 18,
     alignItems: "center",
   },
-  ctaText: { fontSize: 14, color: colors.textBody, textAlign: "center" },
-  ctaLink: { color: colors.accent, fontWeight: "700" },
-  ctaHint: { fontSize: 12, color: colors.mutedForeground, marginTop: 3, textAlign: "center" },
+  ctaText: { fontSize: 14, color: Theme.colors.textBody, textAlign: "center" },
+  ctaLink: { color: Theme.colors.accent, fontWeight: "700" },
+  ctaHint: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3, textAlign: "center" },
 
   // Terms
   termsText: {
-    fontSize: 12, color: colors.mutedForeground,
+    fontSize: 12, color: Theme.colors.mutedForeground,
     textAlign: "center", marginTop: 22, lineHeight: 18,
   },
 });
