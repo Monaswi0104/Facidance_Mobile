@@ -14,7 +14,7 @@ const logoImg = require("../../assets/logo.png");
 
 export default function RegisterScreen({ navigation }) {
   const { colors, isDark } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const insets = useSafeAreaInsets();
   const topPadding = Platform.OS === 'android'
     ? Math.max(insets.top, StatusBar.currentHeight || 0)
@@ -230,7 +230,7 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors, isDark) => StyleSheet.create({
   screenWrapper: { flex: 1, backgroundColor: colors.primary },
   scrollContent: { flexGrow: 1 },
 
@@ -248,7 +248,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,49,53,0.80)",
+    backgroundColor: isDark ? "rgba(15,23,42,0.85)" : "rgba(0,49,53,0.80)",
   },
   heroInner: {
     justifyContent: "flex-end",
