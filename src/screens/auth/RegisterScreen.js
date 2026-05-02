@@ -248,11 +248,11 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: isDark ? "rgba(15,23,42,1)" : "rgba(0,49,53,0.80)",
+    backgroundColor: isDark ? "rgba(15,23,42,0.92)" : "rgba(0,49,53,0.80)",
   },
   heroInner: {
     justifyContent: "flex-end",
-    paddingBottom: 32,
+    paddingBottom: 20,
   },
   brandRow: {
     flexDirection: "row",
@@ -325,7 +325,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     borderTopRightRadius: 24,
     marginTop: -16,
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 22,
     paddingBottom: 36,
   },
   formTitle: {
