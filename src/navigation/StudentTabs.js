@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
 import { clearAuth } from "../api/authStorage";
-import { Theme } from "../theme/Theme";
+import { useTheme } from "../theme/Theme";
 import { LayoutDashboard, BookOpen, ClipboardList, Camera, LogOut } from "lucide-react-native";
 
 import StudentDashboard from "../screens/student/StudentDashboard";
@@ -52,8 +52,9 @@ export default function StudentTabs({ navigation: rootNav }) {
     );
   };
 
-  // Custom header that includes logo + logout + nav pills (same as AdminTabs)
+  // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
+    const { colors, isDark } = useTheme();
     const activeIndex = state.index;
     const scrollViewRef = useRef(null);
     const tabLayouts = useRef({});
@@ -78,15 +79,16 @@ export default function StudentTabs({ navigation: rootNav }) {
     }, [activeIndex]);
 
     return (
-      <View style={s.headerWrapper}>
+      <View style={[s.headerWrapper, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.headerBg} />
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
-            <Text style={{ fontSize: 24, fontWeight: "800", color: "#003135", letterSpacing: -0.5 }}>Facidance</Text>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
-          <TouchableOpacity onPress={confirmLogout} style={s.logoutBtn} activeOpacity={0.7}>
-            <LogOut size={20} color="#EF4444" style={{ marginLeft: 2 }} />
+          <TouchableOpacity onPress={confirmLogout} style={[s.logoutBtn, { backgroundColor: colors.logoutBg, borderColor: colors.logoutBorder }]} activeOpacity={0.7}>
+            <LogOut size={20} color={colors.logoutIcon} style={{ marginLeft: 2 }} />
           </TouchableOpacity>
         </View>
 
@@ -104,15 +106,23 @@ export default function StudentTabs({ navigation: rootNav }) {
               <TouchableOpacity
                 key={tab.name}
                 onLayout={(e) => { tabLayouts.current[i] = e.nativeEvent.layout; }}
-                style={[s.navPill, isActive && s.navPillActive]}
+                style={[
+                  s.navPill,
+                  { backgroundColor: colors.navPillBg, borderColor: colors.navPillBorder },
+                  isActive && { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+                ]}
                 onPress={() => {
                   navigation.navigate(tab.name);
                   setTimeout(() => scrollToTab(i), 100);
                 }}
                 activeOpacity={0.7}
               >
-                <Icon size={18} color={isActive ? "#FFF" : "#64748B"} style={{ marginRight: 4 }} />
-                <Text style={[s.navPillText, isActive && s.navPillTextActive]}>{tab.label}</Text>
+                <Icon size={18} color={isActive ? colors.primaryForeground : colors.navPillText} style={{ marginRight: 4 }} />
+                <Text style={[
+                  s.navPillText,
+                  { color: colors.navPillText },
+                  isActive && { color: colors.primaryForeground },
+                ]}>{tab.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -141,10 +151,8 @@ export default function StudentTabs({ navigation: rootNav }) {
 
 const s = StyleSheet.create({
   headerWrapper: {
-    backgroundColor: "#FFFFFF",
     paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) : 50,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
   },
   headerTopRow: {
     flexDirection: "row",
@@ -166,29 +174,17 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 20,
-    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  navPillActive: {
-    backgroundColor: Theme.colors.primaryDark,
-    borderColor: Theme.colors.primaryDark,
   },
   navPillText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#64748B",
-  },
-  navPillTextActive: {
-    color: "#FFF",
   },
   logoutBtn: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: "#FEF2F2",
     borderWidth: 1,
-    borderColor: "#FECACA",
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",

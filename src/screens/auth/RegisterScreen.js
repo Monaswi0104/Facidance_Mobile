@@ -48,8 +48,8 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#003135" />
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: '#003135' }} />
+      <StatusBar barStyle="light-content" backgroundColor={Theme.colors.primary} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: Theme.colors.primary }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -229,7 +229,7 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  screenWrapper: { flex: 1, backgroundColor: "#003135" },
+  screenWrapper: { flex: 1, backgroundColor: Theme.colors.primary },
   scrollContent: { flexGrow: 1 },
 
   // Hero

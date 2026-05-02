@@ -6,7 +6,7 @@ import {
 import { getTeacherCourses, getTeacherStats, getTeacherReports, getCourseStudents, getTeacherMe } from "../../api/teacherApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
-import { Theme } from "../../theme/Theme";
+import { Theme, useTheme } from "../../theme/Theme";
 import {
   BookOpen, Users, Calendar, CheckCircle, AlertTriangle,
   Mail, TrendingUp, Clock, ArrowUpRight,
@@ -17,6 +17,7 @@ import { StatCardSkeleton, SectionCardSkeleton } from "../../components/Skeleton
 const { width } = Dimensions.get("window");
 
 export default function TeacherDashboard({ navigation }) {
+  const { colors, isDark } = useTheme();
   const [stats, setStats] = useState({ courses: 0, students: 0, semesters: 0, attendance: 0 });
   const [userName, setUserName] = useState("Teacher");
   const [isLoading, setIsLoading] = useState(true);
@@ -148,9 +149,9 @@ export default function TeacherDashboard({ navigation }) {
   };
 
   const getBarColor = (pct) => {
-    if (pct >= 75) return "#10B981";
-    if (pct >= 50) return "#F59E0B";
-    return "#EF4444";
+    if (pct >= 75) return colors.success;
+    if (pct >= 50) return colors.warning;
+    return colors.danger;
   };
 
   const statCards = [
@@ -161,30 +162,30 @@ export default function TeacherDashboard({ navigation }) {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.secondary }]}>
       <ScrollView 
         contentContainerStyle={styles.container} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.welcomeGreeting}>Welcome back 👋</Text>
-            <Text style={styles.welcomeName}>{userName}</Text>
-            <Text style={styles.welcomeDesc}>Here's what's happening across your courses today.</Text>
+            <Text style={[styles.welcomeGreeting, { color: colors.mutedForeground }]}>Welcome back 👋</Text>
+            <Text style={[styles.welcomeName, { color: colors.foreground }]}>{userName}</Text>
+            <Text style={[styles.welcomeDesc, { color: colors.mutedForeground }]}>Here's what's happening across your courses today.</Text>
           </View>
           <View style={styles.headerBtns}>
-            <TouchableOpacity style={styles.headerBtnOutline} onPress={() => navigation.navigate("AttendanceReport")} activeOpacity={0.7}>
-              <TrendingUp size={13} color="#475569" style={{ marginRight: 4 }} />
-              <Text style={styles.headerBtnText}>Export Report</Text>
+            <TouchableOpacity style={[styles.headerBtnOutline, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => navigation.navigate("AttendanceReport")} activeOpacity={0.7}>
+              <TrendingUp size={13} color={colors.textBody} style={{ marginRight: 4 }} />
+              <Text style={[styles.headerBtnText, { color: colors.textBody }]}>Export Report</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("AttendanceCamera")} activeOpacity={0.7}>
-              <CheckCircle size={13} color="#FFF" style={{ marginRight: 4 }} />
-              <Text style={styles.headerBtnFilledText}>New Attendance</Text>
+            <TouchableOpacity style={[styles.headerBtnFilled, { backgroundColor: colors.primaryDark }]} onPress={() => navigation.navigate("AttendanceCamera")} activeOpacity={0.7}>
+              <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+              <Text style={[styles.headerBtnFilledText, { color: colors.primaryForeground }]}>New Attendance</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -201,15 +202,15 @@ export default function TeacherDashboard({ navigation }) {
           <>
             <View style={styles.statsGrid}>
               {statCards.map((s, i) => (
-                <View key={i} style={styles.statCard}>
+                <View key={i} style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]}>
                   <View style={styles.statTopRow}>
-                    <Text style={styles.statLabel}>{s.label}</Text>
-                    <View style={styles.statIconBg}>{s.icon}</View>
+                    <Text style={[styles.statLabel, { color: colors.statLabel }]}>{s.label}</Text>
+                    <View style={[styles.statIconBg, { backgroundColor: colors.primaryDark }]}>{s.icon}</View>
                   </View>
-                  <Text style={styles.statNumber}>{s.value}</Text>
+                  <Text style={[styles.statNumber, { color: colors.foreground }]}>{s.value}</Text>
                   {!!s.sub && (
                     <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
-                      <TrendingUp size={9} color={s.subColor || "#10B981"} style={{ marginRight: 3 }} />
+                      <TrendingUp size={9} color={s.subColor || colors.success} style={{ marginRight: 3 }} />
                       <Text style={[styles.statSub, s.subColor && { color: s.subColor }]}>{s.sub}</Text>
                     </View>
                   )}
@@ -219,11 +220,11 @@ export default function TeacherDashboard({ navigation }) {
 
             {/* At-Risk Students */}
             {atRiskStudents.length > 0 && (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sectionTitle}>At-Risk Students</Text>
-                    <Text style={styles.sectionSubtitle}>Below 75% attendance</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.foreground }]}>At-Risk Students</Text>
+                    <Text style={[styles.sectionSubtitle, { color: colors.statLabel }]}>Below 75% attendance</Text>
                   </View>
                   <View style={styles.atRiskBadge}>
                     <Text style={styles.atRiskBadgeText}>{atRiskStudents.length} at risk</Text>
@@ -232,28 +233,28 @@ export default function TeacherDashboard({ navigation }) {
 
                 <ScrollView style={styles.atRiskScroll} nestedScrollEnabled showsVerticalScrollIndicator>
                   {atRiskStudents.map((s, i) => (
-                    <View key={i} style={[styles.atRiskRow, i < atRiskStudents.length - 1 && styles.borderBottom]}>
+                    <View key={i} style={[styles.atRiskRow, i < atRiskStudents.length - 1 && [styles.borderBottom, { borderBottomColor: colors.muted }]]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.atRiskName} numberOfLines={1}>{s.name}</Text>
-                        <Text style={styles.atRiskCourse} numberOfLines={1}>{s.course}</Text>
+                        <Text style={[styles.atRiskName, { color: colors.foreground }]} numberOfLines={1}>{s.name}</Text>
+                        <Text style={[styles.atRiskCourse, { color: colors.statLabel }]} numberOfLines={1}>{s.course}</Text>
                       </View>
-                      <Text style={styles.atRiskAttend}>{s.attended}/{s.total}</Text>
+                      <Text style={[styles.atRiskAttend, { color: colors.mutedForeground }]}>{s.attended}/{s.total}</Text>
                       <View style={[styles.percentBadge, { backgroundColor: getBarColor(s.percent) + "18" }]}>
                         <AlertTriangle size={10} color={getBarColor(s.percent)} style={{ marginRight: 3 }} />
                         <Text style={[styles.percentBadgeText, { color: getBarColor(s.percent) }]}>{s.percent}%</Text>
                       </View>
                       {!!s.email && (
-                        <TouchableOpacity style={styles.emailBtn} onPress={() => sendEmail(s)} activeOpacity={0.6}>
-                          <Mail size={14} color="#64748B" />
+                        <TouchableOpacity style={[styles.emailBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]} onPress={() => sendEmail(s)} activeOpacity={0.6}>
+                          <Mail size={14} color={colors.mutedForeground} />
                         </TouchableOpacity>
                       )}
                     </View>
                   ))}
                 </ScrollView>
 
-                <TouchableOpacity style={styles.viewFullBtn} onPress={() => navigation.navigate("AttendanceReport")} activeOpacity={0.7}>
-                  <Text style={styles.viewFullText}>View full reports</Text>
-                  <ArrowUpRight size={12} color={Theme.colors.primaryDark} />
+                <TouchableOpacity style={[styles.viewFullBtn, { borderTopColor: colors.muted }]} onPress={() => navigation.navigate("AttendanceReport")} activeOpacity={0.7}>
+                  <Text style={[styles.viewFullText, { color: colors.primaryDark }]}>View full reports</Text>
+                  <ArrowUpRight size={12} color={colors.primaryDark} />
                 </TouchableOpacity>
               </View>
             )}
@@ -262,39 +263,39 @@ export default function TeacherDashboard({ navigation }) {
             {isLoading ? (
               <SectionCardSkeleton rows={3} />
             ) : courses.length > 0 ? (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sectionTitle}>Course Overview</Text>
-                    <Text style={styles.sectionSubtitle}>Attendance rates per course</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Course Overview</Text>
+                    <Text style={[styles.sectionSubtitle, { color: colors.statLabel }]}>Attendance rates per course</Text>
                   </View>
-                  <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate("MyCourses")} activeOpacity={0.7}>
-                    <Text style={styles.viewAllBtnText}>View all</Text>
-                    <ArrowUpRight size={12} color={Theme.colors.primaryDark} />
+                  <TouchableOpacity style={[styles.viewAllBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]} onPress={() => navigation.navigate("MyCourses")} activeOpacity={0.7}>
+                    <Text style={[styles.viewAllBtnText, { color: colors.primaryDark }]}>View all</Text>
+                    <ArrowUpRight size={12} color={colors.primaryDark} />
                   </TouchableOpacity>
                 </View>
 
                 {courses.map((c, i) => (
-                  <View key={c.id} style={[styles.courseRow, i < courses.length - 1 && styles.borderBottom]}>
+                  <View key={c.id} style={[styles.courseRow, i < courses.length - 1 && [styles.borderBottom, { borderBottomColor: colors.muted }]]}>
                     <View style={{ flex: 1, marginBottom: 6 }}>
                       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                        <Text style={styles.courseName} numberOfLines={1}>{c.name}</Text>
+                        <Text style={[styles.courseName, { color: colors.foreground }]} numberOfLines={1}>{c.name}</Text>
                         <View style={styles.activeChip}>
                           <Text style={styles.activeChipText}>{c.status}</Text>
                         </View>
                       </View>
-                      <View style={styles.courseBarTrack}>
+                      <View style={[styles.courseBarTrack, { backgroundColor: colors.muted }]}>
                         <View style={[styles.courseBarFill, { width: `${Math.max(c.attendance, 3)}%`, backgroundColor: getBarColor(c.attendance) }]} />
                       </View>
                       <Text style={[styles.courseAttendText, { color: getBarColor(c.attendance) }]}>{c.attendance}% attendance</Text>
                     </View>
                     <View style={styles.courseMetaCol}>
-                      <Text style={styles.courseMetaNum}>{c.students}</Text>
-                      <Text style={styles.courseMetaLabel}>Students</Text>
+                      <Text style={[styles.courseMetaNum, { color: colors.foreground }]}>{c.students}</Text>
+                      <Text style={[styles.courseMetaLabel, { color: colors.statLabel }]}>Students</Text>
                     </View>
                     <View style={styles.courseMetaCol}>
-                      <Text style={styles.courseMetaNum}>{c.sessions}</Text>
-                      <Text style={styles.courseMetaLabel}>Sessions</Text>
+                      <Text style={[styles.courseMetaNum, { color: colors.foreground }]}>{c.sessions}</Text>
+                      <Text style={[styles.courseMetaLabel, { color: colors.statLabel }]}>Sessions</Text>
                     </View>
                   </View>
                 ))}
@@ -305,11 +306,11 @@ export default function TeacherDashboard({ navigation }) {
             {isLoading ? (
               <SectionCardSkeleton rows={4} />
             ) : recentActivity.length > 0 ? (
-              <View style={styles.sectionCard}>
+              <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sectionTitle}>Recent Activity</Text>
-                    <Text style={styles.sectionSubtitle}>Latest actions</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Recent Activity</Text>
+                    <Text style={[styles.sectionSubtitle, { color: colors.statLabel }]}>Latest actions</Text>
                   </View>
                   <View style={styles.eventsBadge}>
                     <Text style={styles.eventsBadgeText}>{recentActivity.length} events</Text>
@@ -317,20 +318,20 @@ export default function TeacherDashboard({ navigation }) {
                 </View>
 
                 {recentActivity.map((a, i) => (
-                  <View key={i} style={[styles.activityRow, i < recentActivity.length - 1 && styles.borderBottom]}>
+                  <View key={i} style={[styles.activityRow, i < recentActivity.length - 1 && [styles.borderBottom, { borderBottomColor: colors.muted }]]}>
                     <View style={[styles.activityIcon, { backgroundColor: i % 2 === 0 ? "#F0FDF4" : "#EFF6FF" }]}>
                       {i % 2 === 0 ? (
-                        <CheckCircle size={16} color="#10B981" />
+                        <CheckCircle size={16} color={colors.success} />
                       ) : (
-                        <BookOpen size={16} color="#3B82F6" />
+                        <BookOpen size={16} color={colors.info} />
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.activityTitle} numberOfLines={1}>{a.name}</Text>
-                      <Text style={styles.activityMeta}>{a.sessions} sessions · {a.students} students enrolled</Text>
+                      <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>{a.name}</Text>
+                      <Text style={[styles.activityMeta, { color: colors.mutedForeground }]}>{a.sessions} sessions · {a.students} students enrolled</Text>
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
-                        <Clock size={10} color="#CBD5E1" style={{ marginRight: 4 }} />
-                        <Text style={styles.activityTime}>{a.time}</Text>
+                        <Clock size={10} color={colors.mutedForeground} style={{ marginRight: 4 }} />
+                        <Text style={[styles.activityTime, { color: colors.mutedForeground }]}>{a.time}</Text>
                       </View>
                     </View>
                   </View>
@@ -341,18 +342,18 @@ export default function TeacherDashboard({ navigation }) {
             {/* Quick Actions Grid */}
             <View style={styles.quickGrid}>
               {[
-                { title: "Take Attendance", desc: "Start a new session", screen: "AttendanceCamera", icon: <ScanLine size={22} color={Theme.colors.primaryDark} /> },
-                { title: "My Courses", desc: "Browse & manage", screen: "MyCourses", icon: <BookMarked size={22} color={Theme.colors.primaryDark} /> },
-                { title: "Students", desc: "Import & manage", screen: "StudentEnrollment", icon: <UserPlus size={22} color={Theme.colors.primaryDark} /> },
-                { title: "Reports", desc: "Export & analyze", screen: "AttendanceReport", icon: <BarChart2 size={22} color={Theme.colors.primaryDark} /> },
+                { title: "Take Attendance", desc: "Start a new session", screen: "AttendanceCamera", icon: <ScanLine size={22} color={colors.primaryDark} /> },
+                { title: "My Courses", desc: "Browse & manage", screen: "MyCourses", icon: <BookMarked size={22} color={colors.primaryDark} /> },
+                { title: "Students", desc: "Import & manage", screen: "StudentEnrollment", icon: <UserPlus size={22} color={colors.primaryDark} /> },
+                { title: "Reports", desc: "Export & analyze", screen: "AttendanceReport", icon: <BarChart2 size={22} color={colors.primaryDark} /> },
               ].map((action, i) => (
-                <TouchableOpacity key={i} style={styles.quickCard} activeOpacity={0.7}
+                <TouchableOpacity key={i} style={[styles.quickCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]} activeOpacity={0.7}
                   onPress={() => navigation.navigate(action.screen)}>
-                  <View style={styles.quickIconBg}>
+                  <View style={[styles.quickIconBg, { backgroundColor: colors.accentLight }]}>
                     {action.icon}
                   </View>
-                  <Text style={styles.quickTitle}>{action.title}</Text>
-                  <Text style={styles.quickDesc}>{action.desc}</Text>
+                  <Text style={[styles.quickTitle, { color: colors.foreground }]}>{action.title}</Text>
+                  <Text style={[styles.quickDesc, { color: colors.statLabel }]}>{action.desc}</Text>
                 </TouchableOpacity>
               ))}
             </View>
