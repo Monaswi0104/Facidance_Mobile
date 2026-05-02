@@ -226,27 +226,23 @@ const createStyles = (colors, isDark) => StyleSheet.create({
 
   // Hero
   hero: {
-    minHeight: 520,
+    minHeight: 460,
     width: "100%",
     position: "relative",
     paddingHorizontal: 24,
-    overflow: "hidden",
   },
   heroImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: isDark ? "rgba(15,23,42,0.85)" : "rgba(0,49,53,0.80)",
+    backgroundColor: isDark ? "rgba(15,23,42,1)" : "rgba(0,49,53,0.80)",
   },
   heroInner: {
-    flex: 1,
     justifyContent: "flex-end",
-    paddingBottom: 28,
+    paddingBottom: 32,
   },
   brandRow: {
     flexDirection: "row",
@@ -317,9 +313,9 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: -28,
+    marginTop: -16,
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 28,
     paddingBottom: 36,
   },
   formTitle: {
