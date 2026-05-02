@@ -227,7 +227,6 @@ const styles = StyleSheet.create({
     minHeight: 460,
     width: "100%",
     position: "relative",
-    paddingHorizontal: 24,
     overflow: "hidden",
   },
   heroImage: {
@@ -241,6 +240,7 @@ const styles = StyleSheet.create({
   },
   heroInner: {
     justifyContent: "flex-end",
+    paddingHorizontal: 24,
     paddingBottom: 32,
   },
   brandRow: {
