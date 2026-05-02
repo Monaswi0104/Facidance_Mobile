@@ -9,6 +9,7 @@ const { width } = Dimensions.get('window');
 
 export default function MyCourses({ navigation }) {
   const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -144,61 +145,61 @@ export default function MyCourses({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
+const createStyles = (colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   header: { marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  subtitle: { fontSize: 13, color: colors.mutedForeground, marginTop: 3 },
 
   // Search
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: Theme.colors.background, borderRadius: 10,
+    backgroundColor: colors.background, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 10,
-    borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 18,
+    borderWidth: 1, borderColor: colors.border, marginBottom: 18,
   },
-  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
+  searchInput: { flex: 1, fontSize: 13, color: colors.foreground, padding: 0 },
 
   // Empty
-  emptyState: { alignItems: "center", padding: 40, backgroundColor: Theme.colors.background, borderRadius: 14, borderWidth: 1, borderColor: Theme.colors.border },
-  emptyTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 6 },
-  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center" },
+  emptyState: { alignItems: "center", padding: 40, backgroundColor: colors.background, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 6 },
+  emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center" },
 
   // Course Card
   courseCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
-    shadowColor: Theme.colors.foreground,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
   cardTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
-  cardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  courseName: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 6 },
+  cardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  courseName: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 6 },
   badgeRow: { flexDirection: "row", alignItems: "center" },
   activeBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 6 },
   activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
-  codeBadge: { backgroundColor: Theme.colors.muted, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: Theme.colors.border },
-  codeBadgeText: { fontSize: 10, fontWeight: "600", color: Theme.colors.textBody },
+  codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: colors.border },
+  codeBadgeText: { fontSize: 10, fontWeight: "600", color: colors.textBody },
 
   // Details
   detailsList: { marginBottom: 12, paddingLeft: 2 },
   detailRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  detailText: { fontSize: 12, color: Theme.colors.mutedForeground },
+  detailText: { fontSize: 12, color: colors.mutedForeground },
 
   // Footer
   cardFooter: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    borderTopWidth: 1, borderTopColor: Theme.colors.muted, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: colors.muted, paddingTop: 12,
   },
-  viewDetailsText: { fontSize: 13, color: Theme.colors.mutedForeground },
+  viewDetailsText: { fontSize: 13, color: colors.mutedForeground },
 });

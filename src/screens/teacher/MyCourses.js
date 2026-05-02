@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, TextInput, Dimensions
@@ -12,6 +12,7 @@ const { width } = Dimensions.get("window");
 
 export default function MyCourses({ navigation }) {
   const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -150,7 +151,7 @@ export default function MyCourses({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   safeArea: { flex: 1 },
   container: { padding: 20, paddingBottom: 40 },
 

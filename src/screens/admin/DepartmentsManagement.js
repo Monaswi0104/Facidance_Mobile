@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
@@ -10,6 +10,7 @@ import { Building2, GraduationCap, Users, Plus, Trash2, X } from "lucide-react-n
 
 export default function DepartmentsManagement() {
   const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -272,81 +273,81 @@ export default function DepartmentsManagement() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
+const createStyles = (colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  subtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3 },
-  addBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
-  addBtnText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
+  title: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  subtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 3 },
+  addBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
+  addBtnText: { fontSize: 12, fontWeight: "600", color: colors.primaryForeground },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
   statCard: {
-    flex: 1, backgroundColor: Theme.colors.background, borderRadius: 12, padding: 14, marginHorizontal: 3,
-    borderWidth: 1, borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
+    flex: 1, backgroundColor: colors.background, borderRadius: 12, padding: 14, marginHorizontal: 3,
+    borderWidth: 1, borderColor: colors.border,
+    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
   },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-  statLabel: { fontSize: 7, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.3, flex: 1, marginRight: 4 },
-  statNumber: { fontSize: 22, fontWeight: "800", color: Theme.colors.foreground },
-  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  statLabel: { fontSize: 7, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3, flex: 1, marginRight: 4 },
+  statNumber: { fontSize: 22, fontWeight: "800", color: colors.foreground },
+  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Add Form
   addFormCard: {
-    backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 14,
-    borderWidth: 1, borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+    backgroundColor: colors.background, borderRadius: 14, padding: 16, marginBottom: 14,
+    borderWidth: 1, borderColor: colors.border,
+    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
   },
   addFormHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  addFormIconBg: { width: 28, height: 28, borderRadius: 7, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  addFormTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 1 },
-  addFormLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.primaryDark, letterSpacing: 0.4, marginBottom: 6 },
+  addFormIconBg: { width: 28, height: 28, borderRadius: 7, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
+  addFormTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
+  addFormLabel: { fontSize: 9, fontWeight: "700", color: colors.primaryDark, letterSpacing: 0.4, marginBottom: 6 },
   addFormRow: { flexDirection: "row", alignItems: "center" },
-  addFormInput: { flex: 1, backgroundColor: Theme.colors.secondary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: Theme.colors.foreground, borderWidth: 1, borderColor: Theme.colors.border, marginRight: 8 },
-  addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
-  addFormBtnText: { fontSize: 12, fontWeight: "700", color: Theme.colors.primaryForeground },
+  addFormInput: { flex: 1, backgroundColor: colors.secondary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: colors.foreground, borderWidth: 1, borderColor: colors.border, marginRight: 8 },
+  addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
+  addFormBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
 
   // List Card
   listCard: {
-    backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
+    backgroundColor: colors.background, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: colors.border,
+    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
   },
   listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  listTitle: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 1 },
+  listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
+  listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
   listCountBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#CCFBF1" },
-  listCountText: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryDark },
+  listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Department Rows
   deptRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  deptRowBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  deptRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
   deptAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
-  deptName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
-  deptMeta: { fontSize: 10, color: Theme.colors.mutedForeground },
+  deptName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
+  deptMeta: { fontSize: 10, color: colors.mutedForeground },
   deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
-  deleteBtnText: { fontSize: 10, fontWeight: "700", color: Theme.colors.destructive },
+  deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
-  emptyText: { fontSize: 12, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
+  emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
-  modalCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.8 },
-  detailHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  detailHeaderIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
-  detailTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
-  detailSubtitle: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 2 },
-  sectionLabel: { fontSize: 11, fontWeight: "800", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
-  subItem: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: Theme.colors.border },
-  subItemText: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
-  subItemSub: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 1 },
-  emptySubText: { fontSize: 12, color: Theme.colors.mutedForeground, marginBottom: 8 },
+  modalCard: { backgroundColor: colors.background, borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.8 },
+  detailHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.muted },
+  detailHeaderIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  detailTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
+  detailSubtitle: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
+  sectionLabel: { fontSize: 11, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
+  subItem: { flexDirection: "row", alignItems: "center", backgroundColor: colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: colors.border },
+  subItemText: { fontSize: 13, fontWeight: "700", color: colors.foreground },
+  subItemSub: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
+  emptySubText: { fontSize: 12, color: colors.mutedForeground, marginBottom: 8 },
   teacherAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
-  teacherAvatarText: { fontSize: 12, fontWeight: "800", color: Theme.colors.primaryDark },
-  closeBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  closeBtnText: { fontSize: 13, fontWeight: "700", color: Theme.colors.primaryForeground },
+  teacherAvatarText: { fontSize: 12, fontWeight: "800", color: colors.primaryDark },
+  closeBtn: { marginTop: 14, backgroundColor: colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  closeBtnText: { fontSize: 13, fontWeight: "700", color: colors.primaryForeground },
 });

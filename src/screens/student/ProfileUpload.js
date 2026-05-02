@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {  useState, useEffect , useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
@@ -13,6 +13,7 @@ const uploadSteps = [
 
 export default function ProfileUpload() {
   const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [images, setImages] = useState({ front: null, left: null, right: null });
   const [isUploading, setIsUploading] = useState(false);
@@ -251,38 +252,38 @@ export default function ProfileUpload() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
+const createStyles = (colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { marginBottom: 18, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  subtitle: { fontSize: 13, color: colors.mutedForeground, marginTop: 3 },
 
   // Profile Card
   profileCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
-  profileTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  avatarLetter: { fontSize: 18, fontWeight: "800", color: Theme.colors.primaryForeground },
-  profileName: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
-  profileEmail: { fontSize: 11, color: Theme.colors.mutedForeground, marginBottom: 6 },
+  profileTopRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.muted },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  avatarLetter: { fontSize: 18, fontWeight: "800", color: colors.primaryForeground },
+  profileName: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
+  profileEmail: { fontSize: 11, color: colors.mutedForeground, marginBottom: 6 },
   profileBadges: { flexDirection: "row", alignItems: "center" },
   studentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 8 },
   studentBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
-  joinText: { fontSize: 10, color: Theme.colors.mutedForeground },
+  joinText: { fontSize: 10, color: colors.mutedForeground },
   faceActiveBadge: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#DCFCE7",
@@ -294,44 +295,44 @@ const styles = StyleSheet.create({
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   detailBox: { width: "48%", marginBottom: 14 },
   detailBoxHeader: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  detailBoxLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
-  detailBoxValue: { fontSize: 13, fontWeight: "600", color: Theme.colors.foreground },
+  detailBoxLabel: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5 },
+  detailBoxValue: { fontSize: 13, fontWeight: "600", color: colors.foreground },
 
   // Face Recognition Card
   faceCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
   faceCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  faceCardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  faceCardTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground },
-  faceCardSubtitle: { fontSize: 11, color: Theme.colors.mutedForeground },
+  faceCardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  faceCardTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground },
+  faceCardSubtitle: { fontSize: 11, color: colors.mutedForeground },
 
   // Upload Grid
   uploadGrid: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
   uploadCol: { width: "31%" },
-  colLabel: { fontSize: 12, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 2 },
-  colDesc: { fontSize: 9, color: Theme.colors.mutedForeground, marginBottom: 10, minHeight: 24 },
+  colLabel: { fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 2 },
+  colDesc: { fontSize: 9, color: colors.mutedForeground, marginBottom: 10, minHeight: 24 },
 
   // Camera / Upload Buttons
   cameraBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: Theme.colors.primaryDark, borderRadius: 8, paddingVertical: 10,
+    backgroundColor: colors.primaryDark, borderRadius: 8, paddingVertical: 10,
   },
-  cameraBtnText: { fontSize: 10, fontWeight: "600", color: Theme.colors.primaryForeground },
+  cameraBtnText: { fontSize: 10, fontWeight: "600", color: colors.primaryForeground },
   uploadBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, paddingVertical: 10,
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 10,
   },
-  uploadBtnText: { fontSize: 10, fontWeight: "600", color: Theme.colors.textBody },
+  uploadBtnText: { fontSize: 10, fontWeight: "600", color: colors.textBody },
 
   // Preview
   previewBox: { height: 110, borderRadius: 8, overflow: "hidden", position: "relative" },
@@ -340,13 +341,13 @@ const styles = StyleSheet.create({
 
   // Footer
   faceFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  faceFooterText: { fontSize: 10, color: Theme.colors.mutedForeground, flex: 1, marginRight: 10 },
+  faceFooterText: { fontSize: 10, color: colors.mutedForeground, flex: 1, marginRight: 10 },
   submitBtn: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: Theme.colors.primaryDark,
+    backgroundColor: colors.primaryDark,
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8,
   },
-  submitBtnText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
-  submitBtnDisabled: { backgroundColor: Theme.colors.muted },
+  submitBtnText: { fontSize: 12, fontWeight: "600", color: colors.primaryForeground },
+  submitBtnDisabled: { backgroundColor: colors.muted },
   submitBtnSuccess: { backgroundColor: "#10B981" },
 });

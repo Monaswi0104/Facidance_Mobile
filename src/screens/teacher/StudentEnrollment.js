@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
   ScrollView, Modal, TextInput, ActivityIndicator, Dimensions
@@ -15,6 +15,7 @@ const { width } = Dimensions.get("window");
 
 export default function StudentEnrollment() {
   const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedProgram, setSelectedProgram] = useState(null);
@@ -544,115 +545,115 @@ export default function StudentEnrollment() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
+const createStyles = (colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   header: { marginBottom: 18, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  subtitle: { fontSize: 13, color: colors.mutedForeground, marginTop: 3 },
 
   // Stats Row
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
   statCard: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 14,
     marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  statLabel: { fontSize: 8, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 8 },
+  statLabel: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 8 },
   statBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  statNumber: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  statIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  statNumber: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  statIconBg: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Import Section
   sectionCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 20,
     marginBottom: 20,
-    shadowColor: Theme.colors.foreground,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: colors.border,
   },
   importHeader: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  importIconBadge: { width: 40, height: 40, borderRadius: 10, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  importTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground },
-  importDesc: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2 },
+  importIconBadge: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  importTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground },
+  importDesc: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
   
-  labelText: { fontSize: 10, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
+  labelText: { fontSize: 10, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   
-  fileRow: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.secondary, borderRadius: 10, borderWidth: 1, borderColor: Theme.colors.border, paddingLeft: 4, paddingRight: 14, paddingVertical: 4, marginBottom: 16 },
-  chooseFileBtn: { backgroundColor: Theme.colors.muted, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginRight: 12, borderWidth: 1, borderColor: Theme.colors.border },
-  chooseFileText: { color: Theme.colors.textBody, fontSize: 12, fontWeight: "600" },
-  fileNameText: { fontSize: 13, color: Theme.colors.mutedForeground, flex: 1 },
+  fileRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.secondary, borderRadius: 10, borderWidth: 1, borderColor: colors.border, paddingLeft: 4, paddingRight: 14, paddingVertical: 4, marginBottom: 16 },
+  chooseFileBtn: { backgroundColor: colors.muted, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginRight: 12, borderWidth: 1, borderColor: colors.border },
+  chooseFileText: { color: colors.textBody, fontSize: 12, fontWeight: "600" },
+  fileNameText: { fontSize: 13, color: colors.mutedForeground, flex: 1 },
 
   dropdownsRow: { flexDirection: "row", marginBottom: 16 },
-  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: Theme.colors.border },
-  dropdownPlaceholder: { fontSize: 13, color: Theme.colors.mutedForeground, flex: 1 },
-  dropdownText: { fontSize: 13, color: Theme.colors.foreground, flex: 1 },
+  dropdown: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.background, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.border },
+  dropdownPlaceholder: { fontSize: 13, color: colors.mutedForeground, flex: 1 },
+  dropdownText: { fontSize: 13, color: colors.foreground, flex: 1 },
   
-  importFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, borderTopWidth: 1, borderTopColor: Theme.colors.muted, paddingTop: 16 },
-  importInfoText: { fontSize: 11, color: Theme.colors.mutedForeground, flex: 1, paddingRight: 10 },
-  submitBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  importFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, borderTopWidth: 1, borderTopColor: colors.muted, paddingTop: 16 },
+  importInfoText: { fontSize: 11, color: colors.mutedForeground, flex: 1, paddingRight: 10 },
+  submitBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
   submitBtnDisabled: { opacity: 0.4 },
-  submitBtnText: { color: Theme.colors.primaryForeground, fontSize: 13, fontWeight: "700" },
+  submitBtnText: { color: colors.primaryForeground, fontSize: 13, fontWeight: "700" },
 
   // Search & Filter
   searchFilterRow: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Theme.colors.border, marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
-  filterBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Theme.colors.border },
-  filterBtnText: { fontSize: 12, color: Theme.colors.foreground, fontWeight: "600", marginRight: 4, maxWidth: 100 },
+  searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.border, marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 13, color: colors.foreground, padding: 0 },
+  filterBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: colors.border },
+  filterBtnText: { fontSize: 12, color: colors.foreground, fontWeight: "600", marginRight: 4, maxWidth: 100 },
 
   // Table
-  tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 20 },
-  tableTitle: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground },
-  tableSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2, marginBottom: 14 },
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 4 },
-  tableHeaderText: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
+  tableCard: { backgroundColor: colors.background, borderRadius: 14, padding: 16, shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: colors.border, marginBottom: 20 },
+  tableTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
+  tableSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 2, marginBottom: 14 },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: colors.muted, marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  tableBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  studentName: { fontSize: 12, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
-  studentEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
-  cellText: { fontSize: 11, color: Theme.colors.mutedForeground },
+  tableBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
+  studentName: { fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
+  studentEmail: { fontSize: 10, color: colors.mutedForeground },
+  cellText: { fontSize: 11, color: colors.mutedForeground },
   faceYes: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
-  faceNo: { backgroundColor: Theme.colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: Theme.colors.border },
+  faceNo: { backgroundColor: colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
   faceText: { fontSize: 9, fontWeight: "700" },
-  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
+  emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
-  modalContent: { backgroundColor: Theme.colors.background, borderRadius: 16, padding: 20, maxHeight: "80%" },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 16 },
-  modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  modalItemText: { fontSize: 15, color: Theme.colors.textSoft },
-  modalCloseBtn: { marginTop: 20, backgroundColor: Theme.colors.muted, padding: 14, borderRadius: 12, alignItems: "center" },
-  modalCloseText: { fontSize: 15, fontWeight: "600", color: Theme.colors.mutedForeground },
+  modalContent: { backgroundColor: colors.background, borderRadius: 16, padding: 20, maxHeight: "80%" },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 16 },
+  modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.muted },
+  modalItemText: { fontSize: 15, color: colors.textSoft },
+  modalCloseBtn: { marginTop: 20, backgroundColor: colors.muted, padding: 14, borderRadius: 12, alignItems: "center" },
+  modalCloseText: { fontSize: 15, fontWeight: "600", color: colors.mutedForeground },
 
   // Student Details Modal
-  modalDetailCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 24, width: "100%", shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
-  modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: Theme.colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
+  modalDetailCard: { backgroundColor: colors.background, borderRadius: 20, padding: 24, width: "100%", shadowColor: colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  modalHeaderInfoSection: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.muted },
+  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
-  modalName: { fontSize: 18, fontWeight: "800", color: Theme.colors.foreground, marginBottom: 4 },
-  modalEmail: { fontSize: 13, color: Theme.colors.mutedForeground },
+  modalName: { fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 4 },
+  modalEmail: { fontSize: 13, color: colors.mutedForeground },
   modalDetailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
-  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: Theme.colors.mutedForeground, flex: 0.4 },
-  modalDetailValue: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground, flex: 0.6, textAlign: "right" },
-  modalDetailCloseBtn: { backgroundColor: Theme.colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
-  modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: Theme.colors.textBody },
+  modalDetailLabel: { fontSize: 13, fontWeight: "600", color: colors.mutedForeground, flex: 0.4 },
+  modalDetailValue: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 0.6, textAlign: "right" },
+  modalDetailCloseBtn: { backgroundColor: colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: colors.textBody },
 });

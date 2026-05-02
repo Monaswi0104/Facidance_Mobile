@@ -8,6 +8,7 @@ import Share from "react-native-share";
 
 export default function AttendanceHistory({ route }) {
   const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'Overview');
   const [data, setData] = useState([]);
@@ -279,100 +280,100 @@ export default function AttendanceHistory({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Theme.colors.secondary },
+const createStyles = (colors) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
   // Header
   headerSection: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, marginTop: 8 },
-  title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  subtitle: { fontSize: 13, color: Theme.colors.mutedForeground, marginTop: 3 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  subtitle: { fontSize: 13, color: colors.mutedForeground, marginTop: 3 },
   exportBtn: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border,
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  exportBtnText: { fontSize: 12, fontWeight: "600", color: Theme.colors.textBody },
+  exportBtnText: { fontSize: 12, fontWeight: "600", color: colors.textBody },
 
   // Tabs
-  tabsContainer: { flexDirection: "row", backgroundColor: Theme.colors.background, borderRadius: 10, padding: 3, borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 16 },
+  tabsContainer: { flexDirection: "row", backgroundColor: colors.background, borderRadius: 10, padding: 3, borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
   tab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
-  activeTab: { backgroundColor: Theme.colors.secondary, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
-  tabText: { fontSize: 13, fontWeight: "600", color: Theme.colors.mutedForeground },
-  activeTabText: { color: Theme.colors.foreground },
+  activeTab: { backgroundColor: colors.secondary, shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 13, fontWeight: "600", color: colors.mutedForeground },
+  activeTabText: { color: colors.foreground },
 
   // Stats
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 16 },
   statCard: {
     width: "48%",
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  statLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 4 },
-  statNumber: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
-  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  statLabel: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 4 },
+  statNumber: { fontSize: 24, fontWeight: "800", color: colors.foreground },
+  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Section Card
   sectionCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
-    shadowColor: Theme.colors.foreground,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "800", color: Theme.colors.foreground },
-  sectionSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 1, marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: colors.foreground },
+  sectionSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 1, marginBottom: 14 },
 
   // Course Rows
   courseRow: { paddingVertical: 14 },
-  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
+  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
   courseRowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  courseRowName: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
-  courseRowMeta: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 1 },
+  courseRowName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  courseRowMeta: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
   courseRowPct: { fontSize: 13, fontWeight: "700" },
-  courseBarTrack: { height: 6, borderRadius: 3, backgroundColor: Theme.colors.border, overflow: "hidden" },
+  courseBarTrack: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
   courseBarFill: { height: "100%", borderRadius: 3 },
 
   // Filters
   filterRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   searchBar: {
     flexDirection: "row", alignItems: "center", flex: 1,
-    backgroundColor: Theme.colors.background, borderRadius: 8,
+    backgroundColor: colors.background, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 8,
-    borderWidth: 1, borderColor: Theme.colors.border, marginRight: 8,
+    borderWidth: 1, borderColor: colors.border, marginRight: 8,
   },
-  searchInput: { flex: 1, fontSize: 12, color: Theme.colors.foreground, padding: 0 },
+  searchInput: { flex: 1, fontSize: 12, color: colors.foreground, padding: 0 },
   filterPills: { flexDirection: "row" },
-  filterPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: Theme.colors.border, marginLeft: 4, backgroundColor: Theme.colors.background },
-  filterPillActive: { backgroundColor: Theme.colors.primaryDark, borderColor: Theme.colors.primaryDark },
-  filterPillText: { fontSize: 11, fontWeight: "600", color: Theme.colors.textBody },
-  filterPillTextActive: { color: Theme.colors.primaryForeground },
+  filterPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginLeft: 4, backgroundColor: colors.background },
+  filterPillActive: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+  filterPillText: { fontSize: 11, fontWeight: "600", color: colors.textBody },
+  filterPillTextActive: { color: colors.primaryForeground },
 
   // Table
-  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 4 },
-  tableHeaderText: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
+  tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: colors.muted, marginBottom: 4 },
+  tableHeaderText: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  tableRowBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
-  tdCourse: { fontSize: 13, fontWeight: "500", color: Theme.colors.foreground },
-  tdDate: { fontSize: 11, color: Theme.colors.mutedForeground, textAlign: "right" },
+  tableRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
+  tdCourse: { fontSize: 13, fontWeight: "500", color: colors.foreground },
+  tdDate: { fontSize: 11, color: colors.mutedForeground, textAlign: "right" },
   statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
   statusText: { fontSize: 10, fontWeight: "700" },
 
-  emptyText: { fontSize: 13, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
+  emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 });
