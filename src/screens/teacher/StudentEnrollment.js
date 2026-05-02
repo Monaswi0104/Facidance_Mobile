@@ -276,21 +276,21 @@ export default function StudentEnrollment() {
               <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{students.length}</Text>
-                <View style={styles.statIconBg}><Users size={16} color="#FFF" /></View>
+                <View style={styles.statIconBg}><Users size={16} color={Theme.colors.primaryForeground} /></View>
               </View>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>FACE REGISTERED</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{faceRegistered}</Text>
-                <View style={styles.statIconBg}><ScanFace size={16} color="#FFF" /></View>
+                <View style={styles.statIconBg}><ScanFace size={16} color={Theme.colors.primaryForeground} /></View>
               </View>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>NOT{"\n"}REGISTERED</Text>
               <View style={styles.statBottom}>
                 <Text style={styles.statNumber}>{notRegistered}</Text>
-                <View style={styles.statIconBg}><UserX size={16} color="#FFF" /></View>
+                <View style={styles.statIconBg}><UserX size={16} color={Theme.colors.primaryForeground} /></View>
               </View>
             </View>
           </View>
@@ -300,7 +300,7 @@ export default function StudentEnrollment() {
         <View style={styles.sectionCard}>
           <View style={styles.importHeader}>
             <View style={styles.importIconBadge}>
-              <Upload size={18} color="#FFF" />
+              <Upload size={18} color={Theme.colors.primaryForeground} />
             </View>
             <View style={{ flex: 1, flexShrink: 1 }}>
               <Text style={styles.importTitle}>Import Students</Text>
@@ -324,7 +324,7 @@ export default function StudentEnrollment() {
                 <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedProgram ? selectedProgram.name : "Select program..."}
                 </Text>
-                <ChevronDown size={16} color="#94A3B8" />
+                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
@@ -333,7 +333,7 @@ export default function StudentEnrollment() {
                 <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedCourse ? selectedCourse.name : "Select course..."}
                 </Text>
-                <ChevronDown size={16} color="#94A3B8" />
+                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -342,9 +342,9 @@ export default function StudentEnrollment() {
             <Text style={styles.importInfoText}>Newly imported students will receive login credentials via email.</Text>
             <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
               disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
-              {isImporting ? <ActivityIndicator color="#FFF" size="small" /> : (
+              {isImporting ? <ActivityIndicator color={Theme.colors.primaryForeground} size="small" /> : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <FileUp size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <FileUp size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.submitBtnText}>Import Students</Text>
                 </View>
               )}
@@ -355,13 +355,13 @@ export default function StudentEnrollment() {
         {/* Search & Filter */}
         <View style={styles.searchFilterRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
-              placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
+              placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
           </View>
           <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilterInfo(true)}>
             <Text style={styles.filterBtnText} numberOfLines={1}>{filterCourse ? filterCourse.name : "All Courses"}</Text>
-            <ChevronDown size={14} color="#64748B" />
+            <ChevronDown size={14} color={Theme.colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   importInfoText: { fontSize: 11, color: Theme.colors.mutedForeground, flex: 1, paddingRight: 10 },
   submitBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
   submitBtnDisabled: { opacity: 0.4 },
-  submitBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  submitBtnText: { color: Theme.colors.primaryForeground, fontSize: 13, fontWeight: "700" },
 
   // Search & Filter
   searchFilterRow: { flexDirection: "row", alignItems: "center", marginBottom: 18 },

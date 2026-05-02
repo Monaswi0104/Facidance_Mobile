@@ -164,11 +164,11 @@ export default function TeachersManagement() {
         ) : (
           <View>
             <View style={styles.searchBar}>
-              <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+              <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search name, email, or department..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={Theme.colors.mutedForeground}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -179,7 +179,7 @@ export default function TeachersManagement() {
             <View style={[styles.sectionCard, { marginRight: 6 }]}>
               <View style={styles.sectionHeaderRow}>
                 <View style={styles.sectionIconBg}>
-                  <Clock size={14} color="#FFF" />
+                  <Clock size={14} color={Theme.colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Pending Approvals</Text>
@@ -192,7 +192,7 @@ export default function TeachersManagement() {
 
               {filteredPending.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <Star size={24} color="#CBD5E1" style={{ marginBottom: 8 }} />
+                  <Star size={24} color={Theme.colors.mutedForeground} style={{ marginBottom: 8 }} />
                   <Text style={styles.emptyText}>No pending registrations.</Text>
                 </View>
               ) : (
@@ -236,7 +236,7 @@ export default function TeachersManagement() {
                               </Picker>
                             </View>
                             <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
-                              <CheckCircle size={13} color="#FFF" style={{ marginRight: 4 }} />
+                              <CheckCircle size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
                               <Text style={styles.confirmBtnText}>Confirm</Text>
                             </TouchableOpacity>
                           </View>
@@ -252,7 +252,7 @@ export default function TeachersManagement() {
             <View style={[styles.sectionCard, { marginLeft: 6 }]}>
               <View style={styles.sectionHeaderRow}>
                 <View style={[styles.sectionIconBg]}>
-                  <CheckCircle size={14} color="#FFF" />
+                  <CheckCircle size={14} color={Theme.colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Approved Teachers</Text>
@@ -265,7 +265,7 @@ export default function TeachersManagement() {
 
               {filteredApproved.length === 0 ? (
                 <View style={styles.emptyBox}>
-                  <User size={24} color="#CBD5E1" style={{ marginBottom: 8 }} />
+                  <User size={24} color={Theme.colors.mutedForeground} style={{ marginBottom: 8 }} />
                   <Text style={styles.emptyText}>No approved teachers.</Text>
                 </View>
               ) : (
@@ -278,7 +278,7 @@ export default function TeachersManagement() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.teacherName}>{t.name}</Text>
                         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 1 }}>
-                          <Mail size={10} color="#94A3B8" style={{ marginRight: 3 }} />
+                          <Mail size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
                           <Text style={styles.teacherEmail} numberOfLines={1}>{t.email}</Text>
                         </View>
                         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
@@ -317,14 +317,14 @@ export default function TeachersManagement() {
 
             <View style={styles.detailInfoList}>
               <View style={styles.detailInfoItem}>
-                <Mail size={16} color="#94A3B8" style={{ marginRight: 12 }} />
+                <Mail size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Email</Text>
                   <Text style={styles.detailInfoValue}>{selectedTeacher?.email}</Text>
                 </View>
               </View>
               <View style={styles.detailInfoItem}>
-                <Building2 size={16} color="#94A3B8" style={{ marginRight: 12 }} />
+                <Building2 size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Department</Text>
                   <Text style={styles.detailInfoValue}>{selectedTeacher?.dept}</Text>
@@ -337,7 +337,7 @@ export default function TeachersManagement() {
                 <Text style={styles.detailStatNumber}>{selectedTeacher?.courses?.length || 0}</Text>
                 <Text style={styles.detailStatLabel}>Courses</Text>
               </View>
-              <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
+              <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: Theme.colors.border }]}>
                 <Text style={styles.detailStatNumber}>{selectedTeacher?.courses?.reduce((a, c) => a + (c.students || 0), 0) || 0}</Text>
                 <Text style={styles.detailStatLabel}>Students</Text>
               </View>
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   teacherRowExpanded: { backgroundColor: Theme.colors.secondary, paddingHorizontal: 10, marginHorizontal: -10, borderRadius: 10, borderBottomWidth: 0, marginBottom: 6 },
   teacherMainRow: { flexDirection: "row", alignItems: "center" },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  avatarText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  avatarText: { fontSize: 13, fontWeight: "700", color: Theme.colors.primaryForeground },
   teacherName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
   teacherEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
   deptLabel: { fontSize: 10, color: Theme.colors.mutedForeground },
@@ -439,26 +439,26 @@ const styles = StyleSheet.create({
 
   // Buttons
   approveBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 4 },
-  approveBtnText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
+  approveBtnText: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryForeground },
   deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", justifyContent: "center", alignItems: "center" },
   deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: Theme.colors.destructive },
 
   // Assignment
-  assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#E2E8F0" },
+  assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Theme.colors.border },
   assignmentLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   assignmentControls: { flexDirection: "row", alignItems: "center" },
   pickerContainer: { flex: 1, height: 40, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, marginRight: 8, justifyContent: "center", backgroundColor: Theme.colors.background },
   picker: { width: "100%", color: Theme.colors.foreground },
   confirmBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
-  confirmBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  confirmBtnText: { fontSize: 12, fontWeight: "700", color: Theme.colors.primaryForeground },
 
   // Detail Modal
   detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
   detailCard: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, width: "100%", maxHeight: Dimensions.get('window').height * 0.85 },
   detailProfileSection: { alignItems: "center", marginBottom: 18, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   detailAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Theme.colors.primaryDark, justifyContent: "center", alignItems: "center", marginBottom: 10 },
-  detailAvatarText: { fontSize: 22, fontWeight: "800", color: "#FFF" },
+  detailAvatarText: { fontSize: 22, fontWeight: "800", color: Theme.colors.primaryForeground },
   detailName: { fontSize: 20, fontWeight: "800", color: Theme.colors.foreground, textAlign: "center" },
   roleBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 14, paddingVertical: 4, borderRadius: 16, marginTop: 6, borderWidth: 1, borderColor: "#CCFBF1" },
   roleBadgeText: { fontSize: 11, fontWeight: "700", color: Theme.colors.primaryDark },
@@ -480,5 +480,5 @@ const styles = StyleSheet.create({
   courseTagText: { fontSize: 9, fontWeight: "700" },
   detailEmpty: { fontSize: 12, color: Theme.colors.mutedForeground, textAlign: "center", paddingVertical: 14 },
   detailCloseBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  detailCloseBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  detailCloseBtnText: { fontSize: 13, fontWeight: "700", color: Theme.colors.primaryForeground },
 });

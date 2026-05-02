@@ -173,7 +173,7 @@ export default function AttendanceReport() {
                 <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
                   {selectedCourse ? `${selectedCourse.name} ${selectedCourse.code !== "—" ? `(${selectedCourse.code})` : ""}` : "Choose a course..."}
                 </Text>
-                <ChevronDown size={16} color="#94A3B8" />
+                <ChevronDown size={16} color={Theme.colors.mutedForeground} />
               </>
             )}
           </TouchableOpacity>
@@ -183,14 +183,14 @@ export default function AttendanceReport() {
               <Text style={styles.labelText}>START DATE (OPTIONAL)</Text>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowStartPicker(true)}>
                 <Text style={startDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(startDate)}</Text>
-                <Calendar size={14} color="#94A3B8" />
+                <Calendar size={14} color={Theme.colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.labelText}>END DATE (OPTIONAL)</Text>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowEndPicker(true)}>
                 <Text style={endDate ? styles.dateBtnText : styles.dateBtnPlaceholder}>{formatDate(endDate)}</Text>
-                <Calendar size={14} color="#94A3B8" />
+                <Calendar size={14} color={Theme.colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -226,17 +226,17 @@ export default function AttendanceReport() {
               disabled={!selectedCourse || isReportLoading}
               onPress={() => { if (selectedCourse) loadReport(selectedCourse.id); }}>
               {isReportLoading ? (
-                <ActivityIndicator size="small" color="#FFF" />
+                <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
               ) : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <FileText size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <FileText size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.btnPrimaryText}>Generate Report</Text>
                 </View>
               )}
             </TouchableOpacity>
             {reportGenerated && (
               <TouchableOpacity style={styles.btnStroke} onPress={exportCSV}>
-                <Download size={14} color="#475569" style={{ marginRight: 6 }} />
+                <Download size={14} color={Theme.colors.textBody} style={{ marginRight: 6 }} />
                 <Text style={styles.btnStrokeText}>Export CSV</Text>
               </TouchableOpacity>
             )}
@@ -251,21 +251,21 @@ export default function AttendanceReport() {
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL{"\n"}STUDENTS</Text>
-                  <View style={styles.statIconBg}><Users size={16} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><Users size={16} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{data.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>AVERAGE{"\n"}ATTENDANCE</Text>
-                  <View style={styles.statIconBg}><TrendingUp size={16} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><TrendingUp size={16} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{avgPercent}%</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>BELOW 75%</Text>
-                  <View style={styles.statIconBg}><TrendingDown size={16} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><TrendingDown size={16} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{below75}</Text>
               </View>
@@ -358,7 +358,7 @@ export default function AttendanceReport() {
                           onPress={(e) => { e.stopPropagation?.(); sendEmail(s); }}
                           activeOpacity={0.6}
                         >
-                          <Mail size={13} color="#64748B" />
+                          <Mail size={13} color={Theme.colors.mutedForeground} />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   // Actions
   actionsRow: { flexDirection: "row", marginTop: 10 },
   btnPrimary: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 18, paddingVertical: 11, borderRadius: 10, marginRight: 10, alignItems: "center" },
-  btnPrimaryText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  btnPrimaryText: { color: Theme.colors.primaryForeground, fontSize: 13, fontWeight: "700" },
   btnStroke: { flexDirection: "row", backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
   btnStrokeText: { color: Theme.colors.textBody, fontSize: 13, fontWeight: "600" },
 

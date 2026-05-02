@@ -77,10 +77,10 @@ export default function CourseDetails({ route, navigation }) {
   };
 
   const statCards = [
-    { label: "TOTAL STUDENTS", value: students.length, icon: <Users size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
-    { label: "FACE REGISTERED", value: faceRegistered, icon: <ScanFace size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
-    { label: "TOTAL SESSIONS", value: totalSessions, icon: <Clock size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
-    { label: "AVG ATTENDANCE", value: `${avgAttendance}%`, icon: <TrendingUp size={18} color="#FFF" />, bg: Theme.colors.primaryDark },
+    { label: "TOTAL STUDENTS", value: students.length, icon: <Users size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
+    { label: "FACE REGISTERED", value: faceRegistered, icon: <ScanFace size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
+    { label: "TOTAL SESSIONS", value: totalSessions, icon: <Clock size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
+    { label: "AVG ATTENDANCE", value: `${avgAttendance}%`, icon: <TrendingUp size={18} color={Theme.colors.primaryForeground} />, bg: Theme.colors.primaryDark },
   ];
 
   return (
@@ -89,7 +89,7 @@ export default function CourseDetails({ route, navigation }) {
 
         {/* Change Course Button */}
         <TouchableOpacity style={styles.changeCourseBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={16} color="#475569" />
+          <ChevronLeft size={16} color={Theme.colors.textBody} />
           <Text style={styles.changeCourseText}>Change Course</Text>
         </TouchableOpacity>
 
@@ -97,7 +97,7 @@ export default function CourseDetails({ route, navigation }) {
         <View style={styles.headerCard}>
           <View style={styles.headerTop}>
             <View style={styles.headerBadge}>
-              <BookOpen size={22} color="#FFF" />
+              <BookOpen size={22} color={Theme.colors.primaryForeground} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>{course.name}</Text>
@@ -111,12 +111,12 @@ export default function CourseDetails({ route, navigation }) {
           </View>
           <View style={styles.headerMeta}>
             <View style={styles.metaItem}>
-              <Building size={13} color="#64748B" style={{ marginRight: 5 }} />
+              <Building size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 5 }} />
               <Text style={styles.headerMetaText}>{course.department}</Text>
             </View>
             {!!course.semester && (
               <View style={styles.metaItem}>
-                <Calendar size={13} color="#64748B" style={{ marginRight: 5 }} />
+                <Calendar size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 5 }} />
                 <Text style={styles.headerMetaText}>{course.semester}</Text>
               </View>
             )}
@@ -146,12 +146,12 @@ export default function CourseDetails({ route, navigation }) {
 
         <View style={styles.searchExportRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput style={styles.searchInput} placeholder="Search by name, email, or program..."
-              placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
+              placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
           </View>
           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-            <Download size={14} color="#FFF" style={{ marginRight: 4 }} />
+            <Download size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
             <Text style={styles.exportBtnText}>Export</Text>
           </TouchableOpacity>
         </View>
@@ -181,7 +181,7 @@ export default function CourseDetails({ route, navigation }) {
                   {s.faceRegistered ? (
                     <CheckCircle size={16} color="#10B981" />
                   ) : (
-                    <XCircle size={16} color="#CBD5E1" />
+                    <XCircle size={16} color={Theme.colors.mutedForeground} />
                   )}
                 </View>
 
@@ -310,14 +310,14 @@ const styles = StyleSheet.create({
   searchBar: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Theme.colors.border, marginRight: 10 },
   searchInput: { flex: 1, fontSize: 13, color: Theme.colors.foreground, padding: 0 },
   exportBtn: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, flexDirection: "row", alignItems: "center" },
-  exportBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  exportBtnText: { color: Theme.colors.primaryForeground, fontSize: 12, fontWeight: "700" },
 
   // Table
   tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 14, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 6 },
   tableHeaderText: { fontSize: 10, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5 },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
-  tableBorder: { borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
+  tableBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   studentName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground, marginBottom: 1 },
   studentEmail: { fontSize: 10, color: Theme.colors.mutedForeground },
   cellText: { fontSize: 12, color: Theme.colors.mutedForeground },

@@ -160,9 +160,9 @@ export default function ProgramsManagement() {
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
             {showAddForm ? (
-              <><X size={13} color="#FFF" style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
+              <><X size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (
-              <><Plus size={13} color="#FFF" style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Program</Text></>
+              <><Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Program</Text></>
             )}
           </TouchableOpacity>
         </View>
@@ -176,21 +176,21 @@ export default function ProgramsManagement() {
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL PROGRAMS</Text>
-                  <View style={styles.statIconBg}><BookOpen size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{programs.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>DEPARTMENTS LINKED</Text>
-                  <View style={styles.statIconBg}><Building2 size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{uniqueDepts.size}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalStudents}</Text>
               </View>
@@ -200,10 +200,10 @@ export default function ProgramsManagement() {
             {showAddForm && (
               <View style={styles.addFormCard}>
                 <View style={styles.addFormHeader}>
-                  <View style={styles.addFormIconBg}><BookOpen size={14} color="#FFF" /></View>
+                  <View style={styles.addFormIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
                   <Text style={styles.addFormTitle}>Add New Program</Text>
                   <TouchableOpacity onPress={() => { setShowAddForm(false); setNewName(""); }}>
-                    <X size={16} color="#94A3B8" />
+                    <X size={16} color={Theme.colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.addFormFields}>
@@ -212,7 +212,7 @@ export default function ProgramsManagement() {
                     <TextInput
                       style={styles.addFormInput}
                       placeholder="e.g. Bachelor of Computer Science"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={Theme.colors.mutedForeground}
                       value={newName}
                       onChangeText={setNewName}
                     />
@@ -227,10 +227,10 @@ export default function ProgramsManagement() {
                         onValueChange={(v) => setSelectedDeptId(v)}
                         style={styles.picker}
                         mode="dropdown"
-                        dropdownIconColor="#1E293B"
+                        dropdownIconColor={Theme.colors.foreground}
                         itemStyle={{ fontSize: 13, color: Theme.colors.foreground }}
                       >
-                        <Picker.Item label="Select a department" value={null} color="#94A3B8" />
+                        <Picker.Item label="Select a department" value={null} color={Theme.colors.mutedForeground} />
                         {departments.map(d => (
                           <Picker.Item key={d.id} label={d.name} value={d.id} color={Theme.colors.foreground} />
                         ))}
@@ -238,7 +238,7 @@ export default function ProgramsManagement() {
                     </View>
                   </View>
                   <TouchableOpacity style={styles.addFormBtn} onPress={handleAdd} disabled={isCreating}>
-                    <Plus size={13} color="#FFF" style={{ marginRight: 3 }} />
+                    <Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} />
                     <Text style={styles.addFormBtnText}>{isCreating ? "..." : "Add"}</Text>
                   </TouchableOpacity>
                 </View>
@@ -248,7 +248,7 @@ export default function ProgramsManagement() {
             {/* All Programs Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><BookOpen size={12} color="#FFF" /></View>
+                <View style={styles.listHeaderIcon}><BookOpen size={12} color={Theme.colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Programs</Text>
                 <View style={styles.listCountBadge}>
                   <Text style={styles.listCountText}>{programs.length} total</Text>
@@ -266,7 +266,7 @@ export default function ProgramsManagement() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.progName}>{p.name}</Text>
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                        <Building2 size={10} color="#94A3B8" style={{ marginRight: 3 }} />
+                        <Building2 size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.progMeta}>{p.dept}</Text>
                         <View style={styles.progIdBadge}>
                           <Text style={styles.progIdText}>PROG_ID</Text>
@@ -290,7 +290,7 @@ export default function ProgramsManagement() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.detailHeader}>
-              <View style={styles.detailHeaderIcon}><BookOpen size={20} color="#FFF" /></View>
+              <View style={styles.detailHeaderIcon}><BookOpen size={20} color={Theme.colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedProgram?.name}</Text>
                 <Text style={styles.detailSubtitle}>{selectedProgram?.dept}</Text>
@@ -299,14 +299,14 @@ export default function ProgramsManagement() {
 
             <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.45 }} showsVerticalScrollIndicator={false}>
               <View style={styles.detailInfoItem}>
-                <Building2 size={16} color="#94A3B8" style={{ marginRight: 12 }} />
+                <Building2 size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Department</Text>
                   <Text style={styles.detailInfoValue}>{selectedProgram?.dept}</Text>
                 </View>
               </View>
               <View style={styles.detailInfoItem}>
-                <Key size={16} color="#94A3B8" style={{ marginRight: 12 }} />
+                <Key size={16} color={Theme.colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Program ID</Text>
                   <Text style={[styles.detailInfoValue, { fontSize: 11, letterSpacing: 0.3 }]}>{selectedProgram?.id}</Text>
@@ -318,7 +318,7 @@ export default function ProgramsManagement() {
                   <Text style={styles.detailStatNumber}>{selectedProgram?.totalCourses || selectedProgram?.courses?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Courses</Text>
                 </View>
-                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: "#E2E8F0" }]}>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: Theme.colors.border }]}>
                   <Text style={styles.detailStatNumber}>{selectedProgram?.teachers?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Faculty</Text>
                 </View>
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
   subtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3 },
   addBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
-  addBtnText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
+  addBtnText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -2 }],
   },
   addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, height: 54, borderRadius: 8, justifyContent: "center", marginLeft: 8 },
-  addFormBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  addFormBtnText: { fontSize: 12, fontWeight: "700", color: Theme.colors.primaryForeground },
 
   // List Card
   listCard: {
@@ -464,5 +464,5 @@ const styles = StyleSheet.create({
   courseTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4, marginBottom: 2 },
   courseTagText: { fontSize: 9, fontWeight: "700" },
   closeBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  closeBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  closeBtnText: { fontSize: 13, fontWeight: "700", color: Theme.colors.primaryForeground },
 });

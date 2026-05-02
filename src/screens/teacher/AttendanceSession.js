@@ -327,7 +327,7 @@ export default function AttendanceSession({ route, navigation }) {
     return (
       <SafeAreaView style={s.safeArea}>
         <View style={s.centerContainer}>
-          <CameraIcon size={48} color="#94A3B8" />
+          <CameraIcon size={48} color={Theme.colors.mutedForeground} />
           <Text style={s.permTitle}>Camera Permission Required</Text>
           <Text style={s.permSubtitle}>Please grant camera access to capture attendance.</Text>
         </View>
@@ -348,7 +348,7 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.subtitle}>{course.name}</Text>
           </View>
           <TouchableOpacity style={s.historyBtn} onPress={() => setShowHistory(!showHistory)} activeOpacity={0.7}>
-            <History size={14} color="#475569" style={{ marginRight: 4 }} />
+            <History size={14} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
             <Text style={s.historyBtnText}>{showHistory ? "Hide" : "View"} History</Text>
           </TouchableOpacity>
         </View>
@@ -448,7 +448,7 @@ export default function AttendanceSession({ route, navigation }) {
             {isCapturing && (
               <View style={s.cameraOverlayTop}>
                 <View style={s.capturingBadge}>
-                  <ActivityIndicator size="small" color="#FFF" />
+                  <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
                   <Text style={s.capturingText}>Recognizing faces...</Text>
                 </View>
               </View>
@@ -465,7 +465,7 @@ export default function AttendanceSession({ route, navigation }) {
             {/* "Ready" overlay */}
             {!sessionActive && allRecognizedStudents.size === 0 && (
               <View style={s.startOverlay}>
-                <CameraIcon size={28} color="#FFF" />
+                <CameraIcon size={28} color={Theme.colors.primaryForeground} />
                 <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
                 <Text style={s.startOverlaySubtitle}>
                   45-minute session · auto-capture every 2 min{"\n"}· cumulative recognition
@@ -485,7 +485,7 @@ export default function AttendanceSession({ route, navigation }) {
               disabled={localTrainedCount === 0}
               activeOpacity={0.8}
             >
-              <Play size={16} color="#FFF" style={{ marginRight: 8 }} />
+              <Play size={16} color={Theme.colors.primaryForeground} style={{ marginRight: 8 }} />
               <Text style={s.startBtnText}>Start 45-Min Session</Text>
             </TouchableOpacity>
           ) : (
@@ -497,7 +497,7 @@ export default function AttendanceSession({ route, navigation }) {
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={s.resumeBtn} onPress={resumeSession} activeOpacity={0.8}>
-                  <Play size={14} color="#FFF" style={{ marginRight: 6 }} />
+                  <Play size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
                   <Text style={s.resumeBtnText}>Resume</Text>
                 </TouchableOpacity>
               )}
@@ -516,7 +516,7 @@ export default function AttendanceSession({ route, navigation }) {
                 disabled={isCapturing}
                 activeOpacity={0.8}
               >
-                <Zap size={14} color="#FFF" style={{ marginRight: 6 }} />
+                <Zap size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
                 <Text style={s.manualCaptureBtnText}>{isCapturing ? "Scanning..." : "Scan Now"}</Text>
               </TouchableOpacity>
             </View>
@@ -550,7 +550,7 @@ export default function AttendanceSession({ route, navigation }) {
 
           {recognizedCount === 0 ? (
             <View style={s.emptyResultsContainer}>
-              <ScanFace size={32} color="#CBD5E1" />
+              <ScanFace size={32} color={Theme.colors.mutedForeground} />
               <Text style={s.emptyResultsTitle}>No recognitions yet</Text>
               <Text style={s.emptyResultsSubtitle}>Start a session to track attendance.</Text>
             </View>
@@ -585,10 +585,10 @@ export default function AttendanceSession({ route, navigation }) {
                 activeOpacity={0.8}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#FFF" />
+                  <ActivityIndicator size="small" color={Theme.colors.primaryForeground} />
                 ) : (
                   <>
-                    <Send size={14} color="#FFF" style={{ marginRight: 8 }} />
+                    <Send size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 8 }} />
                     <Text style={s.submitBtnText}>
                       Submit Attendance · {recognizedCount}/{students.length} ({attendanceRate}%)
                     </Text>
@@ -643,39 +643,39 @@ const s = StyleSheet.create({
   statLabel: { fontSize: 8, fontWeight: "600", color: Theme.colors.mutedForeground, letterSpacing: 0.3, marginTop: 4 },
   statNumber: { fontSize: 22, fontWeight: "900", color: Theme.colors.foreground, letterSpacing: -0.5 },
 
-  cameraCard: { backgroundColor: "#1E293B", borderRadius: 16, padding: 16, marginBottom: 16 },
+  cameraCard: { backgroundColor: Theme.colors.foreground, borderRadius: 16, padding: 16, marginBottom: 16 },
   cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  cameraTitle: { fontSize: 16, fontWeight: "700", color: "#FFF" },
+  cameraTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.primaryForeground },
   cameraSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 2 },
   liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.9)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Theme.colors.background, marginRight: 5 },
-  liveText: { color: "#FFF", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  liveText: { color: Theme.colors.primaryForeground, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
 
   cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: Theme.colors.foreground, marginBottom: 16, position: "relative" },
   camera: { width: "100%", height: "100%" },
 
   cameraOverlayTop: { position: "absolute", top: 10, right: 10, zIndex: 10 },
   capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.85)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  capturingText: { color: "#FFF", fontSize: 11, fontWeight: "600", marginLeft: 6 },
+  capturingText: { color: Theme.colors.primaryForeground, fontSize: 11, fontWeight: "600", marginLeft: 6 },
   cameraOverlayBottom: { position: "absolute", bottom: 10, left: 10, right: 10, alignItems: "center", zIndex: 10 },
-  captureCountText: { color: "#FFF", fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
+  captureCountText: { color: Theme.colors.primaryForeground, fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
 
   startOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(15,23,42,0.75)", zIndex: 5 },
-  startOverlayTitle: { color: "#FFF", fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
+  startOverlayTitle: { color: Theme.colors.primaryForeground, fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
   startOverlaySubtitle: { color: Theme.colors.mutedForeground, fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 4 },
   warningText: { color: "#FCD34D", fontSize: 11, fontWeight: "600", marginTop: 10 },
 
   startBtn: { flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  startBtnText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
+  startBtnText: { color: Theme.colors.primaryForeground, fontSize: 15, fontWeight: "700" },
   activeControlsRow: { flexDirection: "row", gap: 8 },
   pauseBtn: { flex: 1, flexDirection: "row", backgroundColor: "#FFFBEB", paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(245,158,11,0.3)" },
   pauseBtnText: { color: "#B45309", fontSize: 12, fontWeight: "700" },
   resumeBtn: { flex: 1, flexDirection: "row", backgroundColor: Theme.colors.accent, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  resumeBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  resumeBtnText: { color: Theme.colors.primaryForeground, fontSize: 12, fontWeight: "700" },
   stopBtn: { flex: 1, flexDirection: "row", backgroundColor: Theme.colors.background, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(239,68,68,0.3)" },
   stopBtnText: { color: "#DC2626", fontSize: 12, fontWeight: "700" },
   manualCaptureBtn: { flex: 2, flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  manualCaptureBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  manualCaptureBtnText: { color: Theme.colors.primaryForeground, fontSize: 12, fontWeight: "700" },
 
   resultsCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: Theme.colors.border },
   resultsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
@@ -692,14 +692,14 @@ const s = StyleSheet.create({
   emptyResultsTitle: { fontSize: 15, fontWeight: "700", color: Theme.colors.mutedForeground, marginTop: 10 },
   emptyResultsSubtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 4 },
 
-  recognizedRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F8FAFC" },
+  recognizedRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted },
   recognizedAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDF4", justifyContent: "center", alignItems: "center", marginRight: 10 },
   recognizedName: { fontSize: 13, fontWeight: "700", color: Theme.colors.foreground },
   recognizedEmail: { fontSize: 10, color: Theme.colors.mutedForeground, marginTop: 1 },
 
   submitHint: { fontSize: 11, color: Theme.colors.mutedForeground, textAlign: "center", marginBottom: 10 },
   submitBtn: { flexDirection: "row", backgroundColor: Theme.colors.primaryDark, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  submitBtnText: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  submitBtnText: { color: Theme.colors.primaryForeground, fontSize: 13, fontWeight: "700" },
 
   historyCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: Theme.colors.border },
   historyTitle: { fontSize: 16, fontWeight: "700", color: Theme.colors.foreground },

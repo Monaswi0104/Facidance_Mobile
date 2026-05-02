@@ -110,9 +110,9 @@ export default function DepartmentsManagement() {
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
             {showAddForm ? (
-              <><X size={13} color="#FFF" style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
+              <><X size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (
-              <><Plus size={13} color="#FFF" style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Department</Text></>
+              <><Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Add Department</Text></>
             )}
           </TouchableOpacity>
         </View>
@@ -126,21 +126,21 @@ export default function DepartmentsManagement() {
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>TOTAL{"\n"}DEPARTMENTS</Text>
-                  <View style={styles.statIconBg}><Building2 size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{departments.length}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>ACTIVE{"\n"}PROGRAMS</Text>
-                  <View style={styles.statIconBg}><GraduationCap size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><GraduationCap size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalPrograms}</Text>
               </View>
               <View style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <Text style={styles.statLabel} numberOfLines={2} adjustsFontSizeToFit>FACULTY{"\n"}MEMBERS</Text>
-                  <View style={styles.statIconBg}><Users size={14} color="#FFF" /></View>
+                  <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
                 </View>
                 <Text style={styles.statNumber}>{totalTeachers}</Text>
               </View>
@@ -150,10 +150,10 @@ export default function DepartmentsManagement() {
             {showAddForm && (
               <View style={styles.addFormCard}>
                 <View style={styles.addFormHeader}>
-                  <View style={styles.addFormIconBg}><Building2 size={14} color="#FFF" /></View>
+                  <View style={styles.addFormIconBg}><Building2 size={14} color={Theme.colors.primaryForeground} /></View>
                   <Text style={styles.addFormTitle}>Add New Department</Text>
                   <TouchableOpacity onPress={() => { setShowAddForm(false); setNewName(""); }}>
-                    <X size={16} color="#94A3B8" />
+                    <X size={16} color={Theme.colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.addFormLabel}>DEPARTMENT NAME</Text>
@@ -161,12 +161,12 @@ export default function DepartmentsManagement() {
                   <TextInput
                     style={styles.addFormInput}
                     placeholder="e.g. Computer Science"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={Theme.colors.mutedForeground}
                     value={newName}
                     onChangeText={setNewName}
                   />
                   <TouchableOpacity style={styles.addFormBtn} onPress={handleAdd} disabled={isCreating}>
-                    <Plus size={13} color="#FFF" style={{ marginRight: 3 }} />
+                    <Plus size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 3 }} />
                     <Text style={styles.addFormBtnText}>{isCreating ? "..." : "Add"}</Text>
                   </TouchableOpacity>
                 </View>
@@ -176,7 +176,7 @@ export default function DepartmentsManagement() {
             {/* All Departments Card */}
             <View style={styles.listCard}>
               <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><Building2 size={12} color="#FFF" /></View>
+                <View style={styles.listHeaderIcon}><Building2 size={12} color={Theme.colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Departments</Text>
                 <View style={styles.listCountBadge}>
                   <Text style={styles.listCountText}>{departments.length} total</Text>
@@ -194,10 +194,10 @@ export default function DepartmentsManagement() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.deptName}>{d.name}</Text>
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <GraduationCap size={10} color="#94A3B8" style={{ marginRight: 3 }} />
+                        <GraduationCap size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.deptMeta}>{d.programs} programs</Text>
                         <Text style={[styles.deptMeta, { marginHorizontal: 6 }]}>·</Text>
-                        <Users size={10} color="#94A3B8" style={{ marginRight: 3 }} />
+                        <Users size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.deptMeta}>{d.teachers} teachers</Text>
                       </View>
                     </View>
@@ -219,7 +219,7 @@ export default function DepartmentsManagement() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.detailHeader}>
-              <View style={styles.detailHeaderIcon}><Building2 size={20} color="#FFF" /></View>
+              <View style={styles.detailHeaderIcon}><Building2 size={20} color={Theme.colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedDept?.name}</Text>
                 <Text style={styles.detailSubtitle}>{selectedDept?.programs} Programs • {selectedDept?.teachers} Teachers</Text>
@@ -232,7 +232,7 @@ export default function DepartmentsManagement() {
               {selectedDept?.programsList?.length > 0 ? (
                 selectedDept.programsList.map((p, idx) => (
                   <View key={p.id || idx} style={styles.subItem}>
-                    <GraduationCap size={14} color="#475569" style={{ marginRight: 10 }} />
+                    <GraduationCap size={14} color={Theme.colors.textBody} style={{ marginRight: 10 }} />
                     <Text style={styles.subItemText}>{p.name}</Text>
                   </View>
                 ))
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "800", color: Theme.colors.foreground },
   subtitle: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 3 },
   addBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
-  addBtnText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
+  addBtnText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   addFormRow: { flexDirection: "row", alignItems: "center" },
   addFormInput: { flex: 1, backgroundColor: Theme.colors.secondary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: Theme.colors.foreground, borderWidth: 1, borderColor: Theme.colors.border, marginRight: 8 },
   addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
-  addFormBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  addFormBtnText: { fontSize: 12, fontWeight: "700", color: Theme.colors.primaryForeground },
 
   // List Card
   listCard: {
@@ -348,5 +348,5 @@ const styles = StyleSheet.create({
   teacherAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
   teacherAvatarText: { fontSize: 12, fontWeight: "800", color: Theme.colors.primaryDark },
   closeBtn: { marginTop: 14, backgroundColor: Theme.colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  closeBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  closeBtnText: { fontSize: 13, fontWeight: "700", color: Theme.colors.primaryForeground },
 });

@@ -181,9 +181,9 @@ export default function RegisterScreen({ navigation }) {
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)}
               >
                 {isPasswordVisible ? (
-                  <EyeOff size={18} color="#94A3B8" />
+                  <EyeOff size={18} color={Theme.colors.mutedForeground} />
                 ) : (
-                  <Eye size={18} color="#94A3B8" />
+                  <Eye size={18} color={Theme.colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -202,7 +202,7 @@ export default function RegisterScreen({ navigation }) {
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={styles.submitText}>Submit registration</Text>
-                <ArrowRight size={16} color="#FFF" style={{ marginLeft: 6 }} />
+                <ArrowRight size={16} color={Theme.colors.primaryForeground} style={{ marginLeft: 6 }} />
               </View>
             )}
           </TouchableOpacity>
@@ -335,14 +335,14 @@ const styles = StyleSheet.create({
   },
   formSubtitle: {
     fontSize: 14,
-    color: "#64748B",
+    color: Theme.colors.mutedForeground,
     marginBottom: 24,
   },
   fieldGroup: { marginBottom: 16 },
   fieldLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#475569",
+    color: Theme.colors.textBody,
     letterSpacing: 0.8,
     marginBottom: 7,
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
     borderRadius: 10,
     overflow: "hidden",
   },
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     color: Theme.colors.foreground,
   },
   eyeBtn: { paddingHorizontal: 14, paddingVertical: 12 },
-  passwordHint: { fontSize: 12, color: "#94A3B8", marginTop: 5 },
+  passwordHint: { fontSize: 12, color: Theme.colors.mutedForeground, marginTop: 5 },
 
   // Button
   submitBtn: {
@@ -392,12 +392,12 @@ const styles = StyleSheet.create({
 
   // Login Link
   loginRow: { alignItems: "center", marginTop: 20 },
-  loginRowText: { fontSize: 14, color: "#475569", textAlign: "center" },
+  loginRowText: { fontSize: 14, color: Theme.colors.textBody, textAlign: "center" },
   loginRowLink: { color: Theme.colors.accent, fontWeight: "700" },
 
   // Terms
   termsText: {
-    fontSize: 12, color: "#94A3B8",
+    fontSize: 12, color: Theme.colors.mutedForeground,
     textAlign: "center", marginTop: 18, lineHeight: 18,
   },
 });

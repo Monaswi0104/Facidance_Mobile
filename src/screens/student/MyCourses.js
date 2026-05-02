@@ -65,11 +65,11 @@ export default function MyCourses({ navigation }) {
 
         {/* Search */}
         <View style={styles.searchBar}>
-          <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+          <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by course name, code or teacher..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={Theme.colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
           />
@@ -94,7 +94,7 @@ export default function MyCourses({ navigation }) {
               {/* Card Top Row */}
               <View style={styles.cardTopRow}>
                 <View style={styles.cardIconBg}>
-                  <BookOpen size={16} color="#FFF" />
+                  <BookOpen size={16} color={Theme.colors.primaryForeground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
@@ -107,25 +107,25 @@ export default function MyCourses({ navigation }) {
                     </View>
                   </View>
                 </View>
-                <ChevronRight size={18} color="#94A3B8" />
+                <ChevronRight size={18} color={Theme.colors.mutedForeground} />
               </View>
 
               {/* Details */}
               <View style={styles.detailsList}>
                 <View style={styles.detailRow}>
-                  <User size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <User size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.teacher}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Calendar size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Calendar size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.semester} · {item.year}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <BookOpen size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <BookOpen size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.program}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Hash size={12} color="#94A3B8" style={{ marginRight: 6 }} />
+                  <Hash size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
                   <Text style={styles.detailText}>{item.code}</Text>
                 </View>
               </View>
@@ -133,7 +133,7 @@ export default function MyCourses({ navigation }) {
               {/* View Details Footer */}
               <View style={styles.cardFooter}>
                 <Text style={styles.viewDetailsText}>View details</Text>
-                <ChevronRight size={14} color="#94A3B8" />
+                <ChevronRight size={14} color={Theme.colors.mutedForeground} />
               </View>
             </TouchableOpacity>
           ))

@@ -106,7 +106,7 @@ export default function AttendanceCamera({ navigation }) {
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionIconBg}>
-                <BookOpen size={16} color="#FFF" />
+                <BookOpen size={16} color={Theme.colors.primaryForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sectionHeaderText}>Select Course</Text>
@@ -115,10 +115,10 @@ export default function AttendanceCamera({ navigation }) {
             </View>
 
             <View style={styles.searchBar}>
-              <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+              <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
               <TextInput style={styles.searchInput}
                 placeholder="Search by course name, department, program, or semester..."
-                placeholderTextColor="#94A3B8" value={search} onChangeText={setSearch} />
+                placeholderTextColor={Theme.colors.mutedForeground} value={search} onChangeText={setSearch} />
             </View>
 
             {isLoading ? (
@@ -172,28 +172,28 @@ export default function AttendanceCamera({ navigation }) {
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{students.length}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>TRAINED</Text>
-                <View style={styles.statIconBg}><ScanFace size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><ScanFace size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: Theme.colors.accent }]}>{trained}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>PHOTOS</Text>
-                <View style={styles.statIconBg}><Camera size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><Camera size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{withPhotos}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>UNTRAINED</Text>
-                <View style={styles.statIconBg}><AlertCircle size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><AlertCircle size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: Theme.colors.destructive }]}>{notTrained}</Text>
             </View>
@@ -226,7 +226,7 @@ export default function AttendanceCamera({ navigation }) {
               notTrainedCount: notTrained,
             })}
             activeOpacity={0.8}>
-            <Play size={14} color="#FFF" style={{ marginRight: 6 }} />
+            <Play size={14} color={Theme.colors.primaryForeground} style={{ marginRight: 6 }} />
             <Text style={styles.captureBtnText}>Capture Attendance</Text>
           </TouchableOpacity>
         </View>
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  captureBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
+  captureBtnText: { color: Theme.colors.primaryForeground, fontSize: 12, fontWeight: "700" },
 
   // Table
   tableCard: { backgroundColor: Theme.colors.background, borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: Theme.colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: Theme.colors.border },

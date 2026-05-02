@@ -69,49 +69,49 @@ export default function CourseAttendance({ route, navigation }) {
       {/* Course Details & Instructor side by side */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><BookOpen size={14} color="#FFF" /></View>
+          <View style={styles.cardIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Course Details</Text>
             <Text style={styles.cardSubtitle}>Academic information</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <Calendar size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <Calendar size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Academic Period</Text>
             <Text style={styles.infoValue}>{course.year} · {course.semester}</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <GraduationCap size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <GraduationCap size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Program</Text>
             <Text style={styles.infoValue}>{course.program}</Text>
           </View>
         </View>
         <View style={styles.infoBanner}>
-          <Info size={12} color="#64748B" style={{ marginRight: 6 }} />
+          <Info size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
           <Text style={styles.infoBannerText}>To mark attendance, use the <Text style={{ fontWeight: "700" }}>entry code shared by your teacher</Text> in class.</Text>
         </View>
       </View>
 
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><User size={14} color="#FFF" /></View>
+          <View style={styles.cardIconBg}><User size={14} color={Theme.colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Instructor</Text>
             <Text style={styles.cardSubtitle}>Course teacher details</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <User size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <User size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Name</Text>
             <Text style={styles.infoValue}>{course.teacher}</Text>
           </View>
         </View>
         <View style={styles.infoRow}>
-          <Mail size={12} color="#94A3B8" style={{ marginRight: 8 }} />
+          <Mail size={12} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.infoLabel}>Email</Text>
             <Text style={styles.infoValue}>{course.teacherEmail || "Not Provided"}</Text>
@@ -122,7 +122,7 @@ export default function CourseAttendance({ route, navigation }) {
       {/* Performance Summary */}
       <View style={styles.sectionCard}>
         <View style={styles.cardHeaderRow}>
-          <View style={styles.cardIconBg}><BarChart3 size={14} color="#FFF" /></View>
+          <View style={styles.cardIconBg}><BarChart3 size={14} color={Theme.colors.primaryForeground} /></View>
           <View>
             <Text style={styles.cardTitle}>Performance Summary</Text>
             <Text style={styles.cardSubtitle}>Your overall attendance for this course</Text>
@@ -165,7 +165,7 @@ export default function CourseAttendance({ route, navigation }) {
   const renderHistory = () => (
     <View style={styles.sectionCard}>
       <View style={styles.cardHeaderRow}>
-        <View style={styles.cardIconBg}><Calendar size={14} color="#FFF" /></View>
+        <View style={styles.cardIconBg}><Calendar size={14} color={Theme.colors.primaryForeground} /></View>
         <View>
           <Text style={styles.cardTitle}>Attendance History</Text>
           <Text style={styles.cardSubtitle}>All session records for this course</Text>
@@ -218,15 +218,15 @@ export default function CourseAttendance({ route, navigation }) {
         <View style={styles.courseHeader}>
           <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
             <View style={styles.headerIconBg}>
-              <BookOpen size={18} color="#FFF" />
+              <BookOpen size={18} color={Theme.colors.primaryForeground} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.courseTitle} numberOfLines={2}>{course.name}</Text>
               <Text style={styles.courseProgram}>{course.program}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                <User size={11} color="#94A3B8" style={{ marginRight: 4 }} />
+                <User size={11} color={Theme.colors.mutedForeground} style={{ marginRight: 4 }} />
                 <Text style={styles.courseMeta}>{course.teacher}</Text>
-                <Calendar size={11} color="#94A3B8" style={{ marginLeft: 10, marginRight: 4 }} />
+                <Calendar size={11} color={Theme.colors.mutedForeground} style={{ marginLeft: 10, marginRight: 4 }} />
                 <Text style={styles.courseMeta}>{course.semester} · {course.year}</Text>
               </View>
             </View>
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   progressLabel: { fontSize: 12, color: Theme.colors.mutedForeground, fontWeight: "600" },
   progressPercent: { fontSize: 14, fontWeight: "800" },
-  progressTrack: { height: 8, borderRadius: 4, backgroundColor: "#E2E8F0", overflow: "hidden", marginBottom: 8 },
+  progressTrack: { height: 8, borderRadius: 4, backgroundColor: Theme.colors.border, overflow: "hidden", marginBottom: 8 },
   progressFill: { height: "100%", borderRadius: 4 },
   perfStatsRow: { flexDirection: "row", justifyContent: "space-around", borderTopWidth: 1, borderTopColor: Theme.colors.muted, paddingTop: 14 },
   perfStatBox: { alignItems: "center" },

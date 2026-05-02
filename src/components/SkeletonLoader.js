@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Easing } from "react-native";
+import { Theme } from "../theme/Theme";
 
 // Animated shimmer effect
 function ShimmerView({ style }) {
@@ -113,18 +114,18 @@ export function HeaderSkeleton() {
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: Theme.colors.border,
     borderRadius: 4,
   },
 
   // Stat Card
   statCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
   },
   statTopRow: {
     flexDirection: "row",
@@ -139,12 +140,12 @@ const styles = StyleSheet.create({
 
   // Section Card
   sectionCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 18,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
   },
   sectionTitle: { width: 120, height: 16, borderRadius: 6, marginBottom: 4 },
   sectionSubtitle: { width: 100, height: 11, borderRadius: 6, marginBottom: 16 },
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: Theme.colors.muted,
   },
   rowAvatar: { width: 34, height: 34, borderRadius: 17, marginRight: 10 },
   rowContent: { flex: 1 },
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: Theme.colors.muted,
   },
   listAvatar: { width: 36, height: 36, borderRadius: 10, marginRight: 12 },
   listContent: { flex: 1 },
@@ -176,12 +177,12 @@ const styles = StyleSheet.create({
 
   // Course Card
   courseCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: Theme.colors.background,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: Theme.colors.border,
   },
   courseTitle: { width: "70%", height: 14, borderRadius: 6, marginBottom: 8 },
   courseMeta: { flexDirection: "row", gap: 8 },

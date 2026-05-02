@@ -185,21 +185,21 @@ export default function StudentsManagement() {
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><Users size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{students.length}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>ACTIVE</Text>
-                <View style={styles.statIconBg}><CheckCircle size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><CheckCircle size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: "#10B981" }]}>{totalActive}</Text>
             </View>
             <View style={styles.statCard}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>GRADUATED</Text>
-                <View style={styles.statIconBg}><RefreshCw size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><RefreshCw size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{totalGraduated}</Text>
             </View>
@@ -209,11 +209,11 @@ export default function StudentsManagement() {
         {/* Search + Program Filter */}
         <View style={styles.searchFilterRow}>
           <View style={styles.searchBar}>
-            <Search size={14} color="#94A3B8" style={{ marginRight: 8 }} />
+            <Search size={14} color={Theme.colors.mutedForeground} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search name, email, program..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={Theme.colors.mutedForeground}
               value={search}
               onChangeText={setSearch}
             />
@@ -222,7 +222,7 @@ export default function StudentsManagement() {
             <Text style={styles.programDropdownText} numberOfLines={1}>
               {selectedProgram === "all" ? "All Programs" : selectedProgram}
             </Text>
-            <ChevronDown size={14} color="#475569" />
+            <ChevronDown size={14} color={Theme.colors.textBody} />
           </TouchableOpacity>
         </View>
 
@@ -298,7 +298,7 @@ export default function StudentsManagement() {
                   </View>
                   {s.courseCount > 0 && (
                     <View style={styles.courseCountBadge}>
-                      <BookOpen size={10} color="#64748B" style={{ marginRight: 3 }} />
+                      <BookOpen size={10} color={Theme.colors.mutedForeground} style={{ marginRight: 3 }} />
                       <Text style={styles.courseCountText}>{s.courseCount}</Text>
                     </View>
                   )}
@@ -307,10 +307,10 @@ export default function StudentsManagement() {
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("view", s)}>
-                    <Eye size={14} color="#475569" />
+                    <Eye size={14} color={Theme.colors.textBody} />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("edit", s)}>
-                    <Edit2 size={14} color="#475569" />
+                    <Edit2 size={14} color={Theme.colors.textBody} />
                   </TouchableOpacity>
                   {s.status !== "graduated" ? (
                     <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
@@ -393,7 +393,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleEdit} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Save</Text>}
+                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Save</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -407,7 +407,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#6D28D9'}]} onPress={handleGraduate} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
+                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -421,7 +421,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#059669'}]} onPress={handleActivate} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Activate</Text>}
+                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Activate</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -435,7 +435,7 @@ export default function StudentsManagement() {
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
                    <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#DC2626'}]} onPress={handleDelete} disabled={isActionLoading}>
-                     {isActionLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.modalConfirmText}>Delete</Text>}
+                     {isActionLoading ? <ActivityIndicator color={Theme.colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Delete</Text>}
                    </TouchableOpacity>
                  </View>
               </View>
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   filterPill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 16, backgroundColor: Theme.colors.muted, marginRight: 8 },
   filterPillActive: { backgroundColor: Theme.colors.primaryDark },
   filterText: { fontSize: 12, fontWeight: "600", color: Theme.colors.mutedForeground },
-  filterTextActive: { color: "#FFF" },
+  filterTextActive: { color: Theme.colors.primaryForeground },
 
   // List
   listCard: {
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   // Badges
   badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 },
   programBadge: { backgroundColor: Theme.colors.primaryDark, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  programBadgeText: { fontSize: 10, fontWeight: "600", color: "#FFF" },
+  programBadgeText: { fontSize: 10, fontWeight: "600", color: Theme.colors.primaryForeground },
   noProgramText: { fontSize: 11, color: Theme.colors.mutedForeground, fontStyle: "italic" },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   statusActive: { backgroundColor: "#D1FAE5" },
@@ -583,5 +583,5 @@ const styles = StyleSheet.create({
   modalCancelBtnAction: { paddingVertical: 10, paddingHorizontal: 20, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 20, alignItems: "center" },
   modalCancelText: { fontSize: 14, fontWeight: "600", color: Theme.colors.textBody },
   modalConfirmBtn: { backgroundColor: Theme.colors.primaryDark, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, alignItems: "center", minWidth: 90 },
-  modalConfirmText: { color: "#FFF", fontSize: 14, fontWeight: "700" },
+  modalConfirmText: { color: Theme.colors.primaryForeground, fontSize: 14, fontWeight: "700" },
 });

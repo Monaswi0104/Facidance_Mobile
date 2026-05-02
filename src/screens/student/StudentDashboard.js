@@ -102,15 +102,15 @@ export default function StudentDashboard({ navigation }) {
           </View>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={() => navigation.navigate("AttendanceHistory")}>
-              <BarChart3 size={13} color="#475569" style={{ marginRight: 4 }} />
+              <BarChart3 size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnOutlineText}>History</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("StudentCoursesTab")}>
-              <BookOpen size={13} color="#FFF" style={{ marginRight: 4 }} />
+              <BookOpen size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnFilledText}>Courses</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={() => navigation.navigate("ProfileUpload")}>
-              <User size={13} color="#475569" style={{ marginRight: 4 }} />
+              <User size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnOutlineText}>Profile</Text>
             </TouchableOpacity>
           </View>
@@ -128,7 +128,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("StudentCoursesTab")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>MY COURSES</Text>
-                <View style={styles.statIconBg}><BookOpen size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><BookOpen size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{stats.courses}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -140,7 +140,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("AttendanceHistory")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
-                <View style={styles.statIconBg}><BarChart3 size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><BarChart3 size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={[styles.statNumber, { color: getAttendanceColor(stats.avgRaw) }]}>{stats.avgAttendance}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -152,7 +152,7 @@ export default function StudentDashboard({ navigation }) {
             <TouchableOpacity style={styles.statCard} activeOpacity={0.7} onPress={() => navigation.navigate("AttendanceHistory")}>
               <View style={styles.statTopRow}>
                 <Text style={styles.statLabel}>CLASSES{"\n"}ATTENDED</Text>
-                <View style={styles.statIconBg}><Clock size={14} color="#FFF" /></View>
+                <View style={styles.statIconBg}><Clock size={14} color={Theme.colors.primaryForeground} /></View>
               </View>
               <Text style={styles.statNumber}>{stats.attended}</Text>
             </TouchableOpacity>
@@ -219,7 +219,7 @@ export default function StudentDashboard({ navigation }) {
 
             {/* Full History */}
             <TouchableOpacity style={styles.fullHistoryBtn} onPress={() => navigation.navigate("AttendanceHistory")}>
-              <ArrowUpRight size={14} color="#475569" style={{ marginRight: 6 }} />
+              <ArrowUpRight size={14} color={Theme.colors.textBody} style={{ marginRight: 6 }} />
               <Text style={styles.fullHistoryText}>Full History</Text>
             </TouchableOpacity>
           </View>
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primaryDark,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
+  headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18 },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primaryDark,
     justifyContent: "center", alignItems: "center", marginRight: 12,
   },
-  stepBadgeText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
+  stepBadgeText: { fontSize: 10, fontWeight: "700", color: Theme.colors.primaryForeground },
   stepText: { fontSize: 13, color: Theme.colors.textBody, flex: 1, lineHeight: 18 },
 
   // Insights
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   insightRateLabel: { fontSize: 9, fontWeight: "700", color: Theme.colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   insightBigPercent: { fontSize: 40, fontWeight: "800", marginBottom: 8 },
-  insightProgressTrack: { width: "80%", height: 6, borderRadius: 3, backgroundColor: "#E2E8F0", overflow: "hidden", marginBottom: 6 },
+  insightProgressTrack: { width: "80%", height: 6, borderRadius: 3, backgroundColor: Theme.colors.border, overflow: "hidden", marginBottom: 6 },
   insightProgressFill: { height: "100%", borderRadius: 3 },
   insightTarget: { fontSize: 11, color: Theme.colors.mutedForeground },
 

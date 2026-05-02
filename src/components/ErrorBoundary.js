@@ -34,7 +34,7 @@ export class ErrorBoundary extends React.Component {
               The app encountered an unexpected error. Please try restarting the screen.
             </Text>
             <TouchableOpacity style={styles.button} onPress={this.handleReset}>
-              <RefreshCw size={18} color="#FFF" style={{ marginRight: 8 }} />
+              <RefreshCw size={18} color={Theme.colors.primaryForeground} style={{ marginRight: 8 }} />
               <Text style={styles.buttonText}>Try Again</Text>
             </TouchableOpacity>
           </View>

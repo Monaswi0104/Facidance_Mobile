@@ -122,12 +122,12 @@ export default function AdminDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color="#FFF" />, screen: "TeachersManagement" },
-    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color="#FFF" />, screen: "StudentsManagement" },
-    { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: "#64748B", icon: <Building2 size={16} color="#FFF" />, screen: "DepartmentsManagement" },
-    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color="#FFF" />, screen: "CoursesManagement" },
-    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color="#FFF" />, screen: null },
-    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: "#64748B", icon: <UserX size={16} color="#FFF" />, screen: "StudentsManagement" },
+    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color={Theme.colors.primaryForeground} />, screen: "TeachersManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color={Theme.colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: Theme.colors.mutedForeground, icon: <Building2 size={16} color={Theme.colors.primaryForeground} />, screen: "DepartmentsManagement" },
+    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color={Theme.colors.primaryForeground} />, screen: "CoursesManagement" },
+    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color={Theme.colors.primaryForeground} />, screen: null },
+    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: Theme.colors.mutedForeground, icon: <UserX size={16} color={Theme.colors.primaryForeground} />, screen: "StudentsManagement" },
   ];
 
   const maxProgramStudents = Math.max(...programDist.map(p => p.students), 1);
@@ -151,11 +151,11 @@ export default function AdminDashboard({ navigation }) {
           </View>
           <View style={styles.headerBtns}>
             <TouchableOpacity style={styles.headerBtnOutline} onPress={loadData} activeOpacity={0.7}>
-              <RefreshCw size={13} color="#475569" style={{ marginRight: 4 }} />
+              <RefreshCw size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnText}>Refresh</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
-              <Users size={13} color="#FFF" style={{ marginRight: 4 }} />
+              <Users size={13} color={Theme.colors.primaryForeground} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnFilledText}>Manage Teachers</Text>
             </TouchableOpacity>
           </View>
@@ -290,7 +290,7 @@ export default function AdminDashboard({ navigation }) {
                 <Text style={styles.navTitle}>{action.title}</Text>
                 <Text style={styles.navDesc}>{action.desc}</Text>
               </View>
-              <ChevronRight size={16} color="#94A3B8" />
+              <ChevronRight size={16} color={Theme.colors.mutedForeground} />
             </TouchableOpacity>
           ))}
         </View>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primaryDark,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
-  headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: "#FFF" },
+  headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: Theme.colors.primaryForeground },
 
   // Stats Grid
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 16 },

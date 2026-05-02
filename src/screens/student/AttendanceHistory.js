@@ -97,28 +97,28 @@ export default function AttendanceHistory({ route }) {
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={styles.statLabel}>TOTAL CLASSES</Text>
-            <View style={styles.statIconBg}><Calendar size={14} color="#FFF" /></View>
+            <View style={styles.statIconBg}><Calendar size={14} color={Theme.colors.primaryForeground} /></View>
           </View>
           <Text style={styles.statNumber} numberOfLines={1} adjustsFontSizeToFit>{stats.total}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={[styles.statLabel, { color: "#10B981" }]}>PRESENT</Text>
-            <View style={styles.statIconBg}><CheckCircle size={14} color="#FFF" /></View>
+            <View style={styles.statIconBg}><CheckCircle size={14} color={Theme.colors.primaryForeground} /></View>
           </View>
           <Text style={[styles.statNumber, { color: "#10B981" }]} numberOfLines={1} adjustsFontSizeToFit>{stats.present}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={[styles.statLabel, { color: Theme.colors.destructive }]}>ABSENT</Text>
-            <View style={styles.statIconBg}><XCircle size={14} color="#FFF" /></View>
+            <View style={styles.statIconBg}><XCircle size={14} color={Theme.colors.primaryForeground} /></View>
           </View>
           <Text style={[styles.statNumber, { color: Theme.colors.destructive }]} numberOfLines={1} adjustsFontSizeToFit>{stats.absent}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
             <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
-            <View style={styles.statIconBg}><TrendingUp size={14} color="#FFF" /></View>
+            <View style={styles.statIconBg}><TrendingUp size={14} color={Theme.colors.primaryForeground} /></View>
           </View>
           <Text style={[styles.statNumber, { color: getBarColor(parseFloat(stats.rate)) }]} numberOfLines={1} adjustsFontSizeToFit>{stats.rate}%</Text>
         </View>
@@ -167,11 +167,11 @@ export default function AttendanceHistory({ route }) {
       {/* Search + Filters */}
       <View style={styles.filterRow}>
         <View style={styles.searchBar}>
-          <Search size={13} color="#94A3B8" style={{ marginRight: 6 }} />
+          <Search size={13} color={Theme.colors.mutedForeground} style={{ marginRight: 6 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search courses..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={Theme.colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
           />
@@ -247,7 +247,7 @@ export default function AttendanceHistory({ route }) {
             <Text style={styles.subtitle}>Review and analyze your attendance across all courses.</Text>
           </View>
           <TouchableOpacity style={styles.exportBtn} onPress={exportCSV}>
-            <Download size={13} color="#475569" style={{ marginRight: 4 }} />
+            <Download size={13} color={Theme.colors.textBody} style={{ marginRight: 4 }} />
             <Text style={styles.exportBtnText}>Export CSV</Text>
           </TouchableOpacity>
         </View>
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   courseRowName: { fontSize: 14, fontWeight: "700", color: Theme.colors.foreground },
   courseRowMeta: { fontSize: 11, color: Theme.colors.mutedForeground, marginTop: 1 },
   courseRowPct: { fontSize: 13, fontWeight: "700" },
-  courseBarTrack: { height: 6, borderRadius: 3, backgroundColor: "#E2E8F0", overflow: "hidden" },
+  courseBarTrack: { height: 6, borderRadius: 3, backgroundColor: Theme.colors.border, overflow: "hidden" },
   courseBarFill: { height: "100%", borderRadius: 3 },
 
   // Filters
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   filterPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: Theme.colors.border, marginLeft: 4, backgroundColor: Theme.colors.background },
   filterPillActive: { backgroundColor: Theme.colors.primaryDark, borderColor: Theme.colors.primaryDark },
   filterPillText: { fontSize: 11, fontWeight: "600", color: Theme.colors.textBody },
-  filterPillTextActive: { color: "#FFF" },
+  filterPillTextActive: { color: Theme.colors.primaryForeground },
 
   // Table
   tableHeaderRow: { flexDirection: "row", paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: Theme.colors.muted, marginBottom: 4 },
