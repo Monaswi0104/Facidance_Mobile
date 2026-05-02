@@ -238,11 +238,10 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "relative",
     paddingHorizontal: 24,
+    overflow: "hidden",
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
-    width: "100%",
-    height: "100%",
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
