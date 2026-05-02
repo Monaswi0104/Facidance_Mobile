@@ -323,9 +323,9 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: -16,
+    marginTop: -28,
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 40,
     paddingBottom: 36,
   },
   formTitle: {
