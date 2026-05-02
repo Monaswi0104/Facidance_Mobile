@@ -353,8 +353,10 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 36,
-    borderTopWidth: isDark ? 1 : 0,
-    borderTopColor: isDark ? 'rgba(255,255,255,0.15)' : 'transparent',
+    borderTopWidth: isDark ? 1.5 : 0,
+    borderLeftWidth: isDark ? 1.5 : 0,
+    borderRightWidth: isDark ? 1.5 : 0,
+    borderColor: isDark ? 'rgba(255,255,255,0.4)' : 'transparent',
   },
   formTitle: {
     fontSize: 24,
