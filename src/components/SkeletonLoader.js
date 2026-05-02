@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { View, StyleSheet, Animated, Easing } from "react-native";
-import { Theme } from "../theme/Theme";
+import { useTheme } from "../theme/Theme";
 
 // Animated shimmer effect
-function ShimmerView({ style }) {
+function ShimmerView({ style, colors }) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     const shimmer = Animated.loop(
@@ -17,7 +18,7 @@ function ShimmerView({ style }) {
     );
     shimmer.start();
     return () => shimmer.stop();
-  }, []);
+  }, [shimmerAnim]);
 
   const translateX = shimmerAnim.interpolate({
     inputRange: [0, 1],
@@ -31,6 +32,7 @@ function ShimmerView({ style }) {
           styles.shimmer,
           {
             transform: [{ translateX }],
+            backgroundColor: colors.borderFocus || 'rgba(255,255,255,0.1)',
           },
         ]}
       />
@@ -39,11 +41,14 @@ function ShimmerView({ style }) {
 }
 
 export default function SkeletonLoader({ style }) {
-  return <ShimmerView style={style} />;
+  const { colors } = useTheme();
+  return <ShimmerView style={style} colors={colors} />;
 }
 
 // Stat Card Skeleton
 export function StatCardSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.statCard}>
       <View style={styles.statTopRow}>
@@ -58,6 +63,8 @@ export function StatCardSkeleton() {
 
 // Section Card Skeleton
 export function SectionCardSkeleton({ rows = 3 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.sectionCard}>
       <SkeletonLoader style={styles.sectionTitle} />
@@ -77,6 +84,8 @@ export function SectionCardSkeleton({ rows = 3 }) {
 
 // List Item Skeleton
 export function ListItemSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.listItem}>
       <SkeletonLoader style={styles.listAvatar} />
@@ -91,6 +100,8 @@ export function ListItemSkeleton() {
 
 // Course Card Skeleton
 export function CourseCardSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.courseCard}>
       <SkeletonLoader style={styles.courseTitle} />
@@ -104,6 +115,8 @@ export function CourseCardSkeleton() {
 
 // Header Skeleton
 export function HeaderSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.header}>
       <SkeletonLoader style={styles.headerTitle} />
@@ -112,20 +125,25 @@ export function HeaderSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   skeleton: {
-    backgroundColor: Theme.colors.border,
+    backgroundColor: colors.border,
     borderRadius: 4,
+    overflow: "hidden",
+  },
+  shimmer: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.5,
   },
 
   // Stat Card
   statCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: colors.cardBorder,
   },
   statTopRow: {
     flexDirection: "row",
@@ -140,12 +158,12 @@ const styles = StyleSheet.create({
 
   // Section Card
   sectionCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 18,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: colors.cardBorder,
   },
   sectionTitle: { width: 120, height: 16, borderRadius: 6, marginBottom: 4 },
   sectionSubtitle: { width: 100, height: 11, borderRadius: 6, marginBottom: 16 },
@@ -154,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.muted,
+    borderBottomColor: colors.border,
   },
   rowAvatar: { width: 34, height: 34, borderRadius: 17, marginRight: 10 },
   rowContent: { flex: 1 },
@@ -167,7 +185,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.muted,
+    borderBottomColor: colors.border,
   },
   listAvatar: { width: 36, height: 36, borderRadius: 10, marginRight: 12 },
   listContent: { flex: 1 },
@@ -177,12 +195,12 @@ const styles = StyleSheet.create({
 
   // Course Card
   courseCard: {
-    backgroundColor: Theme.colors.background,
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: colors.cardBorder,
   },
   courseTitle: { width: "70%", height: 14, borderRadius: 6, marginBottom: 8 },
   courseMeta: { flexDirection: "row", gap: 8 },
