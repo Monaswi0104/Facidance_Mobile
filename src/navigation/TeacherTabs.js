@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { useTheme } from "../theme/Theme";
-import { LayoutDashboard, BookOpen, Users, Camera, BarChart2, LogOut } from "lucide-react-native";
+import { LayoutDashboard, BookOpen, Users, Camera, BarChart2, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
 
 import TeacherDashboard from "../screens/teacher/TeacherDashboard";
 import MyCourses from "../screens/teacher/MyCourses";
@@ -67,7 +67,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
 
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
-    const { colors, isDark } = useTheme();
+    const { colors, isDark, toggleTheme, mode } = useTheme();
     const activeIndex = state.index;
     const scrollViewRef = useRef(null);
     const tabLayouts = useRef({});
@@ -100,9 +100,14 @@ export default function TeacherTabs({ navigation: rootNav }) {
             <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
-          <TouchableOpacity onPress={confirmLogout} style={[s.logoutBtn, { backgroundColor: colors.logoutBg, borderColor: colors.logoutBorder }]} activeOpacity={0.7}>
-            <LogOut size={20} color={colors.logoutIcon} style={{ marginLeft: 2 }} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity onPress={toggleTheme} style={[s.logoutBtn, { backgroundColor: colors.navPillBg, borderColor: colors.navPillBorder, marginRight: 10 }]} activeOpacity={0.7}>
+              {mode === 'dark' ? <Moon size={20} color={colors.foreground} /> : mode === 'light' ? <Sun size={20} color={colors.foreground} /> : <Monitor size={20} color={colors.foreground} />}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={confirmLogout} style={[s.logoutBtn, { backgroundColor: colors.logoutBg, borderColor: colors.logoutBorder }]} activeOpacity={0.7}>
+              <LogOut size={20} color={colors.logoutIcon} style={{ marginLeft: 2 }} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Nav pills row */}
