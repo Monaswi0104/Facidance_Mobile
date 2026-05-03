@@ -99,6 +99,25 @@ export default function TeachersManagement() {
       setSelectedDeptId(null);
       loadTeachers();
     } catch (e) { 
+      try {
+        // Fallback: Backend sometimes returns 500 (e.g. SMTP email failure) but still approves the teacher in DB.
+        // Let's verify if the teacher was actually approved before showing an error.
+        const teacherData = await getTeachers();
+        const all = teacherData.teachers || teacherData || [];
+        const targetId = teacher.userId || teacher.id;
+        const updatedTeacher = all.find(x => x.userId === targetId || x.id === targetId);
+        
+        if (updatedTeacher && !updatedTeacher.isPending) {
+          Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
+          setSelectedTeacherForDept(null);
+          setSelectedDeptId(null);
+          loadTeachers();
+          return;
+        }
+      } catch (errCheck) {
+        // Ignore check errors and show the original error
+      }
+      
       Alert.alert("Error", e.message || "Failed to approve."); 
     }
   };
