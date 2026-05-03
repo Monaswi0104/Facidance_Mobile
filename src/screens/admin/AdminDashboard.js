@@ -161,7 +161,9 @@ export default function AdminDashboard({ navigation }) {
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtnFilled} onPress={() => navigation.navigate("TeachersManagement")} activeOpacity={0.7}>
               <Users size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-              <Text style={styles.headerBtnFilledText}>Manage Teachers</Text>
+              <Text style={styles.headerBtnFilledText}>
+                {pendingTeachersCount > 0 ? `${pendingTeachersCount} Pending Approval${pendingTeachersCount > 1 ? 's' : ''}` : "Manage Teachers"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
