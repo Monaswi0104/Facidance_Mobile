@@ -1,4 +1,4 @@
-import React, {  useState, useEffect , useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
@@ -23,24 +23,25 @@ export default function ProfileUpload() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const loadData = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      const meData = await getStudentMe();
+      setStudentInfo(meData);
+    } catch (e) {
+      console.log("Could not load student info:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-     // Assume it accepts showLoading=false, but just await it
+    await loadData(false);
     setIsRefreshing(false);
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const meData = 
-        setStudentInfo(meData);
-      } catch (e) {
-        console.log("Could not load student info:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadData();
   }, []);
 
