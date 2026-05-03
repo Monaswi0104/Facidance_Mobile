@@ -29,11 +29,21 @@ export async function approveTeacher(userId, departmentId) {
     method: "POST",
     body: JSON.stringify({ teacher_id: userId, department_id: departmentId }),
   }, ADMIN_URL);
-  const json = await res.json();
+  
   if (!res.ok) {
-    throw new Error(json.error || "Failed to approve teacher");
+    let errorMsg = "Failed to approve teacher";
+    try {
+      const json = await res.json();
+      errorMsg = json.error || json.detail || errorMsg;
+    } catch (e) {}
+    throw new Error(errorMsg);
   }
-  return json;
+
+  try {
+    return await res.json();
+  } catch (e) {
+    return { success: true };
+  }
 }
 
 export async function deleteTeacher(id) {

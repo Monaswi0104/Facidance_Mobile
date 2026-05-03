@@ -98,7 +98,9 @@ export default function TeachersManagement() {
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
       loadTeachers();
-    } catch (e) { Alert.alert("Error", "Failed to approve."); }
+    } catch (e) { 
+      Alert.alert("Error", e.message || "Failed to approve."); 
+    }
   };
 
   const handleDelete = (teacher) => {
