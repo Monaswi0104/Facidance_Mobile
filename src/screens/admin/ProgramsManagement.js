@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
-} from "react-native";
+, RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStats, getCourses, getStudents, getProgramDistribution } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
@@ -15,6 +15,13 @@ export default function ProgramsManagement() {
   const [programs, setPrograms] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [selectedDeptId, setSelectedDeptId] = useState(null);
@@ -151,7 +158,11 @@ export default function ProgramsManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.headerSection}>

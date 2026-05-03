@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
   ScrollView, Modal, TextInput, ActivityIndicator, Dimensions
-} from "react-native";
+, RefreshControl } from "react-native";
 import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -24,6 +24,13 @@ export default function StudentEnrollment() {
   const [file, setFile] = useState(null);
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [isImporting, setIsImporting] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCourse, setFilterCourse] = useState(null);
@@ -33,8 +40,7 @@ export default function StudentEnrollment() {
   const [showCourseInfo, setShowCourseInfo] = useState(false);
   const [showFilterInfo, setShowFilterInfo] = useState(false);
 
-  useFocusEffect(useCallback(() => {
-    const load = async () => {
+  const loadData = async () => {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
@@ -79,7 +85,9 @@ export default function StudentEnrollment() {
       } catch (e) { console.log(e); }
       finally { setIsLoading(false); }
     };
-    load();
+
+  useFocusEffect(useCallback(() => {
+    loadData();
   }, []));
 
   const pickFile = async () => {
@@ -262,7 +270,11 @@ export default function StudentEnrollment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.header}>

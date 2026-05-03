@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput , RefreshControl } from "react-native";
 import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, Calendar, CheckCircle, XCircle, TrendingUp, Download, Clock } from "lucide-react-native";
@@ -14,6 +14,13 @@ export default function AttendanceHistory({ route }) {
   const [data, setData] = useState([]);
   const [courseSummaries, setCourseSummaries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
@@ -239,7 +246,11 @@ export default function AttendanceHistory({ route }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.headerSection}>

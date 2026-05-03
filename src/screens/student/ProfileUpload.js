@@ -1,5 +1,5 @@
 import React, {  useState, useEffect , useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -21,12 +21,19 @@ export default function ProfileUpload() {
   
   const [studentInfo, setStudentInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+     // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const meData = await getStudentMe();
+        const meData = 
         setStudentInfo(meData);
       } catch (e) {
         console.log("Could not load student info:", e);
@@ -88,7 +95,11 @@ export default function ProfileUpload() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.headerSection}>

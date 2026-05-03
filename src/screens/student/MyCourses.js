@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, TextInput, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, TextInput, Dimensions , RefreshControl } from "react-native";
 import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -12,6 +12,13 @@ export default function MyCourses({ navigation }) {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [search, setSearch] = useState("");
 
   useFocusEffect(
@@ -56,7 +63,11 @@ export default function MyCourses({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.header}>

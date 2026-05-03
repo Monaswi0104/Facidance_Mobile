@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions, TextInput
-} from "react-native";
+, RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,6 +16,13 @@ export default function TeachersManagement() {
   const [pending, setPending] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadTeachers(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
@@ -156,7 +163,11 @@ export default function TeachersManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.headerSection}>

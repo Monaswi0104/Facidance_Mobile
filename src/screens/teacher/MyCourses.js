@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, TextInput, Dimensions
-} from "react-native";
+, RefreshControl } from "react-native";
 import { getTeacherCourses } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../theme/Theme";
@@ -15,10 +15,16 @@ export default function MyCourses({ navigation }) {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [search, setSearch] = useState("");
 
-  useFocusEffect(useCallback(() => {
-    const load = async () => {
+  const loadData = async () => {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
@@ -42,7 +48,9 @@ export default function MyCourses({ navigation }) {
       } catch (e) { console.log("[MyCourses] Error:", e); }
       finally { setIsLoading(false); }
     };
-    load();
+
+  useFocusEffect(useCallback(() => {
+    loadData();
   }, []));
 
   const filtered = courses.filter((c) => {
@@ -54,7 +62,11 @@ export default function MyCourses({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.secondary }]}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.header}>

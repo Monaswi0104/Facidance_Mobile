@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Dimensions, TextInput, Alert, Platform,
   Modal, KeyboardAvoidingView
-} from "react-native";
+, RefreshControl } from "react-native";
 import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, deleteStudent } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -17,6 +17,13 @@ export default function StudentsManagement() {
   const [students, setStudents] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [filter, setFilter] = useState("all"); 
   const [search, setSearch] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("all");
@@ -171,7 +178,11 @@ export default function StudentsManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
         {/* Header */}
         <View style={styles.headerSection}>
           <Text style={styles.title}>Students</Text>

@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
   ActivityIndicator, ScrollView, Modal, Dimensions, Alert, Platform, Linking
-} from "react-native";
+, RefreshControl } from "react-native";
 import { getTeacherCourses, getTeacherReports, getCourseStudents } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -21,6 +21,13 @@ export default function AttendanceReport() {
   const [data, setData] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    setIsRefreshing(false);
+  }, []);
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [showCourseInfo, setShowCourseInfo] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -37,8 +44,7 @@ export default function AttendanceReport() {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
   };
 
-  useFocusEffect(useCallback(() => {
-    const load = async () => {
+  const loadData = async () => {
       try {
         setIsLoading(true);
         const result = await getTeacherCourses();
@@ -48,7 +54,9 @@ export default function AttendanceReport() {
       } catch (e) { console.log(e); }
       finally { setIsLoading(false); }
     };
-    load();
+
+  useFocusEffect(useCallback(() => {
+    loadData();
   }, []));
 
   const loadReport = async (courseId) => {
@@ -152,7 +160,11 @@ export default function AttendanceReport() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+      >
 
         {/* Header */}
         <View style={styles.header}>
