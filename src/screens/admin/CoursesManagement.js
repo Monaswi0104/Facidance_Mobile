@@ -1,7 +1,7 @@
 import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal
+  FlatList, ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal
 , RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
@@ -27,7 +27,8 @@ export default function CoursesManagement() {
     setIsRefreshing(false);
   }, []);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState({
@@ -98,34 +99,37 @@ export default function CoursesManagement() {
     ]);
   };
 
-  const handleCreateCourse = async () => {
-    const { teacherId, programId, academicYear, semesterNumber, name } = form;
-    if (!teacherId || !programId || !academicYear || !semesterNumber || !name) {
+  const handleAddCourse = async () => {
+    const { teacherId, programId, academicYear, semesterNumber, name, code, entryCode } = form;
+    if (!teacherId || !programId || !academicYear || !semesterNumber || !name || !code) {
       Alert.alert("Missing Fields", "Please fill out all required fields.");
       return;
     }
     try {
       console.log("[CoursesManagement] Creating course:", { name, teacherId, programId, academicYear, semesterNumber });
-      const result = await createCourse({ name, teacherId, programId, academicYear, semesterNumber });
+      setIsSubmitting(true);
+      const result = await createCourse({ name, code, teacherId, programId, academicYear, semesterNumber, entryCode });
       if (result.error) {
         Alert.alert("Error", result.error + (result.hint ? `\n\n${result.hint}` : ""));
         return;
       }
       Alert.alert("Success", "Course added successfully!");
       setShowAddForm(false);
-      setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
+      setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "", code: "", entryCode: "" });
       loadData();
     } catch (e) {
       console.error("[CoursesManagement] Create failed:", e);
       Alert.alert("Error", e.message || "Failed to create course.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const filteredPrograms = form.departmentId ? programs.filter(p => p.departmentId === form.departmentId || p.department_id === form.departmentId) : programs;
 
   const filteredCourses = courses.filter(c => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
+    if (!search) return true;
+    const q = search.toLowerCase();
     return c.name?.toLowerCase().includes(q) || 
            c.code?.toLowerCase().includes(q) || 
            c.teacher?.toLowerCase().includes(q) || 
@@ -134,7 +138,17 @@ export default function CoursesManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+            <FlatList
+        data={filteredCourses}
+        keyExtractor={(c) => c.id.toString()}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+        }
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <>
+<ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
         }
@@ -258,7 +272,7 @@ export default function CoursesManagement() {
                   <TouchableOpacity style={styles.formCancelBtn} onPress={() => setShowAddForm(false)}>
                     <Text style={styles.formCancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.formSubmitBtn} onPress={handleCreateCourse}>
+                  <TouchableOpacity style={styles.formSubmitBtn} onPress={handleAddCourse}>
                     <Text style={styles.formSubmitText}>Add Course</Text>
                   </TouchableOpacity>
                 </View>
@@ -272,13 +286,13 @@ export default function CoursesManagement() {
                 style={styles.searchInput}
                 placeholder="Search courses, teachers, or programs..."
                 placeholderTextColor={colors.mutedForeground}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
+                value={search}
+                onChangeText={setSearch}
               />
             </View>
 
             {/* All Courses Card */}
-            <View style={styles.listCard}>
+            <View style={[styles.listCard, { paddingBottom: 0, borderBottomWidth: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}>
               <View style={styles.listHeader}>
                 <View style={styles.listHeaderIcon}><BookOpen size={12} color={colors.primaryForeground} /></View>
                 <Text style={styles.listTitle}>All Courses</Text>
@@ -287,10 +301,14 @@ export default function CoursesManagement() {
                 </View>
               </View>
 
-              {filteredCourses.length === 0 ? (
+              {filteredCourses.length === 0 && (
                 <Text style={styles.emptyText}>No courses found.</Text>
-              ) : (
-                filteredCourses.map((c, i) => (
+              )}
+            </View>
+          </>
+        }
+        renderItem={({ item: c, index: i }) => (
+          <View style={[styles.listCard, { paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
                   <TouchableOpacity key={c.id} style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
                     <View style={styles.courseAvatar}>
                       <BookOpen size={14} color={colors.primaryDark} />
@@ -314,12 +332,12 @@ export default function CoursesManagement() {
                       <Text style={styles.deleteBtnText}>Delete</Text>
                     </TouchableOpacity>
                   </TouchableOpacity>
-                ))
-              )}
-            </View>
-          </>
+          </View>
         )}
-      </ScrollView>
+        ListFooterComponent={
+          <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+        }
+      />
 
       {/* Course Detail Modal */}
       <Modal visible={!!selectedCourse} transparent animationType="slide">

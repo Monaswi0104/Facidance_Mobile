@@ -2,7 +2,7 @@ import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Dimensions, TextInput, Alert, Platform,
-  Modal, KeyboardAvoidingView
+  Modal, KeyboardAvoidingView, FlatList
 , RefreshControl } from "react-native";
 import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, deleteStudent } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
@@ -178,170 +178,181 @@ export default function StudentsManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+      <FlatList
+        data={filtered}
+        keyExtractor={(s) => s.id.toString()}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
         }
-      >
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <Text style={styles.title}>Students</Text>
-          <Text style={styles.subtitle}>Manage enrolled students, programs, status, and course mapping.</Text>
-        </View>
-
-        {/* Stats Row */}
-        {isLoading ? (
-          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
-        ) : (
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
-              </View>
-              <Text style={styles.statNumber}>{students.length}</Text>
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <>
+            {/* Header */}
+            <View style={styles.headerSection}>
+              <Text style={styles.title}>Students</Text>
+              <Text style={styles.subtitle}>Manage enrolled students, programs, status, and course mapping.</Text>
             </View>
-            <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>ACTIVE</Text>
-                <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
-              </View>
-              <Text style={[styles.statNumber, { color: "#10B981" }]}>{totalActive}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>GRADUATED</Text>
-                <View style={styles.statIconBg}><RefreshCw size={14} color={colors.primaryForeground} /></View>
-              </View>
-              <Text style={styles.statNumber}>{totalGraduated}</Text>
-            </View>
-          </View>
-        )}
 
-        {/* Search + Program Filter */}
-        <View style={styles.searchFilterRow}>
-          <View style={styles.searchBar}>
-            <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search name, email, program..."
-              placeholderTextColor={colors.mutedForeground}
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-          <TouchableOpacity style={styles.programDropdown} onPress={() => setShowProgramDropdown(!showProgramDropdown)}>
-            <Text style={styles.programDropdownText} numberOfLines={1}>
-              {selectedProgram === "all" ? "All Programs" : selectedProgram}
-            </Text>
-            <ChevronDown size={14} color={colors.textBody} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Program Dropdown List */}
-        {showProgramDropdown && (
-          <View style={styles.dropdownList}>
-            <TouchableOpacity
-              style={[styles.dropdownItem, selectedProgram === "all" && styles.dropdownItemActive]}
-              onPress={() => { setSelectedProgram("all"); setShowProgramDropdown(false); }}
-            >
-              <Text style={[styles.dropdownItemText, selectedProgram === "all" && styles.dropdownItemTextActive]}>All Programs</Text>
-            </TouchableOpacity>
-            {uniquePrograms.map((p, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.dropdownItem, selectedProgram === p && styles.dropdownItemActive]}
-                onPress={() => { setSelectedProgram(p); setShowProgramDropdown(false); }}
-              >
-                <Text style={[styles.dropdownItemText, selectedProgram === p && styles.dropdownItemTextActive]} numberOfLines={1}>{p}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Filter Pills */}
-        <View style={styles.filterRow}>
-          {[
-            { key: "all", label: "All" },
-            { key: "active", label: "Active" },
-            { key: "graduated", label: "Graduated" },
-          ].map((t) => (
-            <TouchableOpacity
-              key={t.key}
-              style={[styles.filterPill, filter === t.key && styles.filterPillActive]}
-              onPress={() => setFilter(t.key)}
-            >
-              <Text style={[styles.filterText, filter === t.key && styles.filterTextActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Students List Card */}
-        <View style={styles.listCard}>
-          <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Students List</Text>
-            <View style={styles.listCountBadge}>
-              <Text style={styles.listCountText}>{filtered.length} / {students.length}</Text>
-            </View>
-          </View>
-
-          {filtered.length === 0 ? (
-            <Text style={styles.emptyText}>No students found.</Text>
-          ) : (
-            filtered.map((s, i) => (
-              <View key={s.id} style={[styles.studentRow, i < filtered.length - 1 && styles.studentBorder]}>
-                {/* Name + Email */}
-                <Text style={styles.studentName}>{s.name}</Text>
-                <Text style={styles.studentEmail}>{s.email}</Text>
-
-                {/* Badges Row */}
-                <View style={styles.badgeRow}>
-                  {s.primaryProgram ? (
-                    <View style={styles.programBadge}>
-                      <Text style={styles.programBadgeText} numberOfLines={1}>{s.primaryProgram}</Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.noProgramText}>No program</Text>
-                  )}
-                  <View style={[styles.statusBadge, s.status === "active" ? styles.statusActive : styles.statusGrad]}>
-                    <Text style={[styles.statusText, s.status === "active" ? styles.statusTextActive : styles.statusTextGrad]}>
-                      {s.status === "active" ? "Active" : "Graduated"}
-                    </Text>
+            {/* Stats Row */}
+            {isLoading ? (
+              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+            ) : (
+              <View style={styles.statsRow}>
+                <View style={styles.statCard}>
+                  <View style={styles.statTopRow}>
+                    <Text style={styles.statLabel}>TOTAL STUDENTS</Text>
+                    <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
                   </View>
-                  {s.courseCount > 0 && (
-                    <View style={styles.courseCountBadge}>
-                      <BookOpen size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                      <Text style={styles.courseCountText}>{s.courseCount}</Text>
-                    </View>
-                  )}
+                  <Text style={styles.statNumber}>{students.length}</Text>
                 </View>
-
-                {/* Action Buttons */}
-                <View style={styles.actionRow}>
-                  <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("view", s)}>
-                    <Eye size={14} color={colors.textBody} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("edit", s)}>
-                    <Edit2 size={14} color={colors.textBody} />
-                  </TouchableOpacity>
-                  {s.status !== "graduated" ? (
-                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
-                      <Users size={14} color="#D97706" />
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]} onPress={() => openModal("activate", s)}>
-                      <UserCheck size={14} color="#059669" />
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]} onPress={() => openModal("delete", s)}>
-                    <Trash2 size={14} color="#DC2626" />
-                  </TouchableOpacity>
+                <View style={styles.statCard}>
+                  <View style={styles.statTopRow}>
+                    <Text style={styles.statLabel}>ACTIVE</Text>
+                    <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
+                  </View>
+                  <Text style={[styles.statNumber, { color: "#10B981" }]}>{totalActive}</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <View style={styles.statTopRow}>
+                    <Text style={styles.statLabel}>GRADUATED</Text>
+                    <View style={styles.statIconBg}><RefreshCw size={14} color={colors.primaryForeground} /></View>
+                  </View>
+                  <Text style={styles.statNumber}>{totalGraduated}</Text>
                 </View>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            )}
+
+            {/* Search + Program Filter */}
+            <View style={styles.searchFilterRow}>
+              <View style={styles.searchBar}>
+                <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search name, email, program..."
+                  placeholderTextColor={colors.mutedForeground}
+                  value={search}
+                  onChangeText={setSearch}
+                />
+              </View>
+              <TouchableOpacity style={styles.programDropdown} onPress={() => setShowProgramDropdown(!showProgramDropdown)}>
+                <Text style={styles.programDropdownText} numberOfLines={1}>
+                  {selectedProgram === "all" ? "All Programs" : selectedProgram}
+                </Text>
+                <ChevronDown size={14} color={colors.textBody} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Program Dropdown List */}
+            {showProgramDropdown && (
+              <View style={styles.dropdownList}>
+                <TouchableOpacity
+                  style={[styles.dropdownItem, selectedProgram === "all" && styles.dropdownItemActive]}
+                  onPress={() => { setSelectedProgram("all"); setShowProgramDropdown(false); }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedProgram === "all" && styles.dropdownItemTextActive]}>All Programs</Text>
+                </TouchableOpacity>
+                {uniquePrograms.map((p, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.dropdownItem, selectedProgram === p && styles.dropdownItemActive]}
+                    onPress={() => { setSelectedProgram(p); setShowProgramDropdown(false); }}
+                  >
+                    <Text style={[styles.dropdownItemText, selectedProgram === p && styles.dropdownItemTextActive]} numberOfLines={1}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Filter Pills */}
+            <View style={styles.filterRow}>
+              {[
+                { key: "all", label: "All" },
+                { key: "active", label: "Active" },
+                { key: "graduated", label: "Graduated" },
+              ].map((t) => (
+                <TouchableOpacity
+                  key={t.key}
+                  style={[styles.filterPill, filter === t.key && styles.filterPillActive]}
+                  onPress={() => setFilter(t.key)}
+                >
+                  <Text style={[styles.filterText, filter === t.key && styles.filterTextActive]}>{t.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Students List Card Top */}
+            <View style={[styles.listCard, { paddingBottom: 0, borderBottomWidth: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}>
+              <View style={styles.listHeader}>
+                <Text style={styles.listTitle}>Students List</Text>
+                <View style={styles.listCountBadge}>
+                  <Text style={styles.listCountText}>{filtered.length} / {students.length}</Text>
+                </View>
+              </View>
+
+              {filtered.length === 0 && (
+                <Text style={styles.emptyText}>No students found.</Text>
+              )}
+            </View>
+          </>
+        }
+        renderItem={({ item: s, index }) => (
+          <View style={[styles.listCard, { paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
+            <View style={[styles.studentRow, index < filtered.length - 1 && styles.studentBorder]}>
+              {/* Name + Email */}
+              <Text style={styles.studentName}>{s.name}</Text>
+              <Text style={styles.studentEmail}>{s.email}</Text>
+
+              {/* Badges Row */}
+              <View style={styles.badgeRow}>
+                {s.primaryProgram ? (
+                  <View style={styles.programBadge}>
+                    <Text style={styles.programBadgeText} numberOfLines={1}>{s.primaryProgram}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.noProgramText}>No program</Text>
+                )}
+                <View style={[styles.statusBadge, s.status === "active" ? styles.statusActive : styles.statusGrad]}>
+                  <Text style={[styles.statusText, s.status === "active" ? styles.statusTextActive : styles.statusTextGrad]}>
+                    {s.status === "active" ? "Active" : "Graduated"}
+                  </Text>
+                </View>
+                {s.courseCount > 0 && (
+                  <View style={styles.courseCountBadge}>
+                    <BookOpen size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
+                    <Text style={styles.courseCountText}>{s.courseCount}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.actionRow}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("view", s)}>
+                  <Eye size={14} color={colors.textBody} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => openModal("edit", s)}>
+                  <Edit2 size={14} color={colors.textBody} />
+                </TouchableOpacity>
+                {s.status !== "graduated" ? (
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
+                    <Users size={14} color="#D97706" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]} onPress={() => openModal("activate", s)}>
+                    <UserCheck size={14} color="#059669" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]} onPress={() => openModal("delete", s)}>
+                  <Trash2 size={14} color="#DC2626" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+        ListFooterComponent={
+          <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+        }
+      />
 
       {/* --- MODALS --- */}
       <Modal visible={modalType !== null} transparent animationType="fade">
