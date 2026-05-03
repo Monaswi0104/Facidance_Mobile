@@ -7,7 +7,7 @@ import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents, getTe
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
-import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight } from "lucide-react-native";
+import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight, UserCheck } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get("window");
@@ -21,6 +21,7 @@ export default function AdminDashboard({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [teacherWorkload, setTeacherWorkload] = useState([]);
   const [programDist, setProgramDist] = useState([]);
+  const [pendingTeachersCount, setPendingTeachersCount] = useState(0);
 
   const loadData = async (showLoading = true) => {
     try {
@@ -41,6 +42,9 @@ export default function AdminDashboard({ navigation }) {
       const pList = Array.isArray(programsList?.programs || programsList) ? (programsList?.programs || programsList) : [];
       const cList = Array.isArray(coursesList?.courses || coursesList) ? (coursesList?.courses || coursesList) : [];
       const sList = Array.isArray(studentsList?.students || studentsList) ? (studentsList?.students || studentsList) : [];
+
+      const pendingCount = tList.filter(t => t.isPending).length;
+      setPendingTeachersCount(pendingCount);
 
       // Build teacher workload from the dedicated analytics endpoint (accurate counts)
       try {
@@ -161,6 +165,28 @@ export default function AdminDashboard({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Pending Approvals Banner */}
+        {!isLoading && pendingTeachersCount > 0 && (
+          <TouchableOpacity 
+            style={styles.pendingBanner} 
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("TeachersManagement")}
+          >
+            <View style={styles.pendingIconWrap}>
+              <UserCheck size={18} color="#D97706" />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.pendingBannerTitle}>
+                {pendingTeachersCount} teacher{pendingTeachersCount > 1 ? "s" : ""} pending approval
+              </Text>
+              <Text style={styles.pendingBannerSub}>
+                Review and approve new teacher registrations
+              </Text>
+            </View>
+            <ChevronRight size={18} color="#D97706" />
+          </TouchableOpacity>
+        )}
 
         {/* Stat Cards 3x2 Grid */}
         {isLoading ? (
@@ -322,6 +348,37 @@ const createStyles = (colors) => StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
   },
   headerBtnFilledText: { fontSize: 12, fontWeight: "600", color: colors.primaryForeground },
+
+  // Pending Banner
+  pendingBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(245, 158, 11, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.25)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  pendingIconWrap: {
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pendingBannerTitle: {
+    color: "#D97706",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  pendingBannerSub: {
+    color: "#D97706",
+    fontSize: 11,
+    opacity: 0.8,
+  },
 
   // Stats Grid
   statsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 16 },
