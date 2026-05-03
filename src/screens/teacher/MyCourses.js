@@ -7,6 +7,7 @@ import { getTeacherCourses } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Building, Calendar, Key, Users, Clock } from "lucide-react-native";
+import { CourseCardFullSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -88,7 +89,7 @@ export default function MyCourses({ navigation }) {
 
         {/* Course Cards */}
         {isLoading ? (
-          <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
+          <CourseCardFullSkeleton count={3} />
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <BookOpen size={48} color={colors.mutedForeground} />

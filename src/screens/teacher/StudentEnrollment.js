@@ -7,6 +7,7 @@ import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, ScanFace, UserX, Upload, Search, ChevronDown, FileUp, User, CheckCircle, XCircle } from "lucide-react-native";
+import { TableSkeleton } from "../../components/SkeletonLoader";
 import DocumentPicker from "react-native-document-picker";
 import RNFS from "react-native-fs";
 import XLSX from "xlsx";
@@ -392,7 +393,7 @@ export default function StudentEnrollment() {
           </View>
 
           {isLoading ? (
-             <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
+             <TableSkeleton rows={6} columns={5} />
           ) : filteredStudents.length === 0 ? (
             <Text style={styles.emptyText}>No students found.</Text>
           ) : (

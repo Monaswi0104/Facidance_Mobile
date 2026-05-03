@@ -8,6 +8,7 @@ import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, de
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
+import { StatsRowSkeleton, SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
 
 const { width, height } = Dimensions.get("window");
 
@@ -196,7 +197,11 @@ export default function StudentsManagement() {
 
             {/* Stats Row */}
             {isLoading ? (
-              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+              <View>
+                <StatsRowSkeleton count={3} />
+                <SearchBarSkeleton />
+                <ListCardSkeleton rows={5} />
+              </View>
             ) : (
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>

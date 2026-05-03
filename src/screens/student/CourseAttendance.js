@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, To
 import { getCourseAttendance, getCourse } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, User, Mail, Calendar, GraduationCap, Info, CheckCircle, XCircle, ChevronLeft, BarChart3 } from "lucide-react-native";
+import { AttendanceOverviewSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get('window');
 
@@ -279,7 +280,7 @@ export default function CourseAttendance({ route, navigation }) {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
+          <AttendanceOverviewSkeleton />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderHistory()
         )}

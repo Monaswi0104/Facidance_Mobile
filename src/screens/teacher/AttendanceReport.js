@@ -7,6 +7,7 @@ import { getTeacherCourses, getTeacherReports, getCourseStudents } from "../../a
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle, Mail } from "lucide-react-native";
+import SkeletonLoader, { TableSkeleton } from "../../components/SkeletonLoader";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -180,7 +181,7 @@ export default function AttendanceReport() {
           <Text style={styles.labelText}>COURSE *</Text>
           <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)} disabled={isLoading}>
             {isLoading ? (
-              <ActivityIndicator size="small" color={colors.accent} />
+              <SkeletonLoader style={{ width: "70%", height: 14, borderRadius: 6 }} />
             ) : (
               <>
                 <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
@@ -346,7 +347,7 @@ export default function AttendanceReport() {
               </View>
 
               {isReportLoading ? (
-                <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
+                <TableSkeleton rows={4} columns={3} />
               ) : data.length === 0 ? (
                 <Text style={[styles.emptyText, { paddingVertical: 20 }]}>No attendance data found.</Text>
               ) : (

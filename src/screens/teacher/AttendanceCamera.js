@@ -7,6 +7,7 @@ import { getTeacherCourses, getCourseStudents, trainModel as trainModelApi } fro
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
+import { SearchBarSkeleton, ListCardSkeleton, StatsRowSkeleton, TableSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get("window");
 
@@ -123,7 +124,10 @@ export default function AttendanceCamera({ navigation }) {
             </View>
 
             {isLoading ? (
-              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+              <View>
+                <SearchBarSkeleton />
+                <ListCardSkeleton rows={4} />
+              </View>
             ) : filteredCourses.length === 0 ? (
               <Text style={styles.emptyText}>No courses found.</Text>
             ) : (
@@ -167,7 +171,10 @@ export default function AttendanceCamera({ navigation }) {
 
         {/* Stats Grid */}
         {isLoadingStudents ? (
-          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+          <View>
+            <StatsRowSkeleton count={4} />
+            <TableSkeleton rows={4} columns={4} />
+          </View>
         ) : (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>

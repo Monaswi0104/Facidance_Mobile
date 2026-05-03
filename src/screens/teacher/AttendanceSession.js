@@ -25,6 +25,7 @@ import {
   Users, ScanFace, Play, Pause, Square, Send,
   Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap
 } from "lucide-react-native";
+import { TableSkeleton } from "../../components/SkeletonLoader";
 
 const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
 const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
@@ -105,6 +106,7 @@ export default function AttendanceSession({ route, navigation }) {
         if (remaining === 0) endSession();
       }, 1000);
       return () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }
   }, [sessionActive, sessionPaused, sessionStartTime]);
 
@@ -384,7 +386,7 @@ export default function AttendanceSession({ route, navigation }) {
             <Text style={s.historyTitle}>Attendance History</Text>
             <Text style={s.historySubtitle}>Past sessions for this course</Text>
             {isLoadingHistory ? (
-              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+              <TableSkeleton rows={3} columns={2} />
             ) : historyDates.length === 0 ? (
               <View style={s.emptyResultsContainer}>
                 <Text style={s.emptyResultsTitle}>No attendance history yet</Text>

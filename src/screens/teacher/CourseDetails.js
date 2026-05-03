@@ -7,6 +7,7 @@ import { getCourseDetails } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User, ChevronLeft } from "lucide-react-native";
+import { StatsRowSkeleton, CourseDetailsSkeleton } from "../../components/SkeletonLoader";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -49,7 +50,7 @@ export default function CourseDetails({ route, navigation }) {
       finally { setIsLoading(false); }
     };
     load();
-  }, [course.id]));
+  }, [course.id, course.sessions]));
 
   const filtered = students.filter((s) => {
     if (!search) return true;
@@ -126,7 +127,11 @@ export default function CourseDetails({ route, navigation }) {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+          <View>
+            <StatsRowSkeleton count={2} />
+            <StatsRowSkeleton count={2} />
+            <CourseDetailsSkeleton />
+          </View>
         ) : (
           <View style={styles.statsGrid}>
             {statCards.map((s, i) => (

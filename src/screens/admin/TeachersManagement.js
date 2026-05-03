@@ -8,6 +8,7 @@ import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses,
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
+import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
 
 export default function TeachersManagement() {
   const { colors, isDark } = useTheme();
@@ -198,7 +199,10 @@ export default function TeachersManagement() {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+          <View>
+            <SearchBarSkeleton />
+            <TeacherSectionsSkeleton />
+          </View>
         ) : (
           <View>
             <View style={styles.searchBar}>

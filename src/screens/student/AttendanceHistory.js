@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput , RefreshControl } from "react-native";
 import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, Calendar, CheckCircle, XCircle, TrendingUp, Download, Clock } from "lucide-react-native";
+import { AttendanceOverviewSkeleton } from "../../components/SkeletonLoader";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -16,34 +17,35 @@ export default function AttendanceHistory({ route }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const loadData = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      const historyRes = await getAttendanceHistory();
+      
+      const historyList = Array.isArray(historyRes) ? historyRes : (historyRes.records || []);
+      const sums = historyRes.summary || [];
+      
+      historyList.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
+      
+      setData(historyList);
+      setCourseSummaries(sums);
+    } catch (e) {
+      console.log("History load error:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    await loadData(false);
     setIsRefreshing(false);
   }, []);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        const historyRes = await getAttendanceHistory();
-        
-        const historyList = Array.isArray(historyRes) ? historyRes : (historyRes.records || []);
-        const sums = historyRes.summary || [];
-        
-        historyList.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
-        
-        setData(historyList);
-        setCourseSummaries(sums);
-      } catch (e) {
-        console.log("History load error:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+    loadData(true);
   }, []);
 
   const stats = useMemo(() => {
@@ -281,7 +283,7 @@ export default function AttendanceHistory({ route }) {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 40 }} />
+          <AttendanceOverviewSkeleton />
         ) : (
           activeTab === 'Overview' ? renderOverview() : renderRecords()
         )}

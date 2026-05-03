@@ -4,6 +4,7 @@ import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, User, Calendar, Hash, ChevronRight } from "lucide-react-native";
+import { CourseCardFullSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get('window');
 
@@ -14,40 +15,42 @@ export default function MyCourses({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    try {
+      const data = await getStudentCourses();
+      const list = Array.isArray(data) ? data : (data?.courses || []);
+      setCourses(list.map(c => ({
+        id: c.id,
+        name: c.name,
+        code: c.entry_code || c.code || "—",
+        teacher: c.teacher_name || c.teacher?.user?.name || c.teacher?.name || "Teacher",
+        teacherEmail: c.teacher_email || c.teacher?.user?.email || c.teacher?.email || "",
+        teacherDept: c.department_name || c.teacher?.department?.name || "Teacher Department",
+        semester: c.semester_name || c.semester?.name || "—",
+        year: c.academic_year || c.academic_year_name || c.semester?.academicYear?.name || "—",
+        students: c.students_count || c.student_count || c._count?.students || 0,
+        sessions: c.total_sessions || c._count?.attendance || 0,
+        program: c.program_name || c.semester?.academicYear?.program?.name || "",
+        department: c.department_name || c.semester?.academicYear?.program?.department?.name || "",
+      })));
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    await loadData(false);
     setIsRefreshing(false);
   }, []);
   const [search, setSearch] = useState("");
 
   useFocusEffect(
     useCallback(() => {
-      const load = async () => {
-        try {
-          const data = await getStudentCourses();
-          const list = Array.isArray(data) ? data : (data?.courses || []);
-          setCourses(list.map(c => ({
-            id: c.id,
-            name: c.name,
-            code: c.entry_code || c.code || "—",
-            teacher: c.teacher_name || c.teacher?.user?.name || c.teacher?.name || "Teacher",
-            teacherEmail: c.teacher_email || c.teacher?.user?.email || c.teacher?.email || "",
-            teacherDept: c.department_name || c.teacher?.department?.name || "Teacher Department",
-            semester: c.semester_name || c.semester?.name || "—",
-            year: c.academic_year || c.academic_year_name || c.semester?.academicYear?.name || "—",
-            students: c.students_count || c.student_count || c._count?.students || 0,
-            sessions: c.total_sessions || c._count?.attendance || 0,
-            program: c.program_name || c.semester?.academicYear?.program?.name || "",
-            department: c.department_name || c.semester?.academicYear?.program?.department?.name || "",
-          })));
-        } catch (e) {
-          console.log(e);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      load();
+      loadData(true);
     }, [])
   );
 
@@ -89,7 +92,7 @@ export default function MyCourses({ navigation }) {
 
         {/* Course Cards */}
         {isLoading ? (
-          <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 40 }} />
+          <CourseCardFullSkeleton count={3} />
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No Courses Found</Text>

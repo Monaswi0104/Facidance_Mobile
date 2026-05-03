@@ -8,6 +8,7 @@ import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStat
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building2, Users, GraduationCap, Plus, Trash2, X, Key } from "lucide-react-native";
+import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
 
 export default function ProgramsManagement() {
   const { colors, isDark } = useTheme();
@@ -181,7 +182,10 @@ export default function ProgramsManagement() {
 
         {/* Stats Row */}
         {isLoading ? (
-          <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 20 }} />
+          <View>
+            <StatsRowSkeleton count={3} />
+            <ListCardSkeleton rows={4} />
+          </View>
         ) : (
           <>
             <View style={styles.statsRow}>
