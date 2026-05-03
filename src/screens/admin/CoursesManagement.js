@@ -1,13 +1,13 @@
 import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  FlatList, ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal
+  ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal, FlatList
 , RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
-import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search } from "lucide-react-native";
+import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -20,6 +20,7 @@ export default function CoursesManagement() {
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -28,12 +29,11 @@ export default function CoursesManagement() {
   }, []);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [search, setSearch] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState({
     departmentId: null, teacherId: null, programId: null,
-    academicYear: "", semesterNumber: null, name: ""
+    academicYear: "", semesterNumber: null, name: "", code: "", entryCode: ""
   });
 
   const loadData = async () => {
@@ -105,9 +105,9 @@ export default function CoursesManagement() {
       Alert.alert("Missing Fields", "Please fill out all required fields.");
       return;
     }
+    setIsSubmitting(true);
     try {
       console.log("[CoursesManagement] Creating course:", { name, teacherId, programId, academicYear, semesterNumber });
-      setIsSubmitting(true);
       const result = await createCourse({ name, code, teacherId, programId, academicYear, semesterNumber, entryCode });
       if (result.error) {
         Alert.alert("Error", result.error + (result.hint ? `\n\n${result.hint}` : ""));
@@ -138,7 +138,7 @@ export default function CoursesManagement() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-            <FlatList
+      <FlatList
         data={filteredCourses}
         keyExtractor={(c) => c.id.toString()}
         refreshControl={
@@ -148,11 +148,6 @@ export default function CoursesManagement() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
-<ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
-        }
-      >
 
         {/* Header */}
         <View style={styles.headerSection}>
@@ -267,13 +262,24 @@ export default function CoursesManagement() {
                   </View>
                 </View>
 
+                <View style={styles.formRow}>
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>COURSE CODE *</Text>
+                    <TextInput style={styles.formInput} placeholder="e.g. CS101" placeholderTextColor={colors.mutedForeground} value={form.code} onChangeText={(t) => setForm({ ...form, code: t })} />
+                  </View>
+                  <View style={styles.formField}>
+                    <Text style={styles.formLabel}>ENTRY CODE (OPTIONAL)</Text>
+                    <TextInput style={styles.formInput} placeholder="e.g. FALL2024" placeholderTextColor={colors.mutedForeground} value={form.entryCode} onChangeText={(t) => setForm({ ...form, entryCode: t })} />
+                  </View>
+                </View>
+
                 {/* Buttons */}
                 <View style={styles.formActions}>
                   <TouchableOpacity style={styles.formCancelBtn} onPress={() => setShowAddForm(false)}>
                     <Text style={styles.formCancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.formSubmitBtn} onPress={handleAddCourse}>
-                    <Text style={styles.formSubmitText}>Add Course</Text>
+                  <TouchableOpacity style={[styles.formSubmitBtn, (!form.name || !form.code || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId) && styles.submitBtnDisabled]} disabled={!form.name || !form.code || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId || isSubmitting} onPress={handleAddCourse}>
+                    {isSubmitting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.formSubmitText}>Add Course</Text>}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -306,32 +312,34 @@ export default function CoursesManagement() {
               )}
             </View>
           </>
+        )}
+          </>
         }
         renderItem={({ item: c, index: i }) => (
           <View style={[styles.listCard, { paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
-                  <TouchableOpacity key={c.id} style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
-                    <View style={styles.courseAvatar}>
-                      <BookOpen size={14} color={colors.primaryDark} />
+            <TouchableOpacity style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
+              <View style={styles.courseAvatar}>
+                <BookOpen size={14} color={colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.courseName}>{c.name}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
+                  {c.code !== "—" && (
+                    <View style={styles.codeBadge}>
+                      <Text style={styles.codeText}>{c.code}</Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.courseName}>{c.name}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                        {c.code !== "—" && (
-                          <View style={styles.codeBadge}>
-                            <Text style={styles.codeText}>{c.code}</Text>
-                          </View>
-                        )}
-                        <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
-                        <Text style={styles.courseMeta}>{c.teacher}</Text>
-                        {c.year !== "—" && <Text style={styles.courseMeta}> · {c.year}</Text>}
-                        {c.semester !== "—" && <Text style={styles.courseMeta}> · {c.semester}</Text>}
-                      </View>
-                    </View>
-                    <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
-                      <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
-                      <Text style={styles.deleteBtnText}>Delete</Text>
-                    </TouchableOpacity>
-                  </TouchableOpacity>
+                  )}
+                  <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
+                  <Text style={styles.courseMeta}>{c.teacher}</Text>
+                  {c.year !== "—" && <Text style={styles.courseMeta}> · {c.year}</Text>}
+                  {c.semester !== "—" && <Text style={styles.courseMeta}> · {c.semester}</Text>}
+                </View>
+              </View>
+              <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
+                <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                <Text style={styles.deleteBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
           </View>
         )}
         ListFooterComponent={
