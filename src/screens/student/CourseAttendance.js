@@ -221,28 +221,33 @@ export default function CourseAttendance({ route, navigation }) {
         </TouchableOpacity>
 
         {/* Course Header */}
-        <View style={styles.courseHeader}>
-          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+        <View style={[styles.courseHeader, { flexDirection: "column" }]}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
             <View style={styles.headerIconBg}>
               <BookOpen size={18} color={colors.primaryForeground} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
               <Text style={styles.courseTitle} numberOfLines={2}>{course.name}</Text>
               <Text style={styles.courseProgram}>{course.program}</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                <User size={11} color={colors.mutedForeground} style={{ marginRight: 4 }} />
-                <Text style={styles.courseMeta}>{course.teacher}</Text>
-                <Calendar size={11} color={colors.mutedForeground} style={{ marginLeft: 10, marginRight: 4 }} />
-                <Text style={styles.courseMeta}>{course.semester} · {course.year}</Text>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <View style={styles.codePill}>
+                <Text style={styles.codePillText}>{course.code}</Text>
+              </View>
+              <View style={styles.activePill}>
+                <Text style={styles.activePillText}>Active</Text>
               </View>
             </View>
           </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <View style={styles.codePill}>
-              <Text style={styles.codePillText}>{course.code}</Text>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginRight: 16, marginBottom: 4 }}>
+              <User size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+              <Text style={styles.courseMeta}>{course.teacher}</Text>
             </View>
-            <View style={styles.activePill}>
-              <Text style={styles.activePillText}>Active</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <Calendar size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+              <Text style={styles.courseMeta}>{course.semester} · {course.year}</Text>
             </View>
           </View>
         </View>
@@ -320,7 +325,6 @@ const createStyles = (colors) => StyleSheet.create({
 
   // Course Header
   courseHeader: {
-    flexDirection: "row",
     backgroundColor: colors.background,
     borderRadius: 14,
     padding: 16,

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator, TextInput, Dimensions , RefreshControl } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ActivityIndicator, TextInput, Dimensions , RefreshControl } from "react-native";
 import { getStudentCourses, getStudentStats } from "../../api/studentApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -65,94 +65,96 @@ export default function MyCourses({ navigation }) {
     );
   }, [courses, search]);
 
+  const renderHeader = () => (
+    <>
+      <View style={styles.header}>
+        <Text style={styles.title}>My Courses</Text>
+        <Text style={styles.subtitle}>{courses.length} course{courses.length !== 1 ? "s" : ""} enrolled</Text>
+      </View>
+
+      <View style={styles.searchBar}>
+        <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by course name, code or teacher..."
+          placeholderTextColor={colors.mutedForeground}
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
+    </>
+  );
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.courseCard}
+      activeOpacity={0.7}
+      onPress={() => navigation.navigate("CourseAttendance", { course: item })}
+    >
+      <View style={styles.cardTopRow}>
+        <View style={styles.cardIconBg}>
+          <BookOpen size={16} color={colors.primaryForeground} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.activeBadge}>
+              <Text style={styles.activeBadgeText}>Active</Text>
+            </View>
+            <View style={styles.codeBadge}>
+              <Text style={styles.codeBadgeText}>{item.code}</Text>
+            </View>
+          </View>
+        </View>
+        <ChevronRight size={18} color={colors.mutedForeground} />
+      </View>
+
+      <View style={styles.detailsList}>
+        <View style={styles.detailRow}>
+          <User size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Text style={styles.detailText}>{item.teacher}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Calendar size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Text style={styles.detailText}>{item.semester} · {item.year}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <BookOpen size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Text style={styles.detailText}>{item.program}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Hash size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+          <Text style={styles.detailText}>{item.code}</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Text style={styles.viewDetailsText}>View details</Text>
+        <ChevronRight size={14} color={colors.mutedForeground} />
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+      <FlatList
+        data={isLoading ? [] : filtered}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          isLoading ? (
+            <CourseCardFullSkeleton count={3} />
+          ) : (
+            <EmptyStateWithSearch title="No Courses Found" subtitle="You don't have any enrolled courses matching your criteria." />
+          )
+        }
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
-      >
-
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>My Courses</Text>
-          <Text style={styles.subtitle}>{courses.length} course{courses.length !== 1 ? "s" : ""} enrolled</Text>
-        </View>
-
-        {/* Search */}
-        <View style={styles.searchBar}>
-          <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by course name, code or teacher..."
-            placeholderTextColor={colors.mutedForeground}
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-
-        {/* Course Cards */}
-        {isLoading ? (
-          <CourseCardFullSkeleton count={3} />
-        ) : filtered.length === 0 ? (
-          <EmptyStateWithSearch title="No Courses Found" subtitle="You don't have any enrolled courses matching your criteria." />
-        ) : (
-          filtered.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.courseCard}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate("CourseAttendance", { course: item })}
-            >
-              {/* Card Top Row */}
-              <View style={styles.cardTopRow}>
-                <View style={styles.cardIconBg}>
-                  <BookOpen size={16} color={colors.primaryForeground} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.courseName} numberOfLines={2}>{item.name}</Text>
-                  <View style={styles.badgeRow}>
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeBadgeText}>Active</Text>
-                    </View>
-                    <View style={styles.codeBadge}>
-                      <Text style={styles.codeBadgeText}>{item.code}</Text>
-                    </View>
-                  </View>
-                </View>
-                <ChevronRight size={18} color={colors.mutedForeground} />
-              </View>
-
-              {/* Details */}
-              <View style={styles.detailsList}>
-                <View style={styles.detailRow}>
-                  <User size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                  <Text style={styles.detailText}>{item.teacher}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Calendar size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                  <Text style={styles.detailText}>{item.semester} · {item.year}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <BookOpen size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                  <Text style={styles.detailText}>{item.program}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Hash size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                  <Text style={styles.detailText}>{item.code}</Text>
-                </View>
-              </View>
-
-              {/* View Details Footer */}
-              <View style={styles.cardFooter}>
-                <Text style={styles.viewDetailsText}>View details</Text>
-                <ChevronRight size={14} color={colors.mutedForeground} />
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-
-      </ScrollView>
+      />
     </SafeAreaView>
   );
 }

@@ -1,8 +1,8 @@
 import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, ActivityIndicator, TextInput, Dimensions
-, RefreshControl } from "react-native";
+  FlatList, ActivityIndicator, TextInput, Dimensions, RefreshControl
+} from "react-native";
 import { getTeacherCourses } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../theme/Theme";
@@ -62,102 +62,104 @@ export default function MyCourses({ navigation }) {
       c.program.toLowerCase().includes(q) || c.department.toLowerCase().includes(q);
   });
 
+  const renderHeader = () => (
+    <>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.foreground }]}>My Courses</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{courses.length} course{courses.length !== 1 ? "s" : ""} assigned to you</Text>
+      </View>
+
+      <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Search size={16} color={colors.statLabel} style={{ marginRight: 10 }} />
+        <TextInput
+          style={[styles.searchInput, { color: colors.inputText }]}
+          placeholder="Search by course name, code, program, or department..."
+          placeholderTextColor={colors.inputPlaceholder}
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
+    </>
+  );
+
+  const renderItem = ({ item: course }) => {
+    const sessionPct = course.sessions > 0 ? Math.min(100, Math.round((course.sessions / Math.max(course.sessions, 10)) * 100)) : 0;
+    return (
+      <TouchableOpacity style={[styles.courseCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]} activeOpacity={0.7}
+        onPress={() => navigation.navigate("CourseDetails", { course })}>
+        <View style={styles.courseTopRow}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <Text style={[styles.courseName, { color: colors.foreground }]}>{course.name}</Text>
+              <View style={styles.activeBadge}>
+                <Text style={styles.activeBadgeText}>Active</Text>
+              </View>
+            </View>
+            <Text style={[styles.courseProgram, { color: colors.mutedForeground }]}>{course.program}</Text>
+          </View>
+        </View>
+
+        {!!course.department && (
+          <View style={styles.courseDetailRow}>
+            <Building size={13} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+            <Text style={[styles.courseDetailText, { color: colors.mutedForeground }]}>{course.department}</Text>
+          </View>
+        )}
+        {!!course.semester && (
+          <View style={styles.courseDetailRow}>
+            <Calendar size={13} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+            <Text style={[styles.courseDetailText, { color: colors.mutedForeground }]}>{course.semester}</Text>
+          </View>
+        )}
+        {!!course.entryCode && (
+          <View style={styles.courseDetailRow}>
+            <Key size={13} color={colors.accent} style={{ marginRight: 6 }} />
+            <Text style={[styles.courseDetailText, { color: colors.accent, fontWeight: "700" }]}>{course.entryCode}</Text>
+          </View>
+        )}
+
+        <View style={styles.activityRow}>
+          <Text style={[styles.activityLabel, { color: colors.statLabel }]}>Session activity</Text>
+          <Text style={[styles.activityPct, { color: colors.foreground }]}>{sessionPct}%</Text>
+        </View>
+        <View style={[styles.activityTrack, { backgroundColor: colors.muted }]}>
+          <View style={[styles.activityFill, { width: `${Math.max(sessionPct, 4)}%`, backgroundColor: colors.accent }]} />
+        </View>
+
+        <View style={[styles.courseFooter, { borderTopColor: colors.muted }]}>
+          <View style={styles.footerItem}>
+            <Text style={[styles.footerNumber, { color: colors.foreground }]}>{course.students}</Text>
+            <Text style={[styles.footerLabel, { color: colors.statLabel }]}>Students</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Text style={[styles.footerNumber, { color: colors.accent }]}>{course.sessions}</Text>
+            <Text style={[styles.footerLabel, { color: colors.statLabel }]}>Sessions</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.secondary }]}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
+      <FlatList
+        data={isLoading ? [] : filtered}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          isLoading ? (
+            <CourseCardFullSkeleton count={3} />
+          ) : (
+            <EmptyStateWithSearch title="No Courses Found" subtitle="Try adjusting your search filters to find courses." />
+          )
+        }
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
-      >
-
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground }]}>My Courses</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{courses.length} course{courses.length !== 1 ? "s" : ""} assigned to you</Text>
-        </View>
-
-        {/* Search */}
-        <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Search size={16} color={colors.statLabel} style={{ marginRight: 10 }} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.inputText }]}
-            placeholder="Search by course name, code, program, or department..."
-            placeholderTextColor={colors.inputPlaceholder}
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-
-        {/* Course Cards */}
-        {isLoading ? (
-          <CourseCardFullSkeleton count={3} />
-        ) : filtered.length === 0 ? (
-          <EmptyStateWithSearch title="No Courses Found" subtitle="Try adjusting your search filters to find courses." />
-        ) : (
-          filtered.map((course) => {
-            const sessionPct = course.sessions > 0 ? Math.min(100, Math.round((course.sessions / Math.max(course.sessions, 10)) * 100)) : 0;
-            return (
-              <TouchableOpacity key={course.id} style={[styles.courseCard, { backgroundColor: colors.card, borderColor: colors.cardBorder, shadowColor: colors.shadowColor }]} activeOpacity={0.7}
-                onPress={() => navigation.navigate("CourseDetails", { course })}>
-
-                {/* Course Name + Active Badge */}
-                <View style={styles.courseTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                      <Text style={[styles.courseName, { color: colors.foreground }]}>{course.name}</Text>
-                      <View style={styles.activeBadge}>
-                        <Text style={styles.activeBadgeText}>Active</Text>
-                      </View>
-                    </View>
-                    <Text style={[styles.courseProgram, { color: colors.mutedForeground }]}>{course.program}</Text>
-                  </View>
-                </View>
-
-                {/* Details with icons */}
-                {!!course.department && (
-                  <View style={styles.courseDetailRow}>
-                    <Building size={13} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                    <Text style={[styles.courseDetailText, { color: colors.mutedForeground }]}>{course.department}</Text>
-                  </View>
-                )}
-                {!!course.semester && (
-                  <View style={styles.courseDetailRow}>
-                    <Calendar size={13} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-                    <Text style={[styles.courseDetailText, { color: colors.mutedForeground }]}>{course.semester}</Text>
-                  </View>
-                )}
-                {!!course.entryCode && (
-                  <View style={styles.courseDetailRow}>
-                    <Key size={13} color={colors.accent} style={{ marginRight: 6 }} />
-                    <Text style={[styles.courseDetailText, { color: colors.accent, fontWeight: "700" }]}>{course.entryCode}</Text>
-                  </View>
-                )}
-
-                {/* Session Activity Bar */}
-                <View style={styles.activityRow}>
-                  <Text style={[styles.activityLabel, { color: colors.statLabel }]}>Session activity</Text>
-                  <Text style={[styles.activityPct, { color: colors.foreground }]}>{sessionPct}%</Text>
-                </View>
-                <View style={[styles.activityTrack, { backgroundColor: colors.muted }]}>
-                  <View style={[styles.activityFill, { width: `${Math.max(sessionPct, 4)}%`, backgroundColor: colors.accent }]} />
-                </View>
-
-                {/* Footer Stats */}
-                <View style={[styles.courseFooter, { borderTopColor: colors.muted }]}>
-                  <View style={styles.footerItem}>
-                    <Text style={[styles.footerNumber, { color: colors.foreground }]}>{course.students}</Text>
-                    <Text style={[styles.footerLabel, { color: colors.statLabel }]}>Students</Text>
-                  </View>
-                  <View style={styles.footerItem}>
-                    <Text style={[styles.footerNumber, { color: colors.accent }]}>{course.sessions}</Text>
-                    <Text style={[styles.footerLabel, { color: colors.statLabel }]}>Sessions</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </ScrollView>
+      />
     </SafeAreaView>
   );
 }
