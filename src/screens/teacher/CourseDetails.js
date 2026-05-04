@@ -185,7 +185,7 @@ export default function CourseDetails({ route, navigation }) {
 
                 <View style={{ flex: 0.8, alignItems: "center" }}>
                   {s.faceRegistered ? (
-                    <CheckCircle size={16} color="#10B981" />
+                    <CheckCircle size={16} color={colors.} />
                   ) : (
                     <XCircle size={16} color={colors.mutedForeground} />
                   )}
@@ -213,7 +213,7 @@ export default function CourseDetails({ route, navigation }) {
                 <>
                   <View style={styles.modalHeader}>
                     <View style={styles.modalAvatar}>
-                      <User size={22} color="#4361EE" />
+                      <User size={22} color={colors.} />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -228,7 +228,7 @@ export default function CourseDetails({ route, navigation }) {
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : "#4361EE" }]}>
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? colors.success : colors.info }]}>
                        {selectedStudent.status.toUpperCase()}
                     </Text>
                   </View>
@@ -238,12 +238,12 @@ export default function CourseDetails({ route, navigation }) {
                     <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                       {selectedStudent.faceRegistered ? (
                         <>
-                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                          <CheckCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: colors.success, flex: 0 }]}>Registered</Text>
                         </>
                       ) : (
                         <>
-                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                          <XCircle size={14} color={colors.} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}
@@ -338,7 +338,7 @@ const createStyles = (colors) => StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
   modalCard: { backgroundColor: colors.background, borderRadius: 20, padding: 24, width: "100%", shadowColor: colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   modalHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.muted },
-  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#EEF2FF", justifyContent: "center", alignItems: "center", marginRight: 14 },
+  modalAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.infoLight, justifyContent: "center", alignItems: "center", marginRight: 14 },
   modalHeaderInfo: { flex: 1 },
   modalName: { fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 4 },
   modalEmail: { fontSize: 13, color: colors.mutedForeground },

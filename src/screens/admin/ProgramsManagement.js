@@ -161,7 +161,7 @@ export default function ProgramsManagement() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
         }
       >
 
@@ -290,7 +290,7 @@ export default function ProgramsManagement() {
                       </View>
                     </View>
                     <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(p)}>
-                      <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                      <Trash2 size={11} color={colors.} style={{ marginRight: 3 }} />
                       <Text style={styles.deleteBtnText}>Delete</Text>
                     </TouchableOpacity>
                   </TouchableOpacity>
@@ -350,14 +350,14 @@ export default function ProgramsManagement() {
                         <Text style={styles.courseItemName}>{c.name}</Text>
                         <Text style={styles.courseItemCode}>{c.code}</Text>
                         <View style={styles.courseTagsRow}>
-                          <View style={[styles.courseTag, { backgroundColor: "#F0FDFA" }]}>
+                          <View style={[styles.courseTag, { backgroundColor: colors.accentLight }]}>
                             <Text style={[styles.courseTagText, { color: colors.primaryDark }]}>{c.semester}</Text>
                           </View>
-                          <View style={[styles.courseTag, { backgroundColor: "#FEF3C7" }]}>
-                            <Text style={[styles.courseTagText, { color: "#D97706" }]}>{c.teacher}</Text>
+                          <View style={[styles.courseTag, { backgroundColor: colors.warningLight }]}>
+                            <Text style={[styles.courseTagText, { color: colors.warning }]}>{c.teacher}</Text>
                           </View>
-                          <View style={[styles.courseTag, { backgroundColor: "#F0FDF4" }]}>
-                            <Text style={[styles.courseTagText, { color: "#10B981" }]}>{c.students} students</Text>
+                          <View style={[styles.courseTag, { backgroundColor: colors.successLight }]}>
+                            <Text style={[styles.courseTagText, { color: colors.success }]}>{c.students} students</Text>
                           </View>
                         </View>
                       </View>
@@ -441,18 +441,18 @@ const createStyles = (colors) => StyleSheet.create({
   listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
   listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#CCFBF1" },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accentLight },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Program Rows
   progRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   progRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  progAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  progAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   progName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   progMeta: { fontSize: 10, color: colors.mutedForeground, marginRight: 6 },
   progIdBadge: { backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
   progIdText: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.dangerLight, backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
@@ -473,7 +473,7 @@ const createStyles = (colors) => StyleSheet.create({
   detailStatLabel: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground },
   sectionLabel: { fontSize: 11, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
   courseItem: { flexDirection: "row", backgroundColor: colors.background, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: colors.border },
-  courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   courseItemName: { fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
   courseItemCode: { fontSize: 11, fontWeight: "600", color: colors.primaryDark, marginBottom: 4 },
   courseTagsRow: { flexDirection: "row", flexWrap: "wrap" },

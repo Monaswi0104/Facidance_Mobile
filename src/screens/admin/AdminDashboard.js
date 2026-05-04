@@ -127,11 +127,11 @@ export default function AdminDashboard({ navigation }) {
   }, []);
 
   const statCards = [
-    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: "#10B981", icon: <Users size={16} color={colors.primaryForeground} />, screen: "TeachersManagement" },
-    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: "#10B981", icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: colors.success, icon: <Users size={16} color={colors.primaryForeground} />, screen: "TeachersManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: colors.success, icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
     { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: colors.mutedForeground, icon: <Building2 size={16} color={colors.primaryForeground} />, screen: "DepartmentsManagement" },
-    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: "#10B981", icon: <BookOpen size={16} color={colors.primaryForeground} />, screen: "CoursesManagement" },
-    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? "#10B981" : "#F59E0B", icon: <TrendingUp size={16} color={colors.primaryForeground} />, screen: null },
+    { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: colors.success, icon: <BookOpen size={16} color={colors.primaryForeground} />, screen: "CoursesManagement" },
+    { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? colors.success : colors.warning, icon: <TrendingUp size={16} color={colors.primaryForeground} />, screen: null },
     { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: colors.mutedForeground, icon: <UserX size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
   ];
 
@@ -144,7 +144,7 @@ export default function AdminDashboard({ navigation }) {
         contentContainerStyle={styles.container} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -176,7 +176,7 @@ export default function AdminDashboard({ navigation }) {
             onPress={() => navigation.navigate("TeachersManagement")}
           >
             <View style={styles.pendingIconWrap}>
-              <UserCheck size={18} color="#D97706" />
+              <UserCheck size={18} color={colors.warning} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.pendingBannerTitle}>
@@ -186,7 +186,7 @@ export default function AdminDashboard({ navigation }) {
                 Review and approve new teacher registrations
               </Text>
             </View>
-            <ChevronRight size={18} color="#D97706" />
+            <ChevronRight size={18} color={colors.warning} />
           </TouchableOpacity>
         )}
 
@@ -355,15 +355,15 @@ const createStyles = (colors) => StyleSheet.create({
   pendingBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(245, 158, 11, 0.1)",
+    backgroundColor: colors.warningLight,
     borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.25)",
+    borderColor: colors.warning,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
   },
   pendingIconWrap: {
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    backgroundColor: colors.warningLight,
     width: 36,
     height: 36,
     borderRadius: 10,
@@ -371,13 +371,13 @@ const createStyles = (colors) => StyleSheet.create({
     alignItems: "center",
   },
   pendingBannerTitle: {
-    color: "#D97706",
+    color: colors.warning,
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 2,
   },
   pendingBannerSub: {
-    color: "#D97706",
+    color: colors.warning,
     fontSize: 11,
     opacity: 0.8,
   },

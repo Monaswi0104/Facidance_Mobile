@@ -111,7 +111,7 @@ export default function DepartmentsManagement() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
         }
       >
 
@@ -218,7 +218,7 @@ export default function DepartmentsManagement() {
                       </View>
                     </View>
                     <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(d)}>
-                      <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                      <Trash2 size={11} color={colors.} style={{ marginRight: 3 }} />
                       <Text style={styles.deleteBtnText}>Delete</Text>
                     </TouchableOpacity>
                   </TouchableOpacity>
@@ -335,16 +335,16 @@ const createStyles = (colors) => StyleSheet.create({
   listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
   listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#CCFBF1" },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accentLight },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Department Rows
   deptRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   deptRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  deptAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  deptAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   deptName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   deptMeta: { fontSize: 10, color: colors.mutedForeground },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.dangerLight, backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
@@ -361,7 +361,7 @@ const createStyles = (colors) => StyleSheet.create({
   subItemText: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   subItemSub: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
   emptySubText: { fontSize: 12, color: colors.mutedForeground, marginBottom: 8 },
-  teacherAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  teacherAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   teacherAvatarText: { fontSize: 12, fontWeight: "800", color: colors.primaryDark },
   closeBtn: { marginTop: 14, backgroundColor: colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   closeBtnText: { fontSize: 13, fontWeight: "700", color: colors.primaryForeground },

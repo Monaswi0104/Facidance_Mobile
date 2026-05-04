@@ -97,7 +97,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
+            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8, tintColor: isDark ? colors.foreground : undefined }} />
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

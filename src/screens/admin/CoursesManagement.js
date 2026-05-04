@@ -143,7 +143,7 @@ export default function CoursesManagement() {
         data={filteredCourses}
         keyExtractor={(c) => c.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -215,8 +215,8 @@ export default function CoursesManagement() {
                     <Text style={styles.formLabel}>FILTER BY DEPARTMENT</Text>
                     <View style={styles.pickerBox}>
                       <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="All Departments" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                        <Picker.Item label="All Departments" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
+                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -224,8 +224,8 @@ export default function CoursesManagement() {
                     <Text style={styles.formLabel}>TEACHER *</Text>
                     <View style={styles.pickerBox}>
                       <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select Teacher" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                        <Picker.Item label="Select Teacher" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
+                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -236,8 +236,8 @@ export default function CoursesManagement() {
                     <Text style={styles.formLabel}>PROGRAM *</Text>
                     <View style={styles.pickerBox}>
                       <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select Program" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                        <Picker.Item label="Select Program" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
+                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -253,8 +253,8 @@ export default function CoursesManagement() {
                     <Text style={styles.formLabel}>SEMESTER *</Text>
                     <View style={styles.pickerBox}>
                       <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select" value={null} color={colors.mutedForeground} style={{ backgroundColor: '#FFFFFF' }} />
-                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color={colors.foreground} style={{ backgroundColor: '#FFFFFF' }} />)}
+                        <Picker.Item label="Select" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
+                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
                       </Picker>
                     </View>
                   </View>
@@ -341,7 +341,7 @@ export default function CoursesManagement() {
                 </View>
               </View>
               <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
-                <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                 <Text style={styles.deleteBtnText}>Delete</Text>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -376,7 +376,7 @@ export default function CoursesManagement() {
                   <View style={{ marginRight: 12 }}>{item.icon}</View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.detailInfoLabel}>{item.label}</Text>
-                    <Text style={[styles.detailInfoValue, item.highlight && { color: "#10B981", letterSpacing: 2 }]}>{item.value || "—"}</Text>
+                    <Text style={[styles.detailInfoValue, item.highlight && { color: colors.success, letterSpacing: 2 }]}>{item.value || "—"}</Text>
                     {!!item.sub && <Text style={styles.detailInfoSub}>{item.sub}</Text>}
                   </View>
                 </View>
@@ -471,18 +471,18 @@ const createStyles = (colors) => StyleSheet.create({
   listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
   listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: "#CCFBF1" },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accent },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Course Rows
   courseRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
   courseRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  courseAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  courseAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   courseName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   courseMeta: { fontSize: 10, color: colors.mutedForeground },
   codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3, marginRight: 6 },
   codeText: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 

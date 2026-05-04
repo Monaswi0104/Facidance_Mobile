@@ -68,7 +68,7 @@ export default function MyCourses({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -200,8 +200,8 @@ const createStyles = (colors) => StyleSheet.create({
   cardIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
   courseName: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 6 },
   badgeRow: { flexDirection: "row", alignItems: "center" },
-  activeBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 6 },
-  activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  activeBadge: { backgroundColor: colors.successLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: colors.success, marginRight: 6 },
+  activeBadgeText: { fontSize: 10, fontWeight: "700", color: colors.success },
   codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: colors.border },
   codeBadgeText: { fontSize: 10, fontWeight: "600", color: colors.textBody },
 

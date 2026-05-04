@@ -79,9 +79,9 @@ export default function StudentDashboard({ navigation }) {
   }, []);
 
   const getAttendanceColor = (raw) => {
-    if (raw >= 75) return "#10B981";
-    if (raw >= 50) return "#F59E0B";
-    return "#EF4444";
+    if (raw >= 75) return colors.success;
+    if (raw >= 50) return colors.warning;
+    return colors.destructive;
   };
 
   return (
@@ -90,7 +90,7 @@ export default function StudentDashboard({ navigation }) {
         contentContainerStyle={styles.container} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -133,7 +133,7 @@ export default function StudentDashboard({ navigation }) {
               </View>
               <Text style={styles.statNumber}>{stats.courses}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                <CheckCircle size={10} color="#10B981" style={{ marginRight: 3 }} />
+                <CheckCircle size={10} color={colors.success} style={{ marginRight: 3 }} />
                 <Text style={styles.statSubText}>enrolled</Text>
               </View>
             </TouchableOpacity>
@@ -145,7 +145,7 @@ export default function StudentDashboard({ navigation }) {
               </View>
               <Text style={[styles.statNumber, { color: getAttendanceColor(stats.avgRaw) }]}>{stats.avgAttendance}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-                <CheckCircle size={10} color="#10B981" style={{ marginRight: 3 }} />
+                <CheckCircle size={10} color={colors.success} style={{ marginRight: 3 }} />
                 <Text style={styles.statSubText}>{stats.avgRaw >= 75 ? "On track" : "Needs attention"}</Text>
               </View>
             </TouchableOpacity>
@@ -208,9 +208,9 @@ export default function StudentDashboard({ navigation }) {
 
             {/* Tips */}
             {[
-              { icon: Lightbulb, color: "#F59E0B", text: "Submit attendance as soon as a batch opens." },
-              { icon: Lightbulb, color: "#F59E0B", text: "Ensure good lighting when taking your face photo." },
-              { icon: AlertTriangle, color: "#F59E0B", text: "Contact your teacher if you notice any discrepancy." },
+              { icon: Lightbulb, color: colors.warning, text: "Submit attendance as soon as a batch opens." },
+              { icon: Lightbulb, color: colors.warning, text: "Ensure good lighting when taking your face photo." },
+              { icon: AlertTriangle, color: colors.warning, text: "Contact your teacher if you notice any discrepancy." },
             ].map((tip, i) => (
               <View key={i} style={styles.tipRow}>
                 <tip.icon size={14} color={tip.color} style={{ marginRight: 8 }} />
@@ -273,7 +273,7 @@ const createStyles = (colors) => StyleSheet.create({
   statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
   statLabel: { fontSize: 7, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 4 },
   statNumber: { fontSize: 22, fontWeight: "800", color: colors.foreground },
-  statSubText: { fontSize: 10, color: "#10B981", fontWeight: "600" },
+  statSubText: { fontSize: 10, color: colors.success, fontWeight: "600" },
   statIconBg: { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Section Cards

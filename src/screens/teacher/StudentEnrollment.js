@@ -273,7 +273,7 @@ export default function StudentEnrollment() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
         }
       >
 
@@ -409,8 +409,8 @@ export default function StudentEnrollment() {
                 <View style={{ flex: 1, alignItems: "center" }}>
                   {s.faceRegistered ? (
                     <View style={styles.faceYes}>
-                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
-                      <Text style={[styles.faceText, { color: "#059669" }]}>Registered</Text>
+                      <CheckCircle size={11} color={colors.} style={{ marginRight: 2 }} />
+                      <Text style={[styles.faceText, { color: colors.success }]}>Registered</Text>
                     </View>
                   ) : (
                     <View style={styles.faceNo}>
@@ -513,7 +513,7 @@ export default function StudentEnrollment() {
 
                   <View style={styles.modalDetailRow}>
                     <Text style={styles.modalDetailLabel}>Status:</Text>
-                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : colors.accent }]}>
+                    <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? colors.success : colors.accent }]}>
                        {(selectedStudent.status || "active").toUpperCase()}
                     </Text>
                   </View>
@@ -523,12 +523,12 @@ export default function StudentEnrollment() {
                     <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                       {selectedStudent.faceRegistered ? (
                         <>
-                          <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
-                          <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                          <CheckCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <Text style={[styles.modalDetailValue, { color: colors.success, flex: 0 }]}>Registered</Text>
                         </>
                       ) : (
                         <>
-                          <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                          <XCircle size={14} color={colors.} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}
@@ -643,7 +643,7 @@ const createStyles = (colors) => StyleSheet.create({
   studentName: { fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
   studentEmail: { fontSize: 10, color: colors.mutedForeground },
   cellText: { fontSize: 11, color: colors.mutedForeground },
-  faceYes: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
+  faceYes: { flexDirection: "row", alignItems: "center", backgroundColor: colors.successLight, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10 },
   faceNo: { backgroundColor: colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
   faceText: { fontSize: 9, fontWeight: "700" },
   emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },

@@ -1,3 +1,4 @@
+import { Theme } from '../theme/Theme';
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
@@ -23,7 +24,7 @@ card:{
 flexDirection:"row",
 justifyContent:"space-between",
 padding:15,
-backgroundColor:"#fff",
+backgroundColor: Theme.colors.card,
 marginBottom:10,
 borderRadius:8
 },

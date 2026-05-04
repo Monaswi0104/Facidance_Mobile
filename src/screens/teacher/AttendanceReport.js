@@ -146,9 +146,9 @@ export default function AttendanceReport() {
   const below75 = data.filter(d => d.percent < 75).length;
 
   const getBarColor = (percent) => {
-    if (percent >= 75) return "#10B981";
-    if (percent >= 50) return "#F59E0B";
-    return "#EF4444";
+    if (percent >= 75) return colors.success;
+    if (percent >= 50) return colors.warning;
+    return colors.destructive;
   };
 
   const sendEmail = (student) => {
@@ -163,7 +163,7 @@ export default function AttendanceReport() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
         }
       >
 
@@ -316,8 +316,8 @@ export default function AttendanceReport() {
               <Text style={styles.chartTitle}>Distribution</Text>
               <Text style={styles.chartSubtitle}>Attendance rate segments</Text>
               {[
-                { label: "≥ 75%", count: data.filter(d => d.percent >= 75).length, color: "#10B981" },
-                { label: "50–74%", count: data.filter(d => d.percent >= 50 && d.percent < 75).length, color: "#F59E0B" },
+                { label: "≥ 75%", count: data.filter(d => d.percent >= 75).length, color: colors.success },
+                { label: "50–74%", count: data.filter(d => d.percent >= 50 && d.percent < 75).length, color: colors.warning },
                 { label: "< 50%", count: data.filter(d => d.percent < 50).length, color: colors.destructive },
               ].map((seg, i) => (
                 <View key={i} style={styles.distRow}>
@@ -431,7 +431,7 @@ export default function AttendanceReport() {
 
                 <View style={styles.modalDetailRow}>
                   <Text style={styles.modalDetailLabel}>Status:</Text>
-                  <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? "#10B981" : colors.accent }]}>
+                  <Text style={[styles.modalDetailValue, { color: selectedStudent.status === "graduated" ? colors.success : colors.accent }]}>
                     {(selectedStudent.status || "active").toUpperCase()}
                   </Text>
                 </View>
@@ -441,12 +441,12 @@ export default function AttendanceReport() {
                   <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                     {selectedStudent.faceRegistered ? (
                       <>
-                        <CheckCircle size={14} color="#10B981" style={{ marginRight: 4 }} />
-                        <Text style={[styles.modalDetailValue, { color: "#10B981", flex: 0 }]}>Registered</Text>
+                        <CheckCircle size={14} color={colors.success} style={{ marginRight: 4 }} />
+                        <Text style={[styles.modalDetailValue, { color: colors.success, flex: 0 }]}>Registered</Text>
                       </>
                     ) : (
                       <>
-                        <XCircle size={14} color="#EF4444" style={{ marginRight: 4 }} />
+                        <XCircle size={14} color={colors.destructive} style={{ marginRight: 4 }} />
                         <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                       </>
                     )}

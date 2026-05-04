@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
-import { Theme, useTheme } from "../../theme/Theme";
+import { useTheme } from "../../theme/Theme";
 import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
 
 const uploadSteps = [
@@ -98,7 +98,7 @@ export default function ProfileUpload() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -129,13 +129,13 @@ export default function ProfileUpload() {
               </View>
             </View>
             {faceRegistered ? (
-              <View style={styles.faceActiveBadge}>
-                <ScanFace size={12} color="#059669" style={{ marginRight: 4 }} />
+              <View style={[styles.faceActiveBadge, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
+                <ScanFace size={12} color={colors.success} style={{ marginRight: 4 }} />
                 <Text style={styles.faceActiveText}>Face recognition active</Text>
               </View>
             ) : (
-              <View style={[styles.faceActiveBadge, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]}>
-                <X size={12} color="#EF4444" style={{ marginRight: 4 }} />
+              <View style={[styles.faceActiveBadge, { backgroundColor: colors.destructiveLight, borderColor: colors.destructiveLight }]}>
+                <X size={12} color={colors.destructive} style={{ marginRight: 4 }} />
                 <Text style={[styles.faceActiveText, { color: colors.destructive }]}>Face not registered</Text>
               </View>
             )}
@@ -293,15 +293,15 @@ const createStyles = (colors) => StyleSheet.create({
   profileName: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
   profileEmail: { fontSize: 11, color: colors.mutedForeground, marginBottom: 6 },
   profileBadges: { flexDirection: "row", alignItems: "center" },
-  studentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: "#DCFCE7", marginRight: 8 },
-  studentBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  studentBadge: { backgroundColor: colors.successLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: colors.success, marginRight: 8 },
+  studentBadgeText: { fontSize: 10, fontWeight: "700", color: colors.success },
   joinText: { fontSize: 10, color: colors.mutedForeground },
   faceActiveBadge: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#DCFCE7",
+    backgroundColor: colors.successLight, borderWidth: 1, borderColor: colors.success,
     paddingHorizontal: 8, paddingVertical: 6, borderRadius: 10,
   },
-  faceActiveText: { fontSize: 9, fontWeight: "700", color: "#059669" },
+  faceActiveText: { fontSize: 9, fontWeight: "700", color: colors.success },
 
   // Details Grid
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
@@ -361,5 +361,5 @@ const createStyles = (colors) => StyleSheet.create({
   },
   submitBtnText: { fontSize: 12, fontWeight: "600", color: colors.primaryForeground },
   submitBtnDisabled: { backgroundColor: colors.muted },
-  submitBtnSuccess: { backgroundColor: "#10B981" },
+  submitBtnSuccess: { backgroundColor: colors.success },
 });

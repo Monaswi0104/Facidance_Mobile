@@ -38,9 +38,15 @@ const lightColors = {
   statusBarStyle: 'dark-content',
   // Functional
   success: '#10B981',
+  successLight: 'rgba(16,185,129,0.15)',
   warning: '#F59E0B',
+  warningLight: 'rgba(245,158,11,0.15)',
   danger: '#EF4444',
+  dangerLight: 'rgba(239,68,68,0.15)',
+  destructive: '#e11d48',
+  destructiveLight: 'rgba(225,29,72,0.15)',
   info: '#3B82F6',
+  infoLight: 'rgba(59,130,246,0.15)',
   // Logout button
   logoutBg: '#FEF2F2',
   logoutBorder: '#FECACA',
@@ -88,9 +94,15 @@ const darkColors = {
   statusBarStyle: 'light-content',
   // Functional
   success: '#34D399',
+  successLight: 'rgba(52,211,153,0.15)',
   warning: '#FBBF24',
+  warningLight: 'rgba(251,191,36,0.15)',
   danger: '#f87171',
+  dangerLight: 'rgba(248,113,113,0.15)',
+  destructive: '#f87171',
+  destructiveLight: 'rgba(248,113,113,0.15)',
   info: '#60A5FA',
+  infoLight: 'rgba(96,165,250,0.15)',
   // Logout button
   logoutBg: 'rgba(239,68,68,0.15)',
   logoutBorder: 'rgba(239,68,68,0.3)',

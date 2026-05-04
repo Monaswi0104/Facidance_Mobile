@@ -183,7 +183,7 @@ export default function StudentsManagement() {
         data={filtered}
         keyExtractor={(s) => s.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -216,7 +216,7 @@ export default function StudentsManagement() {
                     <Text style={styles.statLabel}>ACTIVE</Text>
                     <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
                   </View>
-                  <Text style={[styles.statNumber, { color: "#10B981" }]}>{totalActive}</Text>
+                  <Text style={[styles.statNumber, { color: colors.success }]}>{totalActive}</Text>
                 </View>
                 <View style={styles.statCard}>
                   <View style={styles.statTopRow}>
@@ -339,16 +339,16 @@ export default function StudentsManagement() {
                   <Edit2 size={14} color={colors.textBody} />
                 </TouchableOpacity>
                 {s.status !== "graduated" ? (
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FFFBEB", borderColor: "#FEF3C7" }]} onPress={() => openModal("graduate", s)}>
-                    <Users size={14} color="#D97706" />
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.warningLight, borderColor: colors.warning }]} onPress={() => openModal("graduate", s)}>
+                    <Users size={14} color={colors.warning} />
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" }]} onPress={() => openModal("activate", s)}>
-                    <UserCheck size={14} color="#059669" />
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.successLight, borderColor: colors.success }]} onPress={() => openModal("activate", s)}>
+                    <UserCheck size={14} color={colors.success} />
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "rgba(239,68,68,0.08)", borderColor: "#FECACA" }]} onPress={() => openModal("delete", s)}>
-                  <Trash2 size={14} color="#DC2626" />
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.destructiveLight, borderColor: colors.destructiveLight }]} onPress={() => openModal("delete", s)}>
+                  <Trash2 size={14} color={colors.destructive} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -434,7 +434,7 @@ export default function StudentsManagement() {
                  <Text style={styles.confirmText}>Are you sure you want to mark <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text> as graduated?</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
-                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#6D28D9'}]} onPress={handleGraduate} disabled={isActionLoading}>
+                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: colors.warning}]} onPress={handleGraduate} disabled={isActionLoading}>
                      {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Confirm</Text>}
                    </TouchableOpacity>
                  </View>
@@ -444,11 +444,11 @@ export default function StudentsManagement() {
             {/* Activate Confirmation */}
             {modalType === "activate" && selectedStudent && (
               <View>
-                 <View style={styles.modalHeader}><UserCheck size={20} color="#059669" style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Reactivate Student</Text></View>
+                 <View style={styles.modalHeader}><UserCheck size={20} color={colors.} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Reactivate Student</Text></View>
                  <Text style={styles.confirmText}>Are you sure you want to reactivate <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text> and change their status back to Active?</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
-                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#059669'}]} onPress={handleActivate} disabled={isActionLoading}>
+                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: colors.success}]} onPress={handleActivate} disabled={isActionLoading}>
                      {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Activate</Text>}
                    </TouchableOpacity>
                  </View>
@@ -462,7 +462,7 @@ export default function StudentsManagement() {
                  <Text style={styles.confirmText}>Are you sure you want to delete <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text>? This action cannot be undone.</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>
-                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: '#DC2626'}]} onPress={handleDelete} disabled={isActionLoading}>
+                   <TouchableOpacity style={[styles.modalConfirmBtn, {backgroundColor: colors.destructive}]} onPress={handleDelete} disabled={isActionLoading}>
                      {isActionLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={styles.modalConfirmText}>Delete</Text>}
                    </TouchableOpacity>
                  </View>
@@ -531,9 +531,9 @@ const createStyles = (colors) => StyleSheet.create({
     shadowColor: colors.foreground, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   dropdownItem: { paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8 },
-  dropdownItemActive: { backgroundColor: "#F0FDF4" },
+  dropdownItemActive: { backgroundColor: colors.successLight },
   dropdownItemText: { fontSize: 13, color: colors.textBody },
-  dropdownItemTextActive: { color: "#059669", fontWeight: "600" },
+  dropdownItemTextActive: { color: colors.success, fontWeight: "600" },
 
   // Filters
   filterRow: { flexDirection: "row", marginBottom: 16 },
@@ -550,7 +550,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   listHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   listTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground },
-  listCountBadge: { backgroundColor: "#EEF2FF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  listCountBadge: { backgroundColor: colors.infoLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   listCountText: { fontSize: 11, fontWeight: "700", color: colors.primaryDark },
   emptyText: { fontSize: 14, color: colors.mutedForeground, textAlign: "center", paddingVertical: 24 },
 
@@ -566,11 +566,11 @@ const createStyles = (colors) => StyleSheet.create({
   programBadgeText: { fontSize: 10, fontWeight: "600", color: colors.primaryForeground },
   noProgramText: { fontSize: 11, color: colors.mutedForeground, fontStyle: "italic" },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  statusActive: { backgroundColor: "#D1FAE5" },
-  statusGrad: { backgroundColor: "#FEF3C7" },
+  statusActive: { backgroundColor: colors.successLight },
+  statusGrad: { backgroundColor: colors.warningLight },
   statusText: { fontSize: 10, fontWeight: "700" },
-  statusTextActive: { color: "#059669" },
-  statusTextGrad: { color: "#D97706" },
+  statusTextActive: { color: colors.success },
+  statusTextGrad: { color: colors.warning },
   courseCountBadge: { flexDirection: "row", alignItems: "center", backgroundColor: colors.muted, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   courseCountText: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground },
 
@@ -593,7 +593,7 @@ const createStyles = (colors) => StyleSheet.create({
   courseItemCard: { backgroundColor: colors.secondary, padding: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
   courseItemName: { fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 4 },
   courseItemCode: { fontSize: 12, color: colors.mutedForeground },
-  courseItemProgram: { fontSize: 12, color: "#8B5CF6", marginTop: 4 },
+  courseItemProgram: { fontSize: 12, color: colors.info, marginTop: 4 },
   
   inputLabel: { fontSize: 13, fontWeight: "600", color: colors.textBody, marginBottom: 6, marginTop: 12 },
   modalInput: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 12, fontSize: 14, color: colors.foreground, backgroundColor: colors.background },

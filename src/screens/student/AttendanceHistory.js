@@ -95,7 +95,12 @@ export default function AttendanceHistory({ route }) {
     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
-  const getBarColor = (rate) => rate >= 90 ? "#10B981" : rate >= 75 ? "#0EA5E9" : rate >= 50 ? "#F59E0B" : "#EF4444";
+  const getBarColor = (rate) => {
+    if (rate >= 90) return colors.success;
+    if (rate >= 75) return colors.info;
+    if (rate >= 50) return colors.warning;
+    return colors.destructive;
+  };
 
   /* ═══════════════════════════════════════ */
   /*  Overview Tab                           */
@@ -113,10 +118,10 @@ export default function AttendanceHistory({ route }) {
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
-            <Text style={[styles.statLabel, { color: "#10B981" }]}>PRESENT</Text>
+            <Text style={[styles.statLabel, { color: colors.success }]}>PRESENT</Text>
             <View style={styles.statIconBg}><CheckCircle size={14} color={colors.primaryForeground} /></View>
           </View>
-          <Text style={[styles.statNumber, { color: "#10B981" }]} numberOfLines={1} adjustsFontSizeToFit>{stats.present}</Text>
+          <Text style={[styles.statNumber, { color: colors.success }]} numberOfLines={1} adjustsFontSizeToFit>{stats.present}</Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statTopRow}>
@@ -226,13 +231,13 @@ export default function AttendanceHistory({ route }) {
               <View key={r.id || i} style={[styles.tableRow, i < filteredRecords.length - 1 && styles.tableRowBorder]}>
                 <Text style={[styles.tdCourse, { flex: 1.5 }]} numberOfLines={1}>{r.course?.name || r.course_name || "Unknown"}</Text>
                 <View style={{ flex: 0.8, alignItems: "center" }}>
-                  <View style={[styles.statusBadge, { backgroundColor: isPresent ? "#F0FDF4" : "#FEF2F2" }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: isPresent ? colors.successLight : colors.destructiveLight }]}>
                     {isPresent ? (
-                      <CheckCircle size={11} color="#16A34A" style={{ marginRight: 3 }} />
+                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 3 }} />
                     ) : (
-                      <XCircle size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                      <XCircle size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                     )}
-                    <Text style={[styles.statusText, { color: isPresent ? "#16A34A" : "#EF4444" }]}>
+                    <Text style={[styles.statusText, { color: isPresent ? colors.success : colors.destructive }]}>
                       {isPresent ? "Present" : "Absent"}
                     </Text>
                   </View>
@@ -250,7 +255,7 @@ export default function AttendanceHistory({ route }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 

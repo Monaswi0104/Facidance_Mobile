@@ -65,7 +65,7 @@ export default function MyCourses({ navigation }) {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.secondary }]}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
         }
       >
 
@@ -211,7 +211,7 @@ const createStyles = (colors) => StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 10,
   },
-  activeBadgeText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  activeBadgeText: { fontSize: 10, fontWeight: "700", color: colors.success },
 
   // Detail rows with icons
   courseDetailRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },

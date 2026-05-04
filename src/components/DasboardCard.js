@@ -1,3 +1,4 @@
+import { Theme } from '../theme/Theme';
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -21,7 +22,7 @@ onPress={onPress}
 const styles = StyleSheet.create({
 
 card:{
-backgroundColor:"#fff",
+backgroundColor: Theme.colors.card,
 padding:20,
 marginBottom:15,
 borderRadius:10,

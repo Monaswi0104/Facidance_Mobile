@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
-  KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
+  KeyboardAvoidingView, Platform, ScrollView,
   StatusBar, ActivityIndicator, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loginUser } from "../../api/authApi";
-import { Theme, useTheme } from "../../theme/Theme";
+import { useTheme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
 
 const universityImg = require("../../assets/university.jpg");
@@ -52,8 +52,8 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle="light-content" backgroundColor={isDark ? '#0f172a' : Theme.colors.primary} />
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: isDark ? '#0f172a' : Theme.colors.primary }} />
+      <StatusBar barStyle={isDark ? "light-content" : "light-content"} backgroundColor={colors.primary} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: colors.primary }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -68,25 +68,25 @@ export default function LoginScreen({ navigation }) {
         {/* Hero */}
         <View style={[styles.hero, { paddingTop: topPadding }]}>
           <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
-          <View style={styles.heroOverlay} />
+          <View style={[styles.heroOverlay, { backgroundColor: isDark ? 'rgba(15,23,42,0.92)' : 'rgba(0,49,53,0.85)' }]} />
 
           <View style={styles.heroInner}>
             {/* Brand + Theme Toggle Row */}
             <View style={styles.heroTopRow}>
               <View style={styles.brandRow}>
-                <Image source={logoImg} style={styles.brandLogo} resizeMode="contain" />
+                <Image source={logoImg} style={[styles.brandLogo, { tintColor: isDark ? "#FFFFFF" : undefined }]} resizeMode="contain" />
                 <View>
                   <Text style={styles.brandName}>Facidance</Text>
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
               <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme} activeOpacity={0.7}>
-                <ThemeIcon size={16} color="#fff" />
+                <ThemeIcon size={16} color={colors.primaryForeground} />
               </TouchableOpacity>
             </View>
 
             {/* AI Badge */}
-            <View style={styles.aiBadge}>
+            <View style={[styles.aiBadge, { backgroundColor: isDark ? 'rgba(52,211,153,0.15)' : 'rgba(16,185,129,0.15)' }]}>
               <Sparkles size={13} color={colors.success} style={{ marginRight: 5 }} />
               <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
             </View>
@@ -228,7 +228,7 @@ export default function LoginScreen({ navigation }) {
 }
 
 const createStyles = (colors, isDark) => StyleSheet.create({
-  screenWrapper: { flex: 1, backgroundColor: isDark ? '#0f172a' : Theme.colors.primary },
+  screenWrapper: { flex: 1, backgroundColor: colors.primary },
   scrollContent: { flexGrow: 1 },
 
   // Hero
@@ -239,13 +239,20 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     overflow: "hidden",
   },
   heroImage: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: "100%",
     height: "100%",
   },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: isDark ? "rgba(15,23,42,0.88)" : "rgba(0,49,53,0.80)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   heroInner: {
     justifyContent: "flex-end",
@@ -268,9 +275,9 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.primaryForeground,
   },
-  brandName: { color: "#fff", fontSize: 20, fontWeight: "800" },
+  brandName: { color: colors.primaryForeground, fontSize: 20, fontWeight: "800" },
   brandSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500" },
 
   // Theme Toggle
@@ -289,7 +296,6 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   aiBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(16,185,129,0.15)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -301,7 +307,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   heroTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#fff",
+    color: colors.primaryForeground,
     letterSpacing: -0.5,
     marginBottom: 6,
   },
@@ -346,7 +352,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     borderTopWidth: isDark ? 1.5 : 0,
     borderLeftWidth: isDark ? 1.5 : 0,
     borderRightWidth: isDark ? 1.5 : 0,
-    borderColor: isDark ? 'rgba(255,255,255,0.4)' : 'transparent',
+    borderColor: isDark ? colors.border : 'transparent',
   },
   formTitle: {
     fontSize: 24,
@@ -371,7 +377,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: isDark ? colors.inputBg : "#fff",
+    backgroundColor: colors.inputBg,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 10,

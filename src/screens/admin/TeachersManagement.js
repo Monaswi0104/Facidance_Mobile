@@ -168,7 +168,7 @@ export default function TeachersManagement() {
         data={filteredApproved}
         keyExtractor={(t) => t.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#10B981"]} tintColor="#10B981" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -187,13 +187,13 @@ export default function TeachersManagement() {
               <Text style={styles.statPillLabel}>TOTAL</Text>
               <Text style={styles.statPillValue}>{stats.total}</Text>
             </View>
-            <View style={[styles.statPill, { borderColor: "#FECACA" }]}>
+            <View style={[styles.statPill, { borderColor: colors.destructiveLight }]}>
               <Text style={[styles.statPillLabel, { color: colors.destructive }]}>PENDING</Text>
               <Text style={[styles.statPillValue, { color: colors.destructive }]}>{stats.pending}</Text>
             </View>
-            <View style={[styles.statPill, { borderColor: "#A7F3D0" }]}>
-              <Text style={[styles.statPillLabel, { color: "#10B981" }]}>APPROVED</Text>
-              <Text style={[styles.statPillValue, { color: "#10B981" }]}>{stats.approved}</Text>
+            <View style={[styles.statPill, { borderColor: colors.successLight }]}>
+              <Text style={[styles.statPillLabel, { color: colors.success }]}>APPROVED</Text>
+              <Text style={[styles.statPillValue, { color: colors.success }]}>{stats.approved}</Text>
             </View>
           </View>
         </View>
@@ -227,7 +227,7 @@ export default function TeachersManagement() {
                   <Text style={styles.sectionTitle}>Pending Approvals</Text>
                   <Text style={styles.sectionSubtitle}>Assign a department to approve</Text>
                 </View>
-                <View style={[styles.countBadge, { backgroundColor: "rgba(239,68,68,0.08)" }]}>
+                <View style={[styles.countBadge, { backgroundColor: colors.destructiveLight }]}>
                   <Text style={[styles.countText, { color: colors.destructive }]}>{filteredPending.length} pending</Text>
                 </View>
               </View>
@@ -255,7 +255,7 @@ export default function TeachersManagement() {
                             <Text style={styles.approveBtnText}>{isExpanded ? "Cancel" : "Approve"}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity style={styles.deleteSmallBtn} onPress={() => handleDelete(t)}>
-                            <Trash2 size={13} color="#EF4444" />
+                            <Trash2 size={13} color={colors.destructive} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -300,8 +300,8 @@ export default function TeachersManagement() {
                   <Text style={styles.sectionTitle}>Approved Teachers</Text>
                   <Text style={styles.sectionSubtitle}>Assigned to departments</Text>
                 </View>
-                <View style={[styles.countBadge, { backgroundColor: "#D1FAE5" }]}>
-                  <Text style={[styles.countText, { color: "#059669" }]}>{filteredApproved.length} approved</Text>
+                <View style={[styles.countBadge, { backgroundColor: colors.successLight }]}>
+                  <Text style={[styles.countText, { color: colors.success }]}>{filteredApproved.length} approved</Text>
                 </View>
               </View>
 
@@ -336,7 +336,7 @@ export default function TeachersManagement() {
                   </View>
                 </View>
                 <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(t)}>
-                  <Trash2 size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                  <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                   <Text style={styles.deleteBtnText}>Delete</Text>
                 </TouchableOpacity>
               </View>
@@ -402,14 +402,14 @@ export default function TeachersManagement() {
                       <Text style={styles.courseItemName}>{c.name}</Text>
                       <Text style={styles.courseItemCode}>{c.code}</Text>
                       <View style={styles.courseItemTagsRow}>
-                        <View style={[styles.courseTag, { backgroundColor: "#F0FDFA" }]}>
+                        <View style={[styles.courseTag, { backgroundColor: colors.accentLight }]}>
                           <Text style={[styles.courseTagText, { color: colors.primaryDark }]}>{c.program}</Text>
                         </View>
-                        <View style={[styles.courseTag, { backgroundColor: "#F0FDF4" }]}>
-                          <Text style={[styles.courseTagText, { color: "#10B981" }]}>{c.semester}</Text>
+                        <View style={[styles.courseTag, { backgroundColor: colors.successLight }]}>
+                          <Text style={[styles.courseTagText, { color: colors.success }]}>{c.semester}</Text>
                         </View>
-                        <View style={[styles.courseTag, { backgroundColor: "#FEF3C7" }]}>
-                          <Text style={[styles.courseTagText, { color: "#D97706" }]}>{c.students} students</Text>
+                        <View style={[styles.courseTag, { backgroundColor: colors.warningLight }]}>
+                          <Text style={[styles.courseTagText, { color: colors.warning }]}>{c.students} students</Text>
                         </View>
                       </View>
                     </View>
@@ -487,8 +487,8 @@ const createStyles = (colors) => StyleSheet.create({
   // Buttons
   approveBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 4 },
   approveBtnText: { fontSize: 10, fontWeight: "700", color: colors.primaryForeground },
-  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", justifyContent: "center", alignItems: "center" },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#FECACA", backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, justifyContent: "center", alignItems: "center" },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
   // Assignment
@@ -507,7 +507,7 @@ const createStyles = (colors) => StyleSheet.create({
   detailAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginBottom: 10 },
   detailAvatarText: { fontSize: 22, fontWeight: "800", color: colors.primaryForeground },
   detailName: { fontSize: 20, fontWeight: "800", color: colors.foreground, textAlign: "center" },
-  roleBadge: { backgroundColor: "#F0FDFA", paddingHorizontal: 14, paddingVertical: 4, borderRadius: 16, marginTop: 6, borderWidth: 1, borderColor: "#CCFBF1" },
+  roleBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 14, paddingVertical: 4, borderRadius: 16, marginTop: 6, borderWidth: 1, borderColor: colors.accent },
   roleBadgeText: { fontSize: 11, fontWeight: "700", color: colors.primaryDark },
   detailInfoList: { marginBottom: 14 },
   detailInfoItem: { flexDirection: "row", alignItems: "center", backgroundColor: colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: colors.border },
@@ -519,7 +519,7 @@ const createStyles = (colors) => StyleSheet.create({
   detailStatLabel: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground },
   detailSectionTitle: { fontSize: 11, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
   courseItem: { flexDirection: "row", backgroundColor: colors.background, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: colors.border },
-  courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: "#F0FDFA", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  courseItemLeft: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   courseItemName: { fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 1 },
   courseItemCode: { fontSize: 11, fontWeight: "600", color: colors.primaryDark, marginBottom: 4 },
   courseItemTagsRow: { flexDirection: "row", flexWrap: "wrap" },

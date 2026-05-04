@@ -263,12 +263,12 @@ export default function AttendanceCamera({ navigation }) {
                 <View style={{ flex: 0.8, alignItems: "center" }}>
                   {s.hasPhotos ? (
                     <View style={styles.photoAvailable}>
-                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: "#059669" }]}>Available</Text>
+                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
+                      <Text style={[styles.badgeText, { color: colors.success }]}>Available</Text>
                     </View>
                   ) : (
                     <View style={styles.photoMissing}>
-                      <XCircle size={11} color="#EF4444" style={{ marginRight: 2 }} />
+                      <XCircle size={11} color={colors.destructive} style={{ marginRight: 2 }} />
                       <Text style={[styles.badgeText, { color: colors.destructive }]}>Missing</Text>
                     </View>
                   )}
@@ -277,8 +277,8 @@ export default function AttendanceCamera({ navigation }) {
                 <View style={{ flex: 0.9, alignItems: "center" }}>
                   {s.trained ? (
                     <View style={styles.trainedBadge}>
-                      <CheckCircle size={11} color="#059669" style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: "#059669" }]}>Trained</Text>
+                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
+                      <Text style={[styles.badgeText, { color: colors.success }]}>Trained</Text>
                     </View>
                   ) : (
                     <View style={styles.pendingBadge}>
@@ -434,7 +434,7 @@ const createStyles = (colors) => StyleSheet.create({
   // Badges
   photoAvailable: { flexDirection: "row", alignItems: "center" },
   photoMissing: { flexDirection: "row", alignItems: "center" },
-  trainedBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "#F0FDF4", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
+  trainedBadge: { flexDirection: "row", alignItems: "center", backgroundColor: colors.successLight, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
   pendingBadge: { backgroundColor: colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
   badgeText: { fontSize: 9, fontWeight: "700" },
 
@@ -442,8 +442,8 @@ const createStyles = (colors) => StyleSheet.create({
   infoCard: { backgroundColor: colors.background, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
   infoTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground },
   infoStep: { fontSize: 12, color: colors.mutedForeground, lineHeight: 20, marginBottom: 2 },
-  infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
-  infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
+  infoHighlight: { backgroundColor: colors.warningLight, borderRadius: 8, padding: 10, marginTop: 10 },
+  infoHighlightText: { fontSize: 11, color: colors.warning, fontWeight: "600" },
 
   emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 16 },
 });

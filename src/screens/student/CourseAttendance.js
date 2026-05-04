@@ -1,7 +1,7 @@
 import React, {  useState, useEffect , useMemo } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from "react-native";
 import { getCourseAttendance, getCourse } from "../../api/studentApi";
-import { Theme, useTheme } from "../../theme/Theme";
+import { useTheme } from "../../theme/Theme";
 import { BookOpen, User, Mail, Calendar, GraduationCap, Info, CheckCircle, XCircle, ChevronLeft, BarChart3 } from "lucide-react-native";
 import { AttendanceOverviewSkeleton } from "../../components/SkeletonLoader";
 
@@ -64,7 +64,11 @@ export default function CourseAttendance({ route, navigation }) {
     };
   };
 
-  const getBarColor = (pct) => pct >= 75 ? "#10B981" : pct >= 50 ? "#F59E0B" : "#EF4444";
+  const getBarColor = (pct) => {
+    if (pct >= 75) return colors.success;
+    if (pct >= 50) return colors.warning;
+    return colors.destructive;
+  };
 
   const renderOverview = () => (
     <View>
@@ -140,8 +144,8 @@ export default function CourseAttendance({ route, navigation }) {
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-          <CheckCircle size={12} color={percent >= 75 ? "#10B981" : "#F59E0B"} style={{ marginRight: 4 }} />
-          <Text style={{ fontSize: 11, color: percent >= 75 ? "#10B981" : "#F59E0B", fontWeight: "600" }}>
+          <CheckCircle size={12} color={percent >= 75 ? colors.success : colors.warning} style={{ marginRight: 4 }} />
+          <Text style={{ fontSize: 11, color: percent >= 75 ? colors.success : colors.warning, fontWeight: "600" }}>
             {percent >= 75 ? "You're on track — great attendance!" : "Needs improvement — aim for 75%"}
           </Text>
         </View>
@@ -153,7 +157,7 @@ export default function CourseAttendance({ route, navigation }) {
           </View>
           <View style={styles.perfStatBox}>
             <Text style={styles.perfStatLabel}>Present</Text>
-            <Text style={[styles.perfStatValue, { color: "#10B981" }]}>{attended}</Text>
+            <Text style={[styles.perfStatValue, { color: colors.success }]}>{attended}</Text>
           </View>
           <View style={styles.perfStatBox}>
             <Text style={styles.perfStatLabel}>Absent</Text>
@@ -189,13 +193,13 @@ export default function CourseAttendance({ route, navigation }) {
           return (
             <View key={record.id || index} style={[styles.historyRow, index < courseRecords.length - 1 && styles.historyBorder]}>
               <Text style={styles.historyDate}>{dt.dateStr}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: isPresent ? "#F0FDF4" : "#FEF2F2" }]}>
+              <View style={[styles.statusBadge, { backgroundColor: isPresent ? colors.successLight : colors.destructiveLight }]}>
                 {isPresent ? (
-                  <CheckCircle size={11} color="#16A34A" style={{ marginRight: 3 }} />
+                  <CheckCircle size={11} color={colors.success} style={{ marginRight: 3 }} />
                 ) : (
-                  <XCircle size={11} color="#EF4444" style={{ marginRight: 3 }} />
+                  <XCircle size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                 )}
-                <Text style={[styles.statusText, { color: isPresent ? "#16A34A" : "#EF4444" }]}>
+                <Text style={[styles.statusText, { color: isPresent ? colors.success : colors.destructive }]}>
                   {isPresent ? "Present" : "Absent"}
                 </Text>
               </View>
@@ -249,11 +253,11 @@ export default function CourseAttendance({ route, navigation }) {
             <Text style={styles.statLabel}>TOTAL SESSIONS</Text>
             <Text style={styles.statNumber}>{totalClasses}</Text>
           </View>
-          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#10B981" }]}>
-            <Text style={[styles.statLabel, { color: "#10B981" }]}>ATTENDED</Text>
-            <Text style={[styles.statNumber, { color: "#10B981" }]}>{attended}</Text>
+          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: colors.success }]}>
+            <Text style={[styles.statLabel, { color: colors.success }]}>ATTENDED</Text>
+            <Text style={[styles.statNumber, { color: colors.success }]}>{attended}</Text>
           </View>
-          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: "#EF4444" }]}>
+          <View style={[styles.statBox, { borderLeftWidth: 3, borderLeftColor: colors.destructive }]}>
             <Text style={[styles.statLabel, { color: colors.destructive }]}>ABSENT</Text>
             <Text style={[styles.statNumber, { color: colors.destructive }]}>{missed}</Text>
           </View>
@@ -335,8 +339,8 @@ const createStyles = (colors) => StyleSheet.create({
   courseMeta: { fontSize: 11, color: colors.mutedForeground },
   codePill: { borderWidth: 1, borderColor: colors.border, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 6 },
   codePillText: { fontSize: 10, fontWeight: "600", color: colors.textBody },
-  activePill: { backgroundColor: "#F0FDF4", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#DCFCE7" },
-  activePillText: { fontSize: 10, fontWeight: "700", color: "#10B981" },
+  activePill: { backgroundColor: colors.successLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: colors.success },
+  activePillText: { fontSize: 10, fontWeight: "700", color: colors.success },
 
   // Stats Row
   statsRow: { flexDirection: "row", marginBottom: 14 },

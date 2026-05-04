@@ -410,7 +410,7 @@ export default function AttendanceSession({ route, navigation }) {
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                       <Text style={s.historyCount}>
-                        <Text style={{ color: "#059669", fontWeight: "800" }}>{presentCount}</Text>
+                        <Text style={{ color: colors.success, fontWeight: "800" }}>{presentCount}</Text>
                         {" / "}{totalInSession}
                       </Text>
                       <View style={s.historyRateBadge}>
@@ -510,7 +510,7 @@ export default function AttendanceSession({ route, navigation }) {
                   { text: "End", style: "destructive", onPress: endSession },
                 ]);
               }} activeOpacity={0.8}>
-                <Square size={14} color="#DC2626" style={{ marginRight: 6 }} />
+                <Square size={14} color={colors.} style={{ marginRight: 6 }} />
                 <Text style={s.stopBtnText}>End</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -565,7 +565,7 @@ export default function AttendanceSession({ route, navigation }) {
                 return (
                   <View key={sid} style={s.recognizedRow}>
                     <View style={s.recognizedAvatar}>
-                      <CheckCircle size={16} color="#10B981" />
+                      <CheckCircle size={16} color={colors.} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.recognizedName}>{student.name}</Text>
@@ -676,7 +676,7 @@ const createStyles = (colors) => StyleSheet.create({
   resumeBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.accent, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   resumeBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
   stopBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.background, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(239,68,68,0.3)" },
-  stopBtnText: { color: "#DC2626", fontSize: 12, fontWeight: "700" },
+  stopBtnText: { color: colors.danger, fontSize: 12, fontWeight: "700" },
   manualCaptureBtn: { flex: 2, flexDirection: "row", backgroundColor: colors.primaryDark, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   manualCaptureBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
 
@@ -684,10 +684,10 @@ const createStyles = (colors) => StyleSheet.create({
   resultsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   resultsTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground },
   resultsSubtitle: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
-  presentBadge: { backgroundColor: "#F0FDF4", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
-  presentBadgeLabel: { fontSize: 8, fontWeight: "600", color: "#10B981" },
-  presentBadgeValue: { fontSize: 16, fontWeight: "800", color: "#10B981" },
-  absentBadge: { backgroundColor: "rgba(239,68,68,0.08)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
+  presentBadge: { backgroundColor: colors.successLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
+  presentBadgeLabel: { fontSize: 8, fontWeight: "600", color: colors.success },
+  presentBadgeValue: { fontSize: 16, fontWeight: "800", color: colors.success },
+  absentBadge: { backgroundColor: colors.dangerLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignItems: "center" },
   absentBadgeLabel: { fontSize: 8, fontWeight: "600", color: colors.destructive },
   absentBadgeValue: { fontSize: 16, fontWeight: "800", color: colors.destructive },
 
@@ -696,7 +696,7 @@ const createStyles = (colors) => StyleSheet.create({
   emptyResultsSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 4 },
 
   recognizedRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.muted },
-  recognizedAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0FDF4", justifyContent: "center", alignItems: "center", marginRight: 10 },
+  recognizedAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.successLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   recognizedName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   recognizedEmail: { fontSize: 10, color: colors.mutedForeground, marginTop: 1 },
 
@@ -717,7 +717,7 @@ const createStyles = (colors) => StyleSheet.create({
   infoCard: { backgroundColor: colors.background, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
   infoTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground },
   infoStep: { fontSize: 12, color: colors.mutedForeground, lineHeight: 22, marginBottom: 2 },
-  infoHighlight: { backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginTop: 10 },
+  infoHighlight: { backgroundColor: colors.warningLight, borderRadius: 8, padding: 10, marginTop: 10 },
   infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
 
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 30 },

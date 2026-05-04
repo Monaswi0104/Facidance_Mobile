@@ -159,7 +159,7 @@ export default function TeacherDashboard({ navigation }) {
     { label: "MY COURSES", value: stats.courses, icon: <BookOpen size={18} color={colors.primaryForeground} />, sub: stats.semesters ? `${stats.semesters} semester` : "" },
     { label: "TOTAL STUDENTS", value: stats.students, icon: <Users size={18} color={colors.primaryForeground} />, sub: stats.students > 0 ? "enrolled" : "" },
     { label: "ACTIVE SEMESTERS", value: stats.semesters, icon: <Calendar size={18} color={colors.primaryForeground} />, sub: "" },
-    { label: "TOTAL ATTENDANCE", value: stats.attendance, icon: <CheckCircle size={18} color={colors.primaryForeground} />, sub: atRiskStudents.length > 0 ? `${atRiskStudents.length} at risk` : "", subColor: atRiskStudents.length > 0 ? "#EF4444" : "#10B981" },
+    { label: "TOTAL ATTENDANCE", value: stats.attendance, icon: <CheckCircle size={18} color={colors.primaryForeground} />, sub: atRiskStudents.length > 0 ? `${atRiskStudents.length} at risk` : "", subColor: atRiskStudents.length > 0 ? colors.danger : colors.success },
   ];
 
   return (
@@ -320,7 +320,7 @@ export default function TeacherDashboard({ navigation }) {
 
                 {recentActivity.map((a, i) => (
                   <View key={i} style={[styles.activityRow, i < recentActivity.length - 1 && [styles.borderBottom, { borderBottomColor: colors.muted }]]}>
-                    <View style={[styles.activityIcon, { backgroundColor: i % 2 === 0 ? "#F0FDF4" : "#EFF6FF" }]}>
+                    <View style={[styles.activityIcon, { backgroundColor: i % 2 === 0 ? colors.successLight : colors.infoLight }]}>
                       {i % 2 === 0 ? (
                         <CheckCircle size={16} color={colors.success} />
                       ) : (
@@ -408,7 +408,7 @@ const createStyles = (colors) => StyleSheet.create({
   statLabel: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 4 },
   statNumber: { fontSize: 28, fontWeight: "800", color: colors.foreground },
   statIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
-  statSub: { fontSize: 11, fontWeight: "600", color: "#10B981" },
+  statSub: { fontSize: 11, fontWeight: "600", color: colors.success },
 
   // Section Card
   sectionCard: {
@@ -430,8 +430,8 @@ const createStyles = (colors) => StyleSheet.create({
   borderBottom: { borderBottomWidth: 1, borderBottomColor: colors.muted },
 
   // At-Risk
-  atRiskBadge: { backgroundColor: "#FEF2F2", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  atRiskBadgeText: { fontSize: 11, fontWeight: "700", color: "#EF4444" },
+  atRiskBadge: { backgroundColor: colors.dangerLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  atRiskBadgeText: { fontSize: 11, fontWeight: "700", color: colors.danger },
   atRiskScroll: { maxHeight: 280 },
   atRiskRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 8 },
   atRiskName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
@@ -455,7 +455,7 @@ const createStyles = (colors) => StyleSheet.create({
   courseRow: { paddingVertical: 14, flexDirection: "row", alignItems: "flex-start" },
   courseName: { fontSize: 14, fontWeight: "700", color: colors.foreground, maxWidth: width * 0.42 },
   activeChip: { backgroundColor: "#D1FAE5", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginLeft: 8 },
-  activeChipText: { fontSize: 10, fontWeight: "700", color: "#059669" },
+  activeChipText: { fontSize: 10, fontWeight: "700", color: colors.success },
   courseBarTrack: { height: 5, borderRadius: 3, backgroundColor: colors.muted, overflow: "hidden", marginBottom: 4 },
   courseBarFill: { height: "100%", borderRadius: 3 },
   courseAttendText: { fontSize: 11, fontWeight: "600" },
@@ -464,8 +464,8 @@ const createStyles = (colors) => StyleSheet.create({
   courseMetaLabel: { fontSize: 9, color: colors.mutedForeground, marginTop: 1 },
 
   // Recent Activity
-  eventsBadge: { backgroundColor: "#EFF6FF", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  eventsBadgeText: { fontSize: 11, fontWeight: "700", color: "#3B82F6" },
+  eventsBadge: { backgroundColor: colors.infoLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  eventsBadgeText: { fontSize: 11, fontWeight: "700", color: colors.info },
   activityRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 14 },
   activityIcon: {
     width: 36, height: 36, borderRadius: 10,

@@ -28,7 +28,7 @@ export class ErrorBoundary extends React.Component {
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
-            <AlertTriangle size={64} color="#EF4444" style={styles.icon} />
+            <AlertTriangle size={64} color={Theme.colors.danger} style={styles.icon} />
             <Text style={styles.title}>Oops, something went wrong</Text>
             <Text style={styles.subtitle}>
               The app encountered an unexpected error. Please try restarting the screen.
@@ -49,7 +49,7 @@ export class ErrorBoundary extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'Theme.colors.secondary',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -63,13 +63,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0f172a',
+    color: 'Theme.colors.foreground',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: 'Theme.colors.mutedForeground',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: '#FFF',
+    color: 'Theme.colors.primaryForeground',
     fontSize: 16,
     fontWeight: '600',
   },
