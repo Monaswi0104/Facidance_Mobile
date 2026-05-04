@@ -28,7 +28,7 @@ const TAB_CONFIG = [
 // Stack for MyCourses with nested CourseDetails
 function CoursesStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="MyCourses" component={MyCourses} />
       <Stack.Screen name="CourseDetails" component={CourseDetails} />
     </Stack.Navigator>
@@ -38,7 +38,7 @@ function CoursesStack() {
 // Stack for AttendanceCamera with nested AttendanceSession
 function AttendanceStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
       <Stack.Screen name="AttendanceSession" component={AttendanceSession} />
     </Stack.Navigator>

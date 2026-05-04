@@ -89,10 +89,10 @@ export default function CourseDetails({ route, navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-        {/* Change Course Button */}
-        <TouchableOpacity style={styles.changeCourseBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={16} color={colors.textBody} />
-          <Text style={styles.changeCourseText}>Change Course</Text>
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={20} color={colors.foreground} />
+          <Text style={styles.backBtnText}>Back to Courses</Text>
         </TouchableOpacity>
 
         {/* Course Header */}
@@ -273,8 +273,24 @@ const createStyles = (colors) => StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
 
   // Header Card
-  changeCourseBtn: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.muted, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
-  changeCourseText: { fontSize: 13, fontWeight: "600", color: colors.textBody, marginLeft: 4 },
+  backBtn: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 16,
+    alignSelf: "flex-start",
+    backgroundColor: colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 1
+  },
+  backBtnText: { fontSize: 14, fontWeight: "700", color: colors.foreground, marginLeft: 4 },
   headerCard: { backgroundColor: colors.background, borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: colors.border, shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
   headerTop: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
   headerBadge: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },

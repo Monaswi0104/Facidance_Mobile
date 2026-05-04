@@ -25,7 +25,7 @@ const TAB_CONFIG = [
 // Nested stack for Courses tab: MyCourses -> CourseAttendance detail
 function CoursesStackScreen() {
   return (
-    <CoursesStack.Navigator screenOptions={{ headerShown: false }}>
+    <CoursesStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <CoursesStack.Screen name="StudentCourses" component={MyCourses} />
       <CoursesStack.Screen name="CourseAttendance" component={CourseAttendance} />
     </CoursesStack.Navigator>

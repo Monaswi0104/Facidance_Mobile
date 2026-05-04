@@ -13,9 +13,11 @@
 import React, {  useState, useRef, useEffect , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, ActivityIndicator, Alert, PermissionsAndroid, Platform
+  ScrollView, ActivityIndicator, Dimensions, Alert, Image, TextInput,
+  Platform, PermissionsAndroid
 } from "react-native";
 import { Camera } from "react-native-camera-kit";
+import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import {
   getAttendanceStudents, recognizeFaces,
@@ -23,9 +25,10 @@ import {
 } from "../../api/teacherApi";
 import {
   Users, ScanFace, Play, Pause, Square, Send,
-  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap
+  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap, ChevronLeft
 } from "lucide-react-native";
 import { TableSkeleton } from "../../components/SkeletonLoader";
+import RNFS from "react-native-fs";
 
 const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
 const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
@@ -35,13 +38,10 @@ export default function AttendanceSession({ route, navigation }) {
   const s = useMemo(() => createStyles(colors), [colors]);
   const { course, studentCount, trainedCount, notTrainedCount } = route.params;
 
-  const cameraRef = useRef(null);
-
   // Students (loaded from attendance API, like the website)
   const [students, setStudents] = useState([]);
 
   // Session state (mirrors website state variables)
-  const [hasPermission, setHasPermission] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionPaused, setSessionPaused] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
@@ -53,6 +53,11 @@ export default function AttendanceSession({ route, navigation }) {
   const [allRecognizedStudents, setAllRecognizedStudents] = useState(new Set());
   const [sessionRecognitions, setSessionRecognitions] = useState([]);
   const [currentRecognition, setCurrentRecognition] = useState(null);
+  const [cctvUrl, setCctvUrl] = useState("https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280");
+  const [useCctv, setUseCctv] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
+
+  const cameraRef = useRef(null);
 
   // History
   const [showHistory, setShowHistory] = useState(false);
@@ -71,11 +76,17 @@ export default function AttendanceSession({ route, navigation }) {
   useEffect(() => {
     (async () => {
       if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
-        setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+        try {
+          const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+        } catch (err) {
+          console.warn(err);
+          setHasPermission(false);
+        }
       } else {
         setHasPermission(true);
       }
+
       // Load students with face data status (like website's fetchStudents)
       try {
         const data = await getAttendanceStudents(course.id);
@@ -106,8 +117,8 @@ export default function AttendanceSession({ route, navigation }) {
         if (remaining === 0) endSession();
       }, 1000);
       return () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionActive, sessionPaused, sessionStartTime]);
 
   function cleanup() {
@@ -147,27 +158,42 @@ export default function AttendanceSession({ route, navigation }) {
     finally { setIsLoadingHistory(false); }
   }
 
-  // ─── Core: Capture 5 frames + recognize (matches website exactly) ───
+  // ─── Core: Capture 1 frame + recognize (matches website exactly) ───
   async function captureAndRecognize() {
-    if (!cameraRef.current || isCapturing) return;
+    if (isCapturing) return;
 
     try {
       setIsCapturing(true);
-
-      // Website captures 5 frames with 300ms gaps
       const frames = [];
-      for (let i = 0; i < 5; i++) {
-        await new Promise((r) => setTimeout(r, 300));
+
+      if (useCctv) {
+        // CCTV Mode
+        const imageUri = `${RNFS.CachesDirectoryPath}/cctv_frame_${Date.now()}.jpg`;
+        const downloadUrl = cctvUrl.trim() || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280";
+        
+        await RNFS.downloadFile({
+          fromUrl: downloadUrl,
+          toFile: imageUri,
+          background: false,
+        }).promise;
+
+        frames.push({
+          uri: `file://${imageUri}`,
+          type: "image/jpeg",
+          name: `frame_cctv.jpg`,
+        });
+      } else {
+        // Phone Camera Mode (1 frame to prevent UI freezing)
+        if (!cameraRef.current) return;
         try {
           const image = await cameraRef.current.capture();
           if (image?.uri) {
-            frames.push({
-              uri: image.uri,
-              type: "image/jpeg",
-              name: `frame_${i}.jpg`,
-            });
+            const finalUri = image.uri.startsWith("file://") ? image.uri : `file://${image.uri}`;
+            frames.push({ uri: finalUri, type: "image/jpeg", name: `frame_0.jpg` });
           }
-        } catch (e) { console.log(`Frame ${i} capture failed:`, e); }
+        } catch (e) { 
+          console.log(`Camera capture failed:`, e); 
+        }
       }
 
       if (frames.length === 0) {
@@ -324,25 +350,17 @@ export default function AttendanceSession({ route, navigation }) {
   const localUntrainedCount = students.length - localTrainedCount;
   const recognizedCount = allRecognizedStudents.size;
   const attendanceRate = students.length > 0 ? ((recognizedCount / students.length) * 100).toFixed(1) : "0.0";
-
-  // Permission screen
-  if (!hasPermission) {
-    return (
-      <SafeAreaView style={s.safeArea}>
-        <View style={s.centerContainer}>
-          <CameraIcon size={48} color={colors.mutedForeground} />
-          <Text style={s.permTitle}>Camera Permission Required</Text>
-          <Text style={s.permSubtitle}>Please grant camera access to capture attendance.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const historyDates = Object.keys(attendanceHistory).sort().reverse();
 
   return (
     <SafeAreaView style={s.safeArea}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+
+        {/* Back Button */}
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={20} color={colors.foreground} />
+          <Text style={s.backBtnText}>Back to Setup</Text>
+        </TouchableOpacity>
 
         {/* Header */}
         <View style={s.header}>
@@ -431,28 +449,41 @@ export default function AttendanceSession({ route, navigation }) {
               <Text style={s.cameraTitle}>Live Camera Feed</Text>
               <Text style={s.cameraSubtitle}>Face recognition capture</Text>
             </View>
-            {sessionActive && (
-              <View style={s.liveBadge}>
-                <View style={s.liveDot} />
-                <Text style={s.liveText}>LIVE</Text>
-              </View>
-            )}
           </View>
 
           <View style={s.cameraContainer}>
-            <Camera
-              ref={cameraRef}
-              style={s.camera}
-              cameraType="back"
-              flashMode="off"
-            />
+            {sessionActive && (
+              useCctv ? (
+                <Image
+                  source={{ uri: cctvUrl.trim() || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280" }}
+                  style={s.camera}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Camera
+                  ref={cameraRef}
+                  style={s.camera}
+                  cameraType="back"
+                  flashMode="off"
+                />
+              )
+            )}
 
             {/* Overlays */}
+            {sessionActive && !isCapturing && (
+              <View style={s.cameraOverlayTopRight}>
+                <View style={s.liveBadge}>
+                  <View style={s.liveDot} />
+                  <Text style={s.liveText}>Live</Text>
+                </View>
+              </View>
+            )}
+
             {isCapturing && (
-              <View style={s.cameraOverlayTop}>
+              <View style={s.cameraOverlayTopRight}>
                 <View style={s.capturingBadge}>
-                  <ActivityIndicator size="small" color={colors.primaryForeground} />
-                  <Text style={s.capturingText}>Recognizing faces...</Text>
+                  <Zap size={12} color={colors.primaryForeground} />
+                  <Text style={s.capturingText}>Capturing…</Text>
                 </View>
               </View>
             )}
@@ -471,8 +502,30 @@ export default function AttendanceSession({ route, navigation }) {
                 <CameraIcon size={28} color={colors.primaryForeground} />
                 <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
                 <Text style={s.startOverlaySubtitle}>
-                  45-minute session · auto-capture every 2 min{"\n"}· cumulative recognition
+                  45-minute session · auto-capture every 2 min
                 </Text>
+                
+                {/* Toggle */}
+                <View style={s.toggleRow}>
+                  <TouchableOpacity onPress={() => setUseCctv(false)} style={[s.toggleBtn, !useCctv && s.toggleBtnActive]} activeOpacity={0.8}>
+                    <Text style={[s.toggleText, !useCctv && s.toggleTextActive]}>Device Camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setUseCctv(true)} style={[s.toggleBtn, useCctv && s.toggleBtnActive]} activeOpacity={0.8}>
+                    <Text style={[s.toggleText, useCctv && s.toggleTextActive]}>CCTV URL</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {useCctv && (
+                  <TextInput
+                    style={s.cctvInput}
+                    placeholder="CCTV Snapshot URL (optional)"
+                    placeholderTextColor={colors.mutedForeground}
+                    value={cctvUrl}
+                    onChangeText={setCctvUrl}
+                    autoCapitalize="none"
+                  />
+                )}
+
                 {localTrainedCount === 0 && (
                   <Text style={s.warningText}>⚠️ No trained students. Train the model first.</Text>
                 )}
@@ -629,6 +682,24 @@ export default function AttendanceSession({ route, navigation }) {
 
 const createStyles = (colors) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
+  backBtn: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 16,
+    alignSelf: "flex-start",
+    backgroundColor: colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 1
+  },
+  backBtnText: { fontSize: 14, fontWeight: "700", color: colors.foreground, marginLeft: 4 },
   container: { padding: 20, paddingBottom: 40 },
 
   header: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, marginTop: 8 },
@@ -650,22 +721,30 @@ const createStyles = (colors) => StyleSheet.create({
   cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   cameraTitle: { fontSize: 16, fontWeight: "700", color: colors.primaryForeground },
   cameraSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
-  liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.9)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.background, marginRight: 5 },
-  liveText: { color: colors.primaryForeground, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16,185,129,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.background, marginRight: 6 },
+  liveText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700" },
 
-  cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: colors.foreground, marginBottom: 16, position: "relative" },
+  cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: "#000", marginBottom: 16, position: "relative" },
   camera: { width: "100%", height: "100%" },
 
-  cameraOverlayTop: { position: "absolute", top: 10, right: 10, zIndex: 10 },
-  capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(239,68,68,0.85)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
-  capturingText: { color: colors.primaryForeground, fontSize: 11, fontWeight: "600", marginLeft: 6 },
+  cameraOverlayTopRight: { position: "absolute", top: 12, right: 12, zIndex: 10 },
+  capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15,164,175,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  capturingText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700", marginLeft: 6 },
   cameraOverlayBottom: { position: "absolute", bottom: 10, left: 10, right: 10, alignItems: "center", zIndex: 10 },
   captureCountText: { color: colors.primaryForeground, fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
 
   startOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(15,23,42,0.75)", zIndex: 5 },
   startOverlayTitle: { color: colors.primaryForeground, fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
   startOverlaySubtitle: { color: colors.mutedForeground, fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 4 },
+  cctvInput: { backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", width: "80%", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 12, marginTop: 16, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
+  
+  toggleRow: { flexDirection: "row", marginTop: 16, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" },
+  toggleBtn: { paddingVertical: 6, paddingHorizontal: 12 },
+  toggleBtnActive: { backgroundColor: colors.accent },
+  toggleText: { color: colors.mutedForeground, fontSize: 12, fontWeight: "600" },
+  toggleTextActive: { color: "#fff", fontWeight: "700" },
+  
   warningText: { color: "#FCD34D", fontSize: 11, fontWeight: "600", marginTop: 10 },
 
   startBtn: { flexDirection: "row", backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },

@@ -28,14 +28,34 @@ export default function RegisterScreen({ navigation }) {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  const validateEmail = (emailStr) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+  };
+
   const register = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    // Sanitize user inputs
+    const sanitizedName = name.trim();
+    const sanitizedEmail = email.trim().toLowerCase();
+    const sanitizedPassword = password.trim();
+
+    if (!sanitizedName || !sanitizedEmail || !sanitizedPassword) {
       Alert.alert("Missing Fields", "Please fill in all fields.");
       return;
     }
+    
+    // Data Validation
+    if (!validateEmail(sanitizedEmail)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+    if (sanitizedPassword.length < 6) {
+      Alert.alert("Weak Password", "Password must be at least 6 characters long.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await registerTeacher(name.trim(), email.trim(), password);
+      await registerTeacher(sanitizedName, sanitizedEmail, sanitizedPassword);
       Alert.alert(
         "Registration Submitted ✅",
         "Your teacher account is pending admin approval. You'll be able to login once approved.",

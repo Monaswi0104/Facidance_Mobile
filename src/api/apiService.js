@@ -1,14 +1,62 @@
 import axios from "axios";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// change this to your backend IP
-const BASE_URL = "http://YOUR_SERVER_IP:8000";
+// Automatically use 10.0.2.2 for Android emulator pointing to localhost, or environment variable
+const BASE_URL = process.env.REACT_APP_API_URL || (Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000");
 
 const API = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 10000, // Security: prevent long-hanging requests
 });
+
+// Security: Request Interceptor for Authentication & Headers
+API.interceptors.request.use(
+  async (config) => {
+    try {
+      // 1. JWT / Auth Token Authentication
+      const token = await AsyncStorage.getItem("authToken");
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+      // 2. API Key Authentication (protects against unauthorized client access)
+      config.headers["x-api-key"] = process.env.API_KEY || "development_api_key_placeholder";
+      
+      return config;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+  (error) => Promise.reject(error)
+);
+
+// Security: Response Interceptor for Centralized Error Handling & Rate Limiting
+API.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 401) {
+        console.warn("[API] Unauthorized: Token may be missing or expired.");
+        // Here you would typically trigger a logout or token refresh
+        await AsyncStorage.removeItem("authToken");
+      } else if (status === 403) {
+        console.warn("[API] Forbidden: You lack permissions for this action.");
+      } else if (status === 429) {
+        console.error("[API] Rate Limit Exceeded. Too many requests.");
+        // Emit event or alert user to slow down
+      } else if (status >= 500) {
+        console.error("[API] Server Error:", error.response.data || "Unknown error");
+      }
+    } else if (error.request) {
+      console.error("[API] Network Error: No response received.");
+    }
+    return Promise.reject(error);
+  }
+);
 
 /* =========================
    AUTH APIs
@@ -92,7 +140,7 @@ export const recognizeAttendance = async (image) => {
     type: image.type,
   });
 
-  return axios.post(`${BASE_URL}/recognize`, formData, {
+  return API.post("/recognize", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -113,7 +161,7 @@ export const uploadFaceImage = async (image) => {
     type: image.type,
   });
 
-  return axios.post(`${BASE_URL}/upload-face`, formData, {
+  return API.post("/upload-face", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

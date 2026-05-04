@@ -26,14 +26,29 @@ export default function LoginScreen({ navigation }) {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  const validateEmail = (emailStr) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+  };
+
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+    // Sanitize user inputs
+    const sanitizedEmail = email.trim().toLowerCase();
+    const sanitizedPassword = password.trim();
+
+    if (!sanitizedEmail || !sanitizedPassword) {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
+    
+    // Data Validation
+    if (!validateEmail(sanitizedEmail)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const data = await loginUser(email.trim(), password);
+      const data = await loginUser(sanitizedEmail, sanitizedPassword);
       if (data.role === "ADMIN") {
         navigation.reset({ index: 0, routes: [{ name: "AdminTabs" }] });
       } else if (data.role === "TEACHER") {

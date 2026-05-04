@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { useTheme } from "../../theme/Theme";
 import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
+import CachedImage from "../../components/CachedImage";
 
 const uploadSteps = [
   { key: "front", label: "Front View", desc: "Look straight at the camera" },
@@ -195,7 +196,7 @@ export default function ProfileUpload() {
 
                 {images[step.key] ? (
                   <View style={styles.previewBox}>
-                    <Image source={{ uri: images[step.key] }} style={styles.previewImg} />
+                    <CachedImage source={{ uri: images[step.key] }} style={styles.previewImg} />
                     <TouchableOpacity style={styles.clearBtn} onPress={() => setImages(prev => ({ ...prev, [step.key]: null }))}>
                       <X size={12} color={colors.primaryForeground} />
                     </TouchableOpacity>
@@ -203,7 +204,7 @@ export default function ProfileUpload() {
                 ) : (
                   <View style={{ gap: 6 }}>
                     <TouchableOpacity style={styles.cameraBtn} onPress={() => {
-                      launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.8 }, (res) => {
+                      launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
                     }}>
@@ -212,7 +213,7 @@ export default function ProfileUpload() {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.uploadBtn} onPress={() => {
-                      launchImageLibrary({ mediaType: "photo", quality: 0.8 }, (res) => {
+                      launchImageLibrary({ mediaType: "photo", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
                     }}>
