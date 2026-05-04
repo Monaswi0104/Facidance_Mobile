@@ -1,3 +1,4 @@
+import EmptyState from '../../components/EmptyState';
 import React, {  useEffect, useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
@@ -240,7 +241,7 @@ export default function AdminDashboard({ navigation }) {
             </View>
 
             {teacherWorkload.length === 0 ? (
-              <Text style={styles.emptyText}>No approved teachers yet.</Text>
+              <EmptyState title="No Approved Teachers" subtitle="There are no approved teachers yet." showImage={false} />
             ) : (
               <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
                 {teacherWorkload.map((t, i) => (
@@ -279,7 +280,7 @@ export default function AdminDashboard({ navigation }) {
             </View>
 
             {programDist.length === 0 ? (
-              <Text style={styles.emptyText}>No programs configured yet.</Text>
+              <EmptyState title="No Programs Configured" subtitle="Add programs to see distribution." showImage={false} />
             ) : (
               programDist.map((p, i) => {
                 const pct = maxProgramStudents > 0 ? (p.students / maxProgramStudents) * 100 : 0;

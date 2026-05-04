@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Building, Calendar, Key, Users, Clock } from "lucide-react-native";
 import { CourseCardFullSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateWithSearch } from "../../components/EmptyState";
 
 const { width } = Dimensions.get("window");
 
@@ -91,10 +92,7 @@ export default function MyCourses({ navigation }) {
         {isLoading ? (
           <CourseCardFullSkeleton count={3} />
         ) : filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <BookOpen size={48} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.statLabel }]}>No courses found</Text>
-          </View>
+          <EmptyStateWithSearch title="No Courses Found" subtitle="Try adjusting your search filters to find courses." />
         ) : (
           filtered.map((course) => {
             const sessionPct = course.sessions > 0 ? Math.min(100, Math.round((course.sessions / Math.max(course.sessions, 10)) * 100)) : 0;

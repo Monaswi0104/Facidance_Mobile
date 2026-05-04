@@ -1,3 +1,4 @@
+import { EmptyStateWithSearch } from '../../components/EmptyState';
 import React, {  useState, useCallback , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
@@ -296,7 +297,7 @@ export default function StudentsManagement() {
               </View>
 
               {filtered.length === 0 && (
-                <Text style={styles.emptyText}>No students found.</Text>
+                <EmptyStateWithSearch title="No Students Found" subtitle="Try adjusting your search criteria." />
               )}
             </View>
           </>

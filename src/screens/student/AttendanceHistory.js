@@ -1,3 +1,4 @@
+import EmptyState, { EmptyStateWithSearch } from '../../components/EmptyState';
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput , RefreshControl } from "react-native";
 import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
@@ -145,7 +146,7 @@ export default function AttendanceHistory({ route }) {
         <Text style={styles.sectionSubtitle}>Attendance rate per course</Text>
 
         {courseSummaries.length === 0 ? (
-          <Text style={styles.emptyText}>No course data available.</Text>
+          <EmptyState title="No Courses Enrolled" subtitle="You are not enrolled in any courses yet." showImage={false} />
         ) : (
           courseSummaries.map((c, i) => {
             const rate = c.rate || 0;
@@ -222,7 +223,7 @@ export default function AttendanceHistory({ route }) {
         </View>
 
         {filteredRecords.length === 0 ? (
-          <Text style={styles.emptyText}>No attendance records match your criteria.</Text>
+          <EmptyStateWithSearch title="No Records Found" subtitle="Try adjusting your filters or search." showImage={false} />
         ) : (
           filteredRecords.map((r, i) => {
             const dt = formatShort(r.timestamp || r.date || r.createdAt);
