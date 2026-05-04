@@ -161,7 +161,7 @@ export default function ProgramsManagement() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -290,7 +290,7 @@ export default function ProgramsManagement() {
                       </View>
                     </View>
                     <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(p)}>
-                      <Trash2 size={11} color={colors.} style={{ marginRight: 3 }} />
+                      <Trash2 size={11} color={colors.danger} style={{ marginRight: 3 }} />
                       <Text style={styles.deleteBtnText}>Delete</Text>
                     </TouchableOpacity>
                   </TouchableOpacity>

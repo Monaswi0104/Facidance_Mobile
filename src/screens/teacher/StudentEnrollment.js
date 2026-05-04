@@ -273,7 +273,7 @@ export default function StudentEnrollment() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
@@ -409,7 +409,7 @@ export default function StudentEnrollment() {
                 <View style={{ flex: 1, alignItems: "center" }}>
                   {s.faceRegistered ? (
                     <View style={styles.faceYes}>
-                      <CheckCircle size={11} color={colors.} style={{ marginRight: 2 }} />
+                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
                       <Text style={[styles.faceText, { color: colors.success }]}>Registered</Text>
                     </View>
                   ) : (
@@ -523,12 +523,12 @@ export default function StudentEnrollment() {
                     <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                       {selectedStudent.faceRegistered ? (
                         <>
-                          <CheckCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <CheckCircle size={14} color={colors.success} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.success, flex: 0 }]}>Registered</Text>
                         </>
                       ) : (
                         <>
-                          <XCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <XCircle size={14} color={colors.danger} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}

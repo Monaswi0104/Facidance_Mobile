@@ -510,7 +510,7 @@ export default function AttendanceSession({ route, navigation }) {
                   { text: "End", style: "destructive", onPress: endSession },
                 ]);
               }} activeOpacity={0.8}>
-                <Square size={14} color={colors.} style={{ marginRight: 6 }} />
+                <Square size={14} color={colors.danger} style={{ marginRight: 6 }} />
                 <Text style={s.stopBtnText}>End</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -565,7 +565,7 @@ export default function AttendanceSession({ route, navigation }) {
                 return (
                   <View key={sid} style={s.recognizedRow}>
                     <View style={s.recognizedAvatar}>
-                      <CheckCircle size={16} color={colors.} />
+                      <CheckCircle size={16} color={colors.success} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.recognizedName}>{student.name}</Text>

@@ -185,7 +185,7 @@ export default function CourseDetails({ route, navigation }) {
 
                 <View style={{ flex: 0.8, alignItems: "center" }}>
                   {s.faceRegistered ? (
-                    <CheckCircle size={16} color={colors.} />
+                    <CheckCircle size={16} color={colors.success} />
                   ) : (
                     <XCircle size={16} color={colors.mutedForeground} />
                   )}
@@ -213,7 +213,7 @@ export default function CourseDetails({ route, navigation }) {
                 <>
                   <View style={styles.modalHeader}>
                     <View style={styles.modalAvatar}>
-                      <User size={22} color={colors.} />
+                      <User size={22} color={colors.info} />
                     </View>
                     <View style={styles.modalHeaderInfo}>
                       <Text style={styles.modalName}>{selectedStudent.name}</Text>
@@ -238,12 +238,12 @@ export default function CourseDetails({ route, navigation }) {
                     <View style={{ flex: 0.6, flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
                       {selectedStudent.faceRegistered ? (
                         <>
-                          <CheckCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <CheckCircle size={14} color={colors.success} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.success, flex: 0 }]}>Registered</Text>
                         </>
                       ) : (
                         <>
-                          <XCircle size={14} color={colors.} style={{ marginRight: 4 }} />
+                          <XCircle size={14} color={colors.danger} style={{ marginRight: 4 }} />
                           <Text style={[styles.modalDetailValue, { color: colors.destructive, flex: 0 }]}>Not Registered</Text>
                         </>
                       )}

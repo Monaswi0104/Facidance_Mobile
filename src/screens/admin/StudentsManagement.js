@@ -444,7 +444,7 @@ export default function StudentsManagement() {
             {/* Activate Confirmation */}
             {modalType === "activate" && selectedStudent && (
               <View>
-                 <View style={styles.modalHeader}><UserCheck size={20} color={colors.} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Reactivate Student</Text></View>
+                 <View style={styles.modalHeader}><UserCheck size={20} color={colors.success} style={{ marginRight: 8 }} /><Text style={styles.modalTitle}>Reactivate Student</Text></View>
                  <Text style={styles.confirmText}>Are you sure you want to reactivate <Text style={{fontWeight: '700'}}>{selectedStudent.name}</Text> and change their status back to Active?</Text>
                  <View style={styles.modalActionRow}>
                    <TouchableOpacity style={styles.modalCancelBtnAction} onPress={closeModal}><Text style={styles.modalCancelText}>Cancel</Text></TouchableOpacity>

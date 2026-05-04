@@ -65,7 +65,7 @@ export default function MyCourses({ navigation }) {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.secondary }]}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
         }
       >
 
