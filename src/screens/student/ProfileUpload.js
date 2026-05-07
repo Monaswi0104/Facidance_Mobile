@@ -5,6 +5,7 @@ import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { useTheme } from "../../theme/Theme";
 import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
 import CachedImage from "../../components/CachedImage";
+import haptic from "../../utils/haptics";
 
 const uploadSteps = [
   { key: "front", label: "Front View", desc: "Look straight at the camera" },
@@ -49,6 +50,7 @@ export default function ProfileUpload() {
   const handleSubmitUpload = async () => {
     const allUploaded = images.front && images.left && images.right;
     if (!allUploaded) {
+      haptic.error();
       Alert.alert("Incomplete", "Please upload all 3 face images before submitting.");
       return;
     }
@@ -61,14 +63,17 @@ export default function ProfileUpload() {
       const result = await uploadFacePhotos(images, studentId);
 
       if (result.message || !result.error) {
+        haptic.success();
         setIsUploaded(true);
         const updatedMe = await getStudentMe();
         setStudentInfo(updatedMe);
         Alert.alert("Upload Successful!", result.message || "Your face images have been successfully uploaded and processed.");
       } else {
+        haptic.error();
         Alert.alert("Upload Failed", result.error || "Server returned an error. Please try again later.");
       }
     } catch (error) {
+      haptic.error();
       Alert.alert("Upload Failed", "Could not connect to the server. Please check your connection.");
     } finally {
       setIsUploading(false);
@@ -197,13 +202,14 @@ export default function ProfileUpload() {
                 {images[step.key] ? (
                   <View style={styles.previewBox}>
                     <CachedImage source={{ uri: images[step.key] }} style={styles.previewImg} />
-                    <TouchableOpacity style={styles.clearBtn} onPress={() => setImages(prev => ({ ...prev, [step.key]: null }))}>
+                    <TouchableOpacity style={styles.clearBtn} onPress={() => { haptic.light(); setImages(prev => ({ ...prev, [step.key]: null })); }}>
                       <X size={12} color={colors.primaryForeground} />
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View style={{ gap: 6 }}>
                     <TouchableOpacity style={styles.cameraBtn} onPress={() => {
+                      haptic.light();
                       launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
@@ -213,6 +219,7 @@ export default function ProfileUpload() {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.uploadBtn} onPress={() => {
+                      haptic.light();
                       launchImageLibrary({ mediaType: "photo", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
@@ -238,7 +245,7 @@ export default function ProfileUpload() {
                 uploadedCount < 3 && styles.submitBtnDisabled,
                 isUploaded && styles.submitBtnSuccess,
               ]}
-              onPress={handleSubmitUpload}
+              onPress={() => { haptic.medium(); handleSubmitUpload(); }}
               disabled={uploadedCount < 3 || isUploading || isUploaded}
               activeOpacity={0.8}
             >

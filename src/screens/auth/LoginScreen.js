@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loginUser } from "../../api/authApi";
 import { useTheme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
+import haptic from "../../utils/haptics";
 
 const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
@@ -36,12 +37,14 @@ export default function LoginScreen({ navigation }) {
     const sanitizedPassword = password.trim();
 
     if (!sanitizedEmail || !sanitizedPassword) {
+      haptic.error();
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
     
     // Data Validation
     if (!validateEmail(sanitizedEmail)) {
+      haptic.error();
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
@@ -49,6 +52,7 @@ export default function LoginScreen({ navigation }) {
     setIsLoading(true);
     try {
       const data = await loginUser(sanitizedEmail, sanitizedPassword);
+      haptic.success();
       if (data.role === "ADMIN") {
         navigation.reset({ index: 0, routes: [{ name: "AdminTabs" }] });
       } else if (data.role === "TEACHER") {
@@ -57,6 +61,7 @@ export default function LoginScreen({ navigation }) {
         navigation.reset({ index: 0, routes: [{ name: "StudentTabs" }] });
       }
     } catch (error) {
+      haptic.error();
       Alert.alert("Login Failed", error.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
@@ -95,7 +100,7 @@ export default function LoginScreen({ navigation }) {
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme} activeOpacity={0.7}>
+              <TouchableOpacity onPress={() => { haptic.light(); toggleTheme(); }} style={styles.themeToggleBtn} activeOpacity={0.7}>
                 <ThemeIcon size={16} color={colors.primaryForeground} />
               </TouchableOpacity>
             </View>
@@ -199,7 +204,7 @@ export default function LoginScreen({ navigation }) {
           {/* Sign In Button */}
           <TouchableOpacity
             style={[styles.signInBtn, isLoading && styles.signInBtnDisabled]}
-            onPress={handleLogin}
+            onPress={() => { haptic.medium(); handleLogin(); }}
             activeOpacity={0.85}
             disabled={isLoading}
           >

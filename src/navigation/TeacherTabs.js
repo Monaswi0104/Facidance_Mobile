@@ -5,6 +5,7 @@ import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, Sta
 import { clearAuth } from "../api/authStorage";
 import { useTheme } from "../theme/Theme";
 import { LayoutDashboard, BookOpen, Users, Camera, BarChart2, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
+import haptic from "../utils/haptics";
 
 import TeacherDashboard from "../screens/teacher/TeacherDashboard";
 import MyCourses from "../screens/teacher/MyCourses";
@@ -48,6 +49,7 @@ function AttendanceStack() {
 export default function TeacherTabs({ navigation: rootNav }) {
 
   const confirmLogout = () => {
+    haptic.warning();
     Alert.alert(
       "Logout",
       "Are you sure you want to logout?",
@@ -101,7 +103,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity onPress={toggleTheme} style={[s.logoutBtn, { backgroundColor: colors.navPillBg, borderColor: colors.navPillBorder, marginRight: 10 }]} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => { haptic.light(); toggleTheme(); }} style={[s.logoutBtn, { backgroundColor: colors.navPillBg, borderColor: colors.navPillBorder, marginRight: 10 }]} activeOpacity={0.7}>
               {mode === 'dark' ? <Moon size={20} color={colors.foreground} /> : mode === 'light' ? <Sun size={20} color={colors.foreground} /> : <Monitor size={20} color={colors.foreground} />}
             </TouchableOpacity>
             <TouchableOpacity onPress={confirmLogout} style={[s.logoutBtn, { backgroundColor: colors.logoutBg, borderColor: colors.logoutBorder }]} activeOpacity={0.7}>
@@ -130,6 +132,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
                   isActive && { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
                 ]}
                 onPress={() => {
+                  haptic.light();
                   navigation.navigate(tab.name);
                   setTimeout(() => scrollToTab(i), 100);
                 }}

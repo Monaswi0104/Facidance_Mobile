@@ -30,6 +30,7 @@ import {
 import { TableSkeleton } from "../../components/SkeletonLoader";
 import RNFS from "react-native-fs";
 import { compressFrames } from "../../utils/imageCompressor";
+import haptic from "../../utils/haptics";
 
 const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
 const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
@@ -264,6 +265,7 @@ export default function AttendanceSession({ route, navigation }) {
 
   // ─── Session controls (matches website) ─────────────────
   async function startSession() {
+    haptic.heavy();
     const trainedStudents = students.filter((s) => s.hasFaceData);
     if (trainedStudents.length === 0) {
       Alert.alert("No Trained Students", "Please train the recognition model first.");
@@ -291,16 +293,19 @@ export default function AttendanceSession({ route, navigation }) {
   }
 
   function pauseSession() {
+    haptic.medium();
     setSessionPaused(true);
     if (captureIntervalRef.current) { clearInterval(captureIntervalRef.current); captureIntervalRef.current = null; }
   }
 
   function resumeSession() {
+    haptic.medium();
     setSessionPaused(false);
     captureIntervalRef.current = setInterval(() => captureAndRecognize(), CAPTURE_INTERVAL);
   }
 
   function endSession() {
+    haptic.heavy();
     cleanup();
     setSessionActive(false);
     setSessionPaused(false);
@@ -330,6 +335,7 @@ export default function AttendanceSession({ route, navigation }) {
 
       const result = await submitSessionAttendance(course.id, finalRec, new Date().toISOString());
 
+      haptic.success();
       const stats = result?.statistics;
       const msg = stats
         ? `Present: ${stats.present}, Absent: ${stats.absent}, Rate: ${stats.attendanceRate}%`
@@ -511,10 +517,10 @@ export default function AttendanceSession({ route, navigation }) {
                 
                 {/* Toggle */}
                 <View style={s.toggleRow}>
-                  <TouchableOpacity onPress={() => setUseCctv(false)} style={[s.toggleBtn, !useCctv && s.toggleBtnActive]} activeOpacity={0.8}>
+                  <TouchableOpacity style={[s.toggleBtn, !useCctv && s.toggleBtnActive]} onPress={() => { haptic.selection(); setUseCctv(false); }} activeOpacity={0.8}>
                     <Text style={[s.toggleText, !useCctv && s.toggleTextActive]}>Device Camera</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setUseCctv(true)} style={[s.toggleBtn, useCctv && s.toggleBtnActive]} activeOpacity={0.8}>
+                  <TouchableOpacity style={[s.toggleBtn, useCctv && s.toggleBtnActive]} onPress={() => { haptic.selection(); setUseCctv(true); }} activeOpacity={0.8}>
                     <Text style={[s.toggleText, useCctv && s.toggleTextActive]}>CCTV URL</Text>
                   </TouchableOpacity>
                 </View>

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { registerTeacher } from "../../api/authApi";
 import { useTheme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
+import haptic from "../../utils/haptics";
 
 const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
@@ -39,16 +40,19 @@ export default function RegisterScreen({ navigation }) {
     const sanitizedPassword = password.trim();
 
     if (!sanitizedName || !sanitizedEmail || !sanitizedPassword) {
+      haptic.error();
       Alert.alert("Missing Fields", "Please fill in all fields.");
       return;
     }
     
     // Data Validation
     if (!validateEmail(sanitizedEmail)) {
+      haptic.error();
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
     if (sanitizedPassword.length < 6) {
+      haptic.error();
       Alert.alert("Weak Password", "Password must be at least 6 characters long.");
       return;
     }
@@ -56,12 +60,14 @@ export default function RegisterScreen({ navigation }) {
     setIsLoading(true);
     try {
       await registerTeacher(sanitizedName, sanitizedEmail, sanitizedPassword);
+      haptic.success();
       Alert.alert(
         "Registration Submitted ✅",
         "Your teacher account is pending admin approval. You'll be able to login once approved.",
         [{ text: "OK", onPress: () => navigation.navigate("Login") }]
       );
     } catch (error) {
+      haptic.error();
       Alert.alert("Registration Failed", error.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -100,7 +106,7 @@ export default function RegisterScreen({ navigation }) {
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.themeToggle} onPress={() => { haptic.light(); toggleTheme(); }} activeOpacity={0.7}>
                 <ThemeIcon size={16} color={colors.primaryForeground} />
               </TouchableOpacity>
             </View>
@@ -222,7 +228,7 @@ export default function RegisterScreen({ navigation }) {
           {/* Submit Button */}
           <TouchableOpacity
             style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
-            onPress={register}
+            onPress={() => { haptic.medium(); register(); }}
             activeOpacity={0.85}
             disabled={isLoading}
           >
