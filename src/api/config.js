@@ -4,7 +4,8 @@ import DeviceInfo from "react-native-device-info";
 import { getToken, clearAuth } from "./authStorage";
 
 const isEmulator = DeviceInfo.isEmulatorSync();
-const HOST = isEmulator ? "10.0.2.2" : "localhost";
+// Android emulator needs 10.0.2.2 to reach host machine; iOS simulator uses localhost directly
+const HOST = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : "localhost";
 
 // Service-specific base URLs (Local Backend Configuration)
 const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later
