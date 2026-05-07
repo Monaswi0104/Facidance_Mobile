@@ -1,4 +1,5 @@
 import { apiFetch, STUDENT_URL, WEB_URL } from "./config";
+import { compressImage } from "../utils/imageCompressor";
 
 // Student profile
 export async function getStudentMe() {
@@ -42,20 +43,22 @@ export async function checkPhotos() {
   return await res.json();
 }
 
-// Upload face photos (front, left, right)
+// Upload face photos (front, left, right) — compressed before upload
 export async function uploadFacePhotos(images, studentId) {
   const formData = new FormData();
   formData.append("studentId", studentId);
 
-  ["front", "left", "right"].forEach((pose) => {
+  for (const pose of ["front", "left", "right"]) {
     if (images[pose]) {
+      // Compress to 720p, 75% quality before upload
+      const compressed = await compressImage(images[pose]);
       formData.append(pose, {
-        uri: images[pose],
+        uri: compressed.uri,
         type: "image/jpeg",
         name: `${pose}.jpg`,
       });
     }
-  });
+  }
 
   const res = await apiFetch("/api/student/upload-photos", {
     method: "POST",

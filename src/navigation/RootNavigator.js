@@ -1,8 +1,32 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import React, { useRef, useEffect } from "react";
+import { Alert } from "react-native";
+import { NavigationContainer, CommonActions } from "@react-navigation/native";
 import AuthNavigator from "./AuthNavigator";
+import { setOnSessionExpired } from "../api/config";
 
 export default function RootNavigator(){
+  const navigationRef = useRef(null);
+
+  // Register the 401 session-expired handler once on mount
+  useEffect(() => {
+    setOnSessionExpired(() => {
+      Alert.alert(
+        "Session Expired",
+        "Your login session has expired. Please sign in again.",
+        [{ text: "OK" }]
+      );
+
+      // Reset the entire navigation stack back to Login
+      if (navigationRef.current) {
+        navigationRef.current.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: "Login" }],
+          })
+        );
+      }
+    });
+  }, []);
 
   const linking = {
     prefixes: ['facidance://', 'https://facidance.com'],
@@ -60,7 +84,7 @@ export default function RootNavigator(){
 
 return(
 
-<NavigationContainer linking={linking}>
+<NavigationContainer ref={navigationRef} linking={linking}>
 
 <AuthNavigator/>
 

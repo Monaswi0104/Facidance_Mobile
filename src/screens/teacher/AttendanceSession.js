@@ -29,6 +29,7 @@ import {
 } from "lucide-react-native";
 import { TableSkeleton } from "../../components/SkeletonLoader";
 import RNFS from "react-native-fs";
+import { compressFrames } from "../../utils/imageCompressor";
 
 const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
 const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
@@ -201,10 +202,13 @@ export default function AttendanceSession({ route, navigation }) {
         return;
       }
 
-      // Send to backend
+      // Compress frames before upload (720p, 75% JPEG quality)
+      const compressedFrames = await compressFrames(frames);
+
+      // Send compressed frames to backend
       const result = await recognizeFaces(
         course.id,
-        frames,
+        compressedFrames,
         `batch_${Date.now()}`
       );
 

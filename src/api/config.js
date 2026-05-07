@@ -1,6 +1,7 @@
 // Auto-detect: emulator uses 10.0.2.2, physical device uses localhost via adb reverse
 import { Platform } from "react-native";
 import DeviceInfo from "react-native-device-info";
+import { getToken, clearAuth } from "./authStorage";
 
 const isEmulator = DeviceInfo.isEmulatorSync();
 const HOST = isEmulator ? "10.0.2.2" : "localhost";
@@ -14,63 +15,178 @@ export const TEACHER_URL = `http://${HOST}:8002`;    // Teacher Service
 export const STUDENT_URL = `http://${HOST}:8003`;    // Student Service
 export const WEB_URL = `http://${HOST}:3000`;        // Next.js Frontend for specific APIs
 
-// Authenticated fetch wrapper — automatically injects JWT token
-import { getToken } from "./authStorage";
-
+// ─── Response Cache ────────────────────────────────────────────────────────────
 const apiCache = new Map();
 const CACHE_TTL = 30000; // 30 seconds
 
-export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retries = 2) {
-  const isGet = !options.method || options.method.toUpperCase() === "GET";
-  const cacheKey = `${baseUrl}${endpoint}`;
+/**
+ * Invalidate all cached API responses.
+ * Call this after mutations (POST/PUT/DELETE) that affect cached data.
+ */
+export function invalidateCache(pattern) {
+  if (!pattern) {
+    apiCache.clear();
+    return;
+  }
+  for (const key of apiCache.keys()) {
+    if (key.includes(pattern)) apiCache.delete(key);
+  }
+}
 
+// ─── Auth Session Listener (for 401 interceptor) ──────────────────────────────
+// The navigation root sets this callback so we can force-logout from anywhere.
+let _onSessionExpired = null;
+
+/**
+ * Register a callback that fires when the API receives a 401 Unauthorized.
+ * Typically wired up in the root navigator to reset to the Login screen.
+ *
+ * @param {() => void} callback
+ */
+export function setOnSessionExpired(callback) {
+  _onSessionExpired = callback;
+}
+
+// Prevents multiple simultaneous logout triggers
+let _isHandlingExpiry = false;
+
+async function handleSessionExpired() {
+  if (_isHandlingExpiry) return;
+  _isHandlingExpiry = true;
+
+  try {
+    console.warn("[API Interceptor] Session expired (401). Clearing auth and redirecting to login.");
+    await clearAuth();
+    invalidateCache();
+
+    if (_onSessionExpired) {
+      _onSessionExpired();
+    }
+  } finally {
+    // Small delay to prevent rapid re-triggers
+    setTimeout(() => { _isHandlingExpiry = false; }, 2000);
+  }
+}
+
+// ─── Request / Response Interceptors ──────────────────────────────────────────
+const _requestInterceptors = [];
+const _responseInterceptors = [];
+
+/**
+ * Add a request interceptor. Receives (endpoint, options, baseUrl) and must
+ * return { endpoint, options, baseUrl } (possibly modified).
+ */
+export function addRequestInterceptor(fn) {
+  _requestInterceptors.push(fn);
+  return () => {
+    const idx = _requestInterceptors.indexOf(fn);
+    if (idx !== -1) _requestInterceptors.splice(idx, 1);
+  };
+}
+
+/**
+ * Add a response interceptor. Receives (response, endpoint, options) and must
+ * return the response (possibly modified).
+ */
+export function addResponseInterceptor(fn) {
+  _responseInterceptors.push(fn);
+  return () => {
+    const idx = _responseInterceptors.indexOf(fn);
+    if (idx !== -1) _responseInterceptors.splice(idx, 1);
+  };
+}
+
+// ─── Core Fetch Wrapper ───────────────────────────────────────────────────────
+
+/**
+ * Authenticated fetch wrapper with:
+ * - Automatic JWT injection
+ * - GET response caching (30s TTL)
+ * - Exponential backoff retries for 5xx / network errors
+ * - 401 interception → auto-logout + redirect to Login
+ * - Request/response interceptor pipeline
+ *
+ * @param {string} endpoint - API path (e.g. "/teacher/me")
+ * @param {RequestInit} options - fetch options
+ * @param {string} baseUrl - Base URL for the target service
+ * @param {number} retries - Number of retries for transient errors (default 2)
+ */
+export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retries = 2) {
+  // ── Run request interceptors ──
+  let reqEndpoint = endpoint;
+  let reqOptions = { ...options };
+  let reqBaseUrl = baseUrl;
+
+  for (const interceptor of _requestInterceptors) {
+    try {
+      const result = interceptor(reqEndpoint, reqOptions, reqBaseUrl);
+      if (result) {
+        reqEndpoint = result.endpoint ?? reqEndpoint;
+        reqOptions = result.options ?? reqOptions;
+        reqBaseUrl = result.baseUrl ?? reqBaseUrl;
+      }
+    } catch (e) {
+      console.warn("[Request Interceptor] Error:", e.message);
+    }
+  }
+
+  const isGet = !reqOptions.method || reqOptions.method.toUpperCase() === "GET";
+  const cacheKey = `${reqBaseUrl}${reqEndpoint}`;
+
+  // ── Cache check (GET only) ──
   if (isGet && apiCache.has(cacheKey)) {
     const cached = apiCache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log(`[API CACHE HIT] GET ${endpoint}`);
+      console.log(`[API CACHE HIT] GET ${reqEndpoint}`);
       return cached.response.clone(); // Return a clone so .json() works multiple times
     } else {
       apiCache.delete(cacheKey);
     }
   }
 
+  // ── Build headers ──
   const token = await getToken();
 
   const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...reqOptions.headers,
   };
 
   // Don't override Content-Type for FormData
-  if (options.body instanceof FormData) {
+  if (reqOptions.body instanceof FormData) {
     delete headers["Content-Type"];
   }
 
+  // ── Retry loop with exponential backoff ──
   let backoffDelay = 1000; // start with 1 second
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        ...options,
+      const response = await fetch(`${reqBaseUrl}${reqEndpoint}`, {
+        ...reqOptions,
         headers,
       });
 
-      console.log(`[API ${options.method || 'GET'} ${endpoint}] Status:`, response.status);
+      console.log(`[API ${reqOptions.method || 'GET'} ${reqEndpoint}] Status:`, response.status);
 
+      // ── 401 Interceptor: session expired ──
       if (response.status === 401) {
+        handleSessionExpired(); // fire-and-forget, don't await
         throw new Error("UNAUTHORIZED");
       }
 
+      // ── Non-OK responses ──
       if (!response.ok) {
-        // We only retry on 5xx server errors or network errors. 4xx are returned as-is.
+        // Retry on 5xx server errors
         if (response.status >= 500 && attempt < retries) {
           throw new Error(`SERVER_ERROR_${response.status}`);
         }
 
         const text = await response.text();
         console.log(`[API FAIL] Response text:`, text.substring(0, 200));
-        return { 
+
+        let errorResponse = { 
           ok: false, 
           status: response.status, 
           headers: response.headers, 
@@ -83,8 +199,18 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
             }
           }
         };
+
+        // Run response interceptors on error responses too
+        for (const interceptor of _responseInterceptors) {
+          try {
+            errorResponse = interceptor(errorResponse, reqEndpoint, reqOptions) || errorResponse;
+          } catch (e) { /* skip */ }
+        }
+
+        return errorResponse;
       }
 
+      // ── Cache successful GET responses ──
       if (response.ok && isGet) {
         apiCache.set(cacheKey, {
           timestamp: Date.now(),
@@ -92,15 +218,30 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
         });
       }
 
-      return response;
+      // ── Run response interceptors ──
+      let finalResponse = response;
+      for (const interceptor of _responseInterceptors) {
+        try {
+          finalResponse = interceptor(finalResponse, reqEndpoint, reqOptions) || finalResponse;
+        } catch (e) {
+          console.warn("[Response Interceptor] Error:", e.message);
+        }
+      }
+
+      return finalResponse;
     } catch (err) {
-      if (attempt < retries && err.message !== "UNAUTHORIZED") {
-        console.warn(`[API RETRY ${attempt + 1}/${retries}] ${options.method || 'GET'} ${endpoint} failed (${err.message}). Retrying in ${backoffDelay}ms...`);
+      if (err.message === "UNAUTHORIZED") {
+        // Don't retry auth failures
+        throw err;
+      }
+
+      if (attempt < retries) {
+        console.warn(`[API RETRY ${attempt + 1}/${retries}] ${reqOptions.method || 'GET'} ${reqEndpoint} failed (${err.message}). Retrying in ${backoffDelay}ms...`);
         await new Promise(res => setTimeout(res, backoffDelay));
         backoffDelay *= 2; // Exponential backoff
         continue;
       }
-      console.error(`[API NETWORK ERROR] ${options.method || 'GET'} ${endpoint} failed completely after ${attempt + 1} attempts:`, err.message);
+      console.error(`[API NETWORK ERROR] ${reqOptions.method || 'GET'} ${reqEndpoint} failed completely after ${attempt + 1} attempts:`, err.message);
       throw err;
     }
   }
