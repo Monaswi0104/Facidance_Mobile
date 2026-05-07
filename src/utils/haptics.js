@@ -52,9 +52,9 @@ const haptic = {
     try { ReactNativeHapticFeedback.trigger("notificationError", options); } catch (_) {}
   },
 
-  /** Selection tick — picker changes, scroll snapping */
+  /** Selection tick — picker changes, tab switches, scroll snapping */
   selection: () => {
-    try { ReactNativeHapticFeedback.trigger("selection", options); } catch (_) {}
+    try { ReactNativeHapticFeedback.trigger("selection", { enableVibrateFallback: true, ignoreAndroidSystemSettings: true }); } catch (_) {}
   },
 };
 

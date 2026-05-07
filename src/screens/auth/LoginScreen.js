@@ -94,14 +94,14 @@ export default function LoginScreen({ navigation }) {
             {/* Brand + Theme Toggle Row */}
             <View style={styles.heroTopRow}>
               <View style={styles.brandRow}>
-                <Image source={logoImg} style={[styles.brandLogo, { tintColor: isDark ? "#FFFFFF" : undefined }]} resizeMode="contain" />
+                <Image source={logoImg} style={styles.brandLogo} resizeMode="contain" />
                 <View>
                   <Text style={styles.brandName}>Facidance</Text>
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => { haptic.light(); toggleTheme(); }} style={styles.themeToggleBtn} activeOpacity={0.7}>
-                <ThemeIcon size={16} color={colors.primaryForeground} />
+              <TouchableOpacity onPress={() => { haptic.light(); toggleTheme(); }} style={styles.themeToggle} activeOpacity={0.7}>
+                <ThemeIcon size={25} color={colors.primaryForeground} />
               </TouchableOpacity>
             </View>
 

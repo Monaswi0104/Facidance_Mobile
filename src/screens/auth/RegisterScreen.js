@@ -100,14 +100,14 @@ export default function RegisterScreen({ navigation }) {
             {/* Brand + Theme Toggle Row */}
             <View style={styles.heroTopRow}>
               <View style={styles.brandRow}>
-                <Image source={logoImg} style={[styles.brandLogo, { tintColor: isDark ? "#FFFFFF" : undefined }]} resizeMode="contain" />
+                <Image source={logoImg} style={styles.brandLogo} resizeMode="contain" />
                 <View>
                   <Text style={styles.brandName}>Facidance</Text>
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
               <TouchableOpacity style={styles.themeToggle} onPress={() => { haptic.light(); toggleTheme(); }} activeOpacity={0.7}>
-                <ThemeIcon size={16} color={colors.primaryForeground} />
+                <ThemeIcon size={25} color={colors.primaryForeground} />
               </TouchableOpacity>
             </View>
 

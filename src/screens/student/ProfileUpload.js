@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions , RefreshControl } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions, RefreshControl, Platform, PermissionsAndroid } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { useTheme } from "../../theme/Theme";
@@ -208,9 +208,35 @@ export default function ProfileUpload() {
                   </View>
                 ) : (
                   <View style={{ gap: 6 }}>
-                    <TouchableOpacity style={styles.cameraBtn} onPress={() => {
+                    <TouchableOpacity style={styles.cameraBtn} onPress={async () => {
                       haptic.light();
+                      // Request camera permission on Android
+                      if (Platform.OS === 'android') {
+                        try {
+                          const granted = await PermissionsAndroid.request(
+                            PermissionsAndroid.PERMISSIONS.CAMERA,
+                            {
+                              title: 'Camera Permission',
+                              message: 'Facidance needs access to your camera to take profile photos for face recognition.',
+                              buttonPositive: 'Allow',
+                              buttonNegative: 'Deny',
+                            }
+                          );
+                          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                            Alert.alert('Permission Denied', 'Camera permission is required to take photos. Please enable it in Settings.');
+                            return;
+                          }
+                        } catch (err) {
+                          console.warn('Camera permission error:', err);
+                          return;
+                        }
+                      }
                       launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
+                        if (res.errorCode) {
+                          console.warn('Camera error:', res.errorCode, res.errorMessage);
+                          Alert.alert('Camera Error', res.errorMessage || 'Could not open camera.');
+                          return;
+                        }
                         if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
                       });
                     }}>

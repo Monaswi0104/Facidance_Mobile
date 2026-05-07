@@ -132,7 +132,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
                   isActive && { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
                 ]}
                 onPress={() => {
-                  haptic.light();
+                  haptic.medium();
                   navigation.navigate(tab.name);
                   setTimeout(() => scrollToTab(i), 100);
                 }}
