@@ -307,7 +307,7 @@ const createStyles = (colors) => StyleSheet.create({
   faceActiveBadge: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: colors.successLight, borderWidth: 1, borderColor: colors.success,
-    paddingHorizontal: 8, paddingVertical: 6, borderRadius: 10,
+    paddingHorizontal: 6, paddingVertical: 6, borderRadius: 10,
   },
   faceActiveText: { fontSize: 9, fontWeight: "700", color: colors.success },
 
