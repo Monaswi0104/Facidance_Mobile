@@ -29,9 +29,9 @@ const TAB_CONFIG = [
 // Stack for MyCourses with nested CourseDetails
 function CoursesStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
       <Stack.Screen name="MyCourses" component={MyCourses} />
-      <Stack.Screen name="CourseDetails" component={CourseDetails} />
+      <Stack.Screen name="CourseDetails" component={CourseDetails} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
     </Stack.Navigator>
   );
 }
@@ -39,9 +39,9 @@ function CoursesStack() {
 // Stack for AttendanceCamera with nested AttendanceSession
 function AttendanceStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
       <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
-      <Stack.Screen name="AttendanceSession" component={AttendanceSession} />
+      <Stack.Screen name="AttendanceSession" component={AttendanceSession} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
     </Stack.Navigator>
   );
 }
@@ -99,7 +99,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8, tintColor: isDark ? colors.foreground : undefined }} />
+            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

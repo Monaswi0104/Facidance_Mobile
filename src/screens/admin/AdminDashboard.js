@@ -10,6 +10,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight, UserCheck } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width } = Dimensions.get("window");
 
@@ -145,7 +146,7 @@ export default function AdminDashboard({ navigation }) {
         contentContainerStyle={styles.container} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 

@@ -8,6 +8,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, ScanFace, UserX, Upload, Search, ChevronDown, FileUp, User, CheckCircle, XCircle } from "lucide-react-native";
 import { TableSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 import DocumentPicker from "react-native-document-picker";
 import RNFS from "react-native-fs";
 import XLSX from "xlsx";
@@ -273,7 +275,7 @@ export default function StudentEnrollment() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 
@@ -395,7 +397,7 @@ export default function StudentEnrollment() {
           {isLoading ? (
              <TableSkeleton rows={6} columns={5} />
           ) : filteredStudents.length === 0 ? (
-            <Text style={styles.emptyText}>No students found.</Text>
+            <EmptyStateCompact icon={Users} title="No students found" subtitle="Try adjusting your search or import students" />
           ) : (
             filteredStudents.map((s, i) => (
               <TouchableOpacity key={i} style={[styles.tableRow, i < filteredStudents.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>

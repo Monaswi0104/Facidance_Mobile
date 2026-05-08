@@ -26,9 +26,9 @@ const TAB_CONFIG = [
 // Nested stack for Courses tab: MyCourses -> CourseAttendance detail
 function CoursesStackScreen() {
   return (
-    <CoursesStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+    <CoursesStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
       <CoursesStack.Screen name="StudentCourses" component={MyCourses} />
-      <CoursesStack.Screen name="CourseAttendance" component={CourseAttendance} />
+      <CoursesStack.Screen name="CourseAttendance" component={CourseAttendance} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
     </CoursesStack.Navigator>
   );
 }
@@ -86,7 +86,7 @@ export default function StudentTabs({ navigation: rootNav }) {
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8, tintColor: isDark ? colors.foreground : undefined }} />
+            <Image source={require("../assets/logo.png")} style={{ width: 45, height: 45, resizeMode: "contain", marginRight: 8 }} />
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

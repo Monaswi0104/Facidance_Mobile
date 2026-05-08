@@ -8,6 +8,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Building2, GraduationCap, Users, Plus, Trash2, X } from "lucide-react-native";
 import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 export default function DepartmentsManagement() {
   const { colors, isDark } = useTheme();
@@ -111,7 +113,7 @@ export default function DepartmentsManagement() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 
@@ -200,7 +202,7 @@ export default function DepartmentsManagement() {
               </View>
 
               {departments.length === 0 ? (
-                <Text style={styles.emptyText}>No departments created yet.</Text>
+                <EmptyStateCompact icon={Building2} title="No departments yet" subtitle="Create your first department" />
               ) : (
                 departments.map((d, i) => (
                   <TouchableOpacity key={d.id} style={[styles.deptRow, i < departments.length - 1 && styles.deptRowBorder]} onPress={() => setSelectedDept(d)} activeOpacity={0.7}>

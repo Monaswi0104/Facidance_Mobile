@@ -10,6 +10,7 @@ import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
 import EmptyState from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 export default function TeachersManagement() {
   const { colors, isDark } = useTheme();
@@ -169,7 +170,7 @@ export default function TeachersManagement() {
         data={filteredApproved}
         keyExtractor={(t) => t.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}

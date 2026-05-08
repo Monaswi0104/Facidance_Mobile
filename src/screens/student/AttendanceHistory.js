@@ -5,6 +5,7 @@ import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, Calendar, CheckCircle, XCircle, TrendingUp, Download, Clock } from "lucide-react-native";
 import { AttendanceOverviewSkeleton } from "../../components/SkeletonLoader";
+import BrandedRefresh from "../../components/BrandedRefresh";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -256,7 +257,7 @@ export default function AttendanceHistory({ route }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 

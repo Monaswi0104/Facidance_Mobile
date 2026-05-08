@@ -406,6 +406,76 @@ export function CourseDetailsSkeleton() {
 }
 
 
+/**
+ * Profile Upload Skeleton — mimics the profile card + face upload grid.
+ * Used in: Student ProfileUpload
+ */
+export function ProfileSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={{ padding: 20 }}>
+      {/* Header */}
+      <SkeletonLoader style={{ width: 100, height: 20, borderRadius: 6, marginBottom: 4 }} />
+      <SkeletonLoader style={{ width: 240, height: 12, borderRadius: 4, marginBottom: 20 }} />
+
+      {/* Profile Card */}
+      <View style={styles.mgmtListCard}>
+        {/* Avatar + Name Row */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+          <SkeletonLoader style={{ width: 52, height: 52, borderRadius: 26, marginRight: 12 }} />
+          <View style={{ flex: 1 }}>
+            <SkeletonLoader style={{ width: "60%", height: 16, borderRadius: 6, marginBottom: 6 }} />
+            <SkeletonLoader style={{ width: "45%", height: 11, borderRadius: 4, marginBottom: 6 }} />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <SkeletonLoader style={{ width: 55, height: 18, borderRadius: 10 }} />
+              <SkeletonLoader style={{ width: 80, height: 18, borderRadius: 10 }} />
+            </View>
+          </View>
+          <SkeletonLoader style={{ width: 100, height: 22, borderRadius: 8 }} />
+        </View>
+
+        {/* Details Grid (2x2) */}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={{ width: "48%", backgroundColor: colors.secondary, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: colors.border }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                <SkeletonLoader style={{ width: 12, height: 12, borderRadius: 6, marginRight: 4 }} />
+                <SkeletonLoader style={{ width: 60, height: 9, borderRadius: 4 }} />
+              </View>
+              <SkeletonLoader style={{ width: "75%", height: 13, borderRadius: 5 }} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Face Recognition Card */}
+      <View style={styles.mgmtListCard}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+          <SkeletonLoader style={{ width: 32, height: 32, borderRadius: 8, marginRight: 10 }} />
+          <View>
+            <SkeletonLoader style={{ width: 160, height: 14, borderRadius: 6, marginBottom: 4 }} />
+            <SkeletonLoader style={{ width: 220, height: 10, borderRadius: 4 }} />
+          </View>
+        </View>
+
+        {/* Upload Grid (3 columns) */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <View key={i} style={{ width: "31%", alignItems: "center" }}>
+              <SkeletonLoader style={{ width: "90%", height: 12, borderRadius: 4, marginBottom: 4 }} />
+              <SkeletonLoader style={{ width: "70%", height: 9, borderRadius: 4, marginBottom: 10 }} />
+              <SkeletonLoader style={{ width: "100%", height: 80, borderRadius: 10, marginBottom: 6 }} />
+              <SkeletonLoader style={{ width: "100%", height: 28, borderRadius: 6 }} />
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+
 const createStyles = (colors) => StyleSheet.create({
   skeleton: {
     backgroundColor: colors.border,

@@ -10,6 +10,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
 import { StatsRowSkeleton, SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width, height } = Dimensions.get("window");
 
@@ -184,7 +185,7 @@ export default function StudentsManagement() {
         data={filtered}
         keyExtractor={(s) => s.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}

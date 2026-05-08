@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Building, Calendar, Key, Users, Clock } from "lucide-react-native";
 import { CourseCardFullSkeleton } from "../../components/SkeletonLoader";
+import BrandedRefresh from "../../components/BrandedRefresh";
 import { EmptyStateWithSearch } from "../../components/EmptyState";
 
 const { width } = Dimensions.get("window");
@@ -157,7 +158,7 @@ export default function MyCourses({ navigation }) {
           )
         }
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       />
     </SafeAreaView>

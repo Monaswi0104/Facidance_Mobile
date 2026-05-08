@@ -8,6 +8,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BarChart2, ChevronDown, Calendar, FileText, Download, Users, TrendingUp, TrendingDown, User, CheckCircle, XCircle, Mail } from "lucide-react-native";
 import SkeletonLoader, { TableSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
@@ -163,7 +165,7 @@ export default function AttendanceReport() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 
@@ -306,7 +308,7 @@ export default function AttendanceReport() {
                       <Text style={styles.barLabel} numberOfLines={1}>{d.name.split(" ")[0]}</Text>
                     </View>
                   ))}
-                  {data.length === 0 && <Text style={styles.emptyText}>No data</Text>}
+                  {data.length === 0 && <EmptyStateCompact icon={BarChart2} title="No data" subtitle="Generate a report to see charts" />}
                 </View>
               </ScrollView>
             </View>
@@ -349,7 +351,7 @@ export default function AttendanceReport() {
               {isReportLoading ? (
                 <TableSkeleton rows={4} columns={3} />
               ) : data.length === 0 ? (
-                <Text style={[styles.emptyText, { paddingVertical: 20 }]}>No attendance data found.</Text>
+                <EmptyStateCompact icon={Users} title="No attendance data" subtitle="No records found for this course" />
               ) : (
                 data.map((s, i) => (
                   <TouchableOpacity key={s.id} style={[styles.tableRow, i < data.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>

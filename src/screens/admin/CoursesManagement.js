@@ -9,6 +9,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
 import { StatsRowSkeleton, SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width } = Dimensions.get("window");
 
@@ -143,7 +145,7 @@ export default function CoursesManagement() {
         data={filteredCourses}
         keyExtractor={(c) => c.id.toString()}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -313,7 +315,7 @@ export default function CoursesManagement() {
               </View>
 
               {filteredCourses.length === 0 && (
-                <Text style={styles.emptyText}>No courses found.</Text>
+                <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle="Try a different search or add a course" />
               )}
             </View>
           </>

@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building, Calendar, Search, Download, Users, ScanFace, Clock, TrendingUp, CheckCircle, XCircle, User, ChevronLeft } from "lucide-react-native";
 import { StatsRowSkeleton, CourseDetailsSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
@@ -173,7 +174,7 @@ export default function CourseDetails({ route, navigation }) {
           </View>
 
           {filtered.length === 0 ? (
-            <Text style={styles.emptyText}>No students found.</Text>
+            <EmptyStateCompact icon={Users} title="No students found" subtitle="Try adjusting your search" />
           ) : (
             filtered.map((s, i) => (
               <TouchableOpacity key={s.id} style={[styles.tableRow, i < filtered.length - 1 && styles.tableBorder]} onPress={() => setSelectedStudent(s)}>

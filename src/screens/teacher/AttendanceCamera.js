@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
 import { SearchBarSkeleton, ListCardSkeleton, StatsRowSkeleton, TableSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
 
 const { width } = Dimensions.get("window");
 
@@ -129,7 +130,7 @@ export default function AttendanceCamera({ navigation }) {
                 <ListCardSkeleton rows={4} />
               </View>
             ) : filteredCourses.length === 0 ? (
-              <Text style={styles.emptyText}>No courses found.</Text>
+              <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle="Try a different search term" />
             ) : (
               filteredCourses.map((c) => (
                 <TouchableOpacity key={c.id} style={styles.courseItem} onPress={() => selectCourse(c)} activeOpacity={0.7}>
@@ -252,7 +253,7 @@ export default function AttendanceCamera({ navigation }) {
           </View>
 
           {students.length === 0 ? (
-            <Text style={styles.emptyText}>No students enrolled.</Text>
+            <EmptyStateCompact icon={Users} title="No students enrolled" subtitle="Students need to enroll in this course" />
           ) : (
             students.map((s, i) => (
               <View key={s.id} style={[styles.tableRow, i < students.length - 1 && styles.tableBorder]}>

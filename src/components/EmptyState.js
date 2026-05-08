@@ -1,220 +1,289 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
+import React, { useEffect, useRef, useMemo } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from "react-native";
 import { useTheme } from "../theme/Theme";
-import { BookOpen, Users, Calendar, Search, Plus, ArrowRight, RefreshCw, Settings, Bell } from "lucide-react-native";
+import {
+  BookOpen, Users, Calendar, Search, Plus, RefreshCw,
+  Camera, ClipboardList, BarChart2, Building2, GraduationCap,
+  Layers, ScanFace, FileText, AlertTriangle, Inbox
+} from "lucide-react-native";
+import haptic from "../utils/haptics";
 
+/**
+ * Animated floating icon with decorative rings.
+ * Creates a premium "illustrated" feel using only vector icons + animations.
+ */
+function AnimatedIllustration({ Icon, colors }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0.6)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Floating up/down
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, { toValue: -8, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Pulsing outer ring
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.6, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Slow rotate for decoration dots
+    Animated.loop(
+      Animated.timing(rotateAnim, { toValue: 1, duration: 12000, easing: Easing.linear, useNativeDriver: true }),
+    ).start();
+  }, []);
+
+  const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
+  return (
+    <View style={{ width: 140, height: 140, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+      {/* Rotating decoration dots */}
+      <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate }] }]}>
+        {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+          <View key={i} style={{
+            position: "absolute",
+            width: i % 2 === 0 ? 6 : 4,
+            height: i % 2 === 0 ? 6 : 4,
+            borderRadius: 3,
+            backgroundColor: i % 2 === 0 ? colors.accent : colors.success,
+            opacity: 0.3,
+            top: 70 + Math.sin(deg * Math.PI / 180) * 64,
+            left: 70 + Math.cos(deg * Math.PI / 180) * 64,
+            transform: [{ translateX: -3 }, { translateY: -3 }],
+          }} />
+        ))}
+      </Animated.View>
+
+      {/* Pulsing outer ring */}
+      <Animated.View style={{
+        position: "absolute",
+        width: 120, height: 120, borderRadius: 60,
+        borderWidth: 1.5,
+        borderColor: colors.accent,
+        opacity: pulseAnim,
+        borderStyle: "dashed",
+      }} />
+
+      {/* Inner ring */}
+      <View style={{
+        position: "absolute",
+        width: 100, height: 100, borderRadius: 50,
+        backgroundColor: colors.accentLight || (colors.accent + "12"),
+      }} />
+
+      {/* Floating icon */}
+      <Animated.View style={{
+        transform: [{ translateY: floatAnim }],
+        width: 72, height: 72, borderRadius: 20,
+        backgroundColor: colors.primaryDark,
+        justifyContent: "center", alignItems: "center",
+        shadowColor: colors.primaryDark,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+        elevation: 6,
+      }}>
+        <Icon size={32} color={colors.primaryForeground} />
+      </Animated.View>
+    </View>
+  );
+}
+
+/**
+ * Main EmptyState — animated illustration with title, subtitle, and optional action.
+ */
 export default function EmptyState({
-  icon: Icon = BookOpen,
+  icon: Icon = Inbox,
   title = "No Data Found",
   subtitle = "There's nothing to display here yet.",
-  actionText = "Refresh",
+  actionText,
   onAction,
-  showImage = true,
+  actionIcon: ActionIcon = RefreshCw,
 }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
-      {showImage && (
-        <View style={styles.imageContainer}>
-          <Icon size={80} color={colors.border} style={{ opacity: 0.5 }} />
-        </View>
+    <View style={s.container}>
+      <AnimatedIllustration Icon={Icon} colors={colors} />
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
+      {onAction && actionText && (
+        <TouchableOpacity style={s.actionBtn} onPress={() => { haptic.light(); onAction(); }} activeOpacity={0.7}>
+          <ActionIcon size={15} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+          <Text style={s.actionBtnText}>{actionText}</Text>
+        </TouchableOpacity>
       )}
-      <View style={styles.content}>
-        <View style={styles.iconWrapper}>
-          <Icon size={48} color={colors.mutedForeground} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        {onAction && (
-          <TouchableOpacity style={styles.actionBtn} onPress={onAction} activeOpacity={0.7}>
-            {actionText === "Refresh" ? (
-              <RefreshCw size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />
-            ) : (
-              <Plus size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />
-            )}
-            <Text style={styles.actionText}>{actionText}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
     </View>
   );
 }
 
-export function EmptyStateWithActions({
-  icon: Icon = BookOpen,
-  title = "No Data Found",
-  subtitle = "There's nothing to display here yet.",
-  actions = [],
-  showImage = true,
-}) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  return (
-    <View style={styles.container}>
-      {showImage && (
-        <View style={styles.imageContainer}>
-          <Icon size={80} color={colors.border} style={{ opacity: 0.5 }} />
-        </View>
-      )}
-      <View style={styles.content}>
-        <View style={styles.iconWrapper}>
-          <Icon size={48} color={colors.mutedForeground} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        {actions.length > 0 && (
-          <View style={styles.actionsContainer}>
-            {actions.map((action, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.actionBtn, action.style]}
-                onPress={action.onPress}
-                activeOpacity={0.7}
-              >
-                {action.icon && <action.icon size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />}
-                <Text style={styles.actionText}>{action.text}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
+/**
+ * EmptyStateWithSearch — for filtered/search states that returned no results.
+ */
 export function EmptyStateWithSearch({
   icon: Icon = Search,
   title = "No Results Found",
   subtitle = "Try adjusting your search terms or filters.",
   onClearFilters,
-  showImage = true,
 }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
-      {showImage && (
-        <View style={styles.imageContainer}>
-          <Icon size={80} color={colors.border} style={{ opacity: 0.5 }} />
-        </View>
+    <View style={s.container}>
+      <AnimatedIllustration Icon={Icon} colors={colors} />
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
+      {onClearFilters && (
+        <TouchableOpacity style={s.secondaryBtn} onPress={() => { haptic.light(); onClearFilters(); }} activeOpacity={0.7}>
+          <Text style={s.secondaryBtnText}>Clear Filters</Text>
+        </TouchableOpacity>
       )}
-      <View style={styles.content}>
-        <View style={styles.iconWrapper}>
-          <Icon size={48} color={colors.mutedForeground} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        {onClearFilters && (
-          <TouchableOpacity style={styles.clearBtn} onPress={onClearFilters} activeOpacity={0.7}>
-            <Text style={styles.clearBtnText}>Clear Filters</Text>
-          </TouchableOpacity>
-        )}
-      </View>
     </View>
   );
 }
 
+/**
+ * EmptyStateWithCTA — prominent call-to-action for first-time/empty screens.
+ */
 export function EmptyStateWithCTA({
+  icon: Icon = Plus,
+  title = "Get Started",
+  subtitle = "Add your first item to get started.",
+  ctaText = "Add New",
+  ctaIcon: CTAIcon = Plus,
+  onCTA,
+}) {
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
+
+  return (
+    <View style={s.container}>
+      <AnimatedIllustration Icon={Icon} colors={colors} />
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
+      {onCTA && (
+        <TouchableOpacity style={s.actionBtn} onPress={() => { haptic.medium(); onCTA(); }} activeOpacity={0.7}>
+          <CTAIcon size={15} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+          <Text style={s.actionBtnText}>{ctaText}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+/**
+ * EmptyStateCompact — smaller version for inline use within cards/sections.
+ */
+export function EmptyStateCompact({
+  icon: Icon = Inbox,
+  title = "Nothing here yet",
+  subtitle = "",
+}) {
+  const { colors } = useTheme();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ alignItems: "center", paddingVertical: 28, opacity: fadeAnim }}>
+      <View style={{
+        width: 48, height: 48, borderRadius: 14,
+        backgroundColor: colors.muted,
+        justifyContent: "center", alignItems: "center",
+        marginBottom: 10,
+      }}>
+        <Icon size={22} color={colors.mutedForeground} />
+      </View>
+      <Text style={{ fontSize: 14, fontWeight: "700", color: colors.mutedForeground, marginBottom: 2 }}>{title}</Text>
+      {!!subtitle && <Text style={{ fontSize: 12, color: colors.mutedForeground, opacity: 0.7 }}>{subtitle}</Text>}
+    </Animated.View>
+  );
+}
+
+/**
+ * EmptyStateWithActions — multiple action buttons.
+ */
+export function EmptyStateWithActions({
   icon: Icon = BookOpen,
   title = "No Data Found",
-  subtitle = "Get started by adding your first item.",
-  ctaText = "Add New",
-  ctaIcon = Plus,
-  onCTA,
-  showImage = true,
+  subtitle = "There's nothing to display here yet.",
+  actions = [],
 }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
-      {showImage && (
-        <View style={styles.imageContainer}>
-          <Icon size={80} color={colors.border} style={{ opacity: 0.5 }} />
+    <View style={s.container}>
+      <AnimatedIllustration Icon={Icon} colors={colors} />
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
+      {actions.length > 0 && (
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {actions.map((action, i) => (
+            <TouchableOpacity key={i} style={s.actionBtn} onPress={() => { haptic.light(); action.onPress?.(); }} activeOpacity={0.7}>
+              {action.icon && <action.icon size={15} color={colors.primaryForeground} style={{ marginRight: 6 }} />}
+              <Text style={s.actionBtnText}>{action.text}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       )}
-      <View style={styles.content}>
-        <View style={styles.iconWrapper}>
-          <Icon size={48} color={colors.mutedForeground} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        <TouchableOpacity style={styles.ctaBtn} onPress={onCTA} activeOpacity={0.7}>
-          {ctaIcon && <ctaIcon size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />}
-          <Text style={styles.ctaText}>{ctaText}</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
 
+/**
+ * EmptyStateWithIllustration — for read-only empty states with no actions.
+ */
 export function EmptyStateWithIllustration({
   icon: Icon = BookOpen,
   title = "No Data Found",
   subtitle = "There's nothing to display here yet.",
-  illustration = "no-data",
-  showImage = true,
 }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
-      {showImage && (
-        <View style={styles.imageContainer}>
-          <Icon size={80} color={colors.border} style={{ opacity: 0.5 }} />
-        </View>
-      )}
-      <View style={styles.content}>
-        <View style={styles.iconWrapper}>
-          <Icon size={48} color={colors.mutedForeground} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-      </View>
+    <View style={s.container}>
+      <AnimatedIllustration Icon={Icon} colors={colors} />
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
     </View>
   );
 }
 
+
 const createStyles = (colors) => StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    padding: 40,
-  },
-  imageContainer: {
-    marginBottom: 24,
-  },
-  image: {
-    width: 120,
-    height: 120,
-    opacity: 0.5,
-  },
-  content: {
-    alignItems: "center",
-    flex: 1,
-  },
-  iconWrapper: {
-    marginBottom: 16,
+    paddingVertical: 40,
+    paddingHorizontal: 32,
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.foreground,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.mutedForeground,
     textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
+    marginBottom: 20,
+    lineHeight: 19,
+    maxWidth: 280,
   },
   actionBtn: {
     flexDirection: "row",
@@ -225,47 +294,24 @@ const createStyles = (colors) => StyleSheet.create({
     borderRadius: 10,
     shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  actionText: {
+  actionBtnText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.primaryForeground,
   },
-  actionsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
-  },
-  clearBtn: {
+  secondaryBtn: {
     backgroundColor: colors.muted,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  clearBtnText: {
+  secondaryBtnText: {
     fontSize: 13,
     fontWeight: "600",
     color: colors.textBody,
-  },
-  ctaBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primaryDark,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    shadowColor: colors.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  ctaText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primaryForeground,
   },
 });

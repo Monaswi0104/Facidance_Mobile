@@ -5,7 +5,9 @@ import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { useTheme } from "../../theme/Theme";
 import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
 import CachedImage from "../../components/CachedImage";
+import { ProfileSkeleton } from "../../components/SkeletonLoader";
 import haptic from "../../utils/haptics";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 const uploadSteps = [
   { key: "front", label: "Front View", desc: "Look straight at the camera" },
@@ -83,9 +85,9 @@ export default function ProfileUpload() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.accent} />
-         </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <ProfileSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -104,7 +106,7 @@ export default function ProfileUpload() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 

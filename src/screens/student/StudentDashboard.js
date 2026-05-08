@@ -9,6 +9,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, BarChart3, Clock, ArrowUpRight, CheckCircle, Lightbulb, AlertTriangle, User } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width } = Dimensions.get('window');
 
@@ -90,7 +91,7 @@ export default function StudentDashboard({ navigation }) {
         contentContainerStyle={styles.container} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 

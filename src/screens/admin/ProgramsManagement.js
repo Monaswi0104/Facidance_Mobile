@@ -9,6 +9,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building2, Users, GraduationCap, Plus, Trash2, X, Key } from "lucide-react-native";
 import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import { EmptyStateCompact } from "../../components/EmptyState";
+import BrandedRefresh from "../../components/BrandedRefresh";
 
 export default function ProgramsManagement() {
   const { colors, isDark } = useTheme();
@@ -161,7 +163,7 @@ export default function ProgramsManagement() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.success]} tintColor={colors.success} />
+          <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
 
@@ -272,7 +274,7 @@ export default function ProgramsManagement() {
               </View>
 
               {programs.length === 0 ? (
-                <Text style={styles.emptyText}>No programs created yet.</Text>
+                <EmptyStateCompact icon={BookOpen} title="No programs yet" subtitle="Create your first program" />
               ) : (
                 programs.map((p, i) => (
                   <TouchableOpacity key={p.id} style={[styles.progRow, i < programs.length - 1 && styles.progRowBorder]} activeOpacity={0.7} onPress={() => setSelectedProgram(p)}>
