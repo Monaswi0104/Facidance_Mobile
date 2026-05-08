@@ -293,7 +293,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
   heroInner: {
     justifyContent: "flex-end",
     paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingBottom: 55,
   },
   heroTopRow: {
     flexDirection: "row",
