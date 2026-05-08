@@ -265,7 +265,7 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     right: 0,
     bottom: 0,
     width: "100%",
-    height: "100%",
+    height: "110%",
   },
   heroOverlay: {
     position: "absolute",
