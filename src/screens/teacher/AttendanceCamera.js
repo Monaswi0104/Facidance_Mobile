@@ -14,7 +14,7 @@ const { width } = Dimensions.get("window");
 
 export default function AttendanceCamera({ navigation }) {
   const { colors, isDark } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [students, setStudents] = useState([]);
@@ -33,11 +33,11 @@ export default function AttendanceCamera({ navigation }) {
           id: c.id, 
           name: c.name || c.course_name || "Untitled", 
           code: c.code || c.course_code || "",
-          program: c.semester?.academicYear?.program?.name || c.program_name || c.program || "",
-          department: c.semester?.academicYear?.program?.department?.name || c.department_name || c.department || "",
-          semester: c.semester?.name || c.semester_name || "",
-          year: c.semester?.academicYear?.name || c.academic_year || c.year || "",
-          students: c._count?.students || c.student_count || c.students_count || c.total_students || 0,
+          program: c.program || c.semester?.academicYear?.program?.name || c.program_name || "",
+          department: c.department || c.semester?.academicYear?.program?.department?.name || c.department_name || "",
+          semester: c.semester_name || (typeof c.semester === "string" ? c.semester : c.semester?.name) || "",
+          year: c.academic_year || c.year || c.semester?.academicYear?.name || "",
+          students: c.student_count || c._count?.students || c.students_count || c.total_students || 0,
         })));
       } catch (e) { console.log(e); }
       finally { setIsLoading(false); }
@@ -160,13 +160,13 @@ export default function AttendanceCamera({ navigation }) {
 
         {/* Selected Course Banner */}
         <View style={styles.selectedBanner}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={styles.selectedLabel}>SELECTED COURSE</Text>
             <Text style={styles.selectedName}>{selectedCourse.name}</Text>
-            <Text style={styles.selectedMeta} numberOfLines={2}>{selectedCourse.department} → {selectedCourse.program} → {selectedCourse.year}{selectedCourse.semester ? ` → ${selectedCourse.semester}` : ""}</Text>
+            <Text style={styles.selectedMeta} numberOfLines={1}>{[selectedCourse.department, selectedCourse.program, selectedCourse.year, selectedCourse.semester].filter(Boolean).join(" → ")}</Text>
           </View>
           <TouchableOpacity style={styles.changeCourseBtn} onPress={() => { setSelectedCourse(null); setStudents([]); }}>
-            <Text style={styles.changeCourseBtnText}>Change{"\n"}course</Text>
+            <Text style={styles.changeCourseBtnText}>Change course</Text>
           </TouchableOpacity>
         </View>
 
@@ -179,32 +179,24 @@ export default function AttendanceCamera({ navigation }) {
         ) : (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>STUDENTS</Text>
-                <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
-              </View>
+              <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
               <Text style={styles.statNumber}>{students.length}</Text>
+              <Text style={styles.statLabel}>Students</Text>
             </View>
             <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>TRAINED</Text>
-                <View style={styles.statIconBg}><ScanFace size={14} color={colors.primaryForeground} /></View>
-              </View>
+              <View style={styles.statIconBg}><ScanFace size={14} color={colors.primaryForeground} /></View>
               <Text style={[styles.statNumber, { color: colors.accent }]}>{trained}</Text>
+              <Text style={styles.statLabel}>Trained</Text>
             </View>
             <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>PHOTOS</Text>
-                <View style={styles.statIconBg}><Camera size={14} color={colors.primaryForeground} /></View>
-              </View>
+              <View style={styles.statIconBg}><Camera size={14} color={colors.primaryForeground} /></View>
               <Text style={styles.statNumber}>{withPhotos}</Text>
+              <Text style={styles.statLabel}>Photos</Text>
             </View>
             <View style={styles.statCard}>
-              <View style={styles.statTopRow}>
-                <Text style={styles.statLabel}>UNTRAINED</Text>
-                <View style={styles.statIconBg}><AlertCircle size={14} color={colors.primaryForeground} /></View>
-              </View>
+              <View style={styles.statIconBg}><AlertCircle size={14} color={colors.primaryForeground} /></View>
               <Text style={[styles.statNumber, { color: colors.destructive }]}>{notTrained}</Text>
+              <Text style={styles.statLabel}>Untrained</Text>
             </View>
           </View>
         )}
@@ -312,7 +304,7 @@ export default function AttendanceCamera({ navigation }) {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors, isDark) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
@@ -354,20 +346,20 @@ const createStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: isDark ? colors.card : "rgba(13,148,136,0.04)",
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderLeftWidth: 4,
+    borderColor: isDark ? colors.border : "rgba(13,148,136,0.15)",
+    borderLeftWidth: 3,
     borderLeftColor: colors.accent,
   },
-  selectedLabel: { fontSize: 9, fontWeight: "700", color: colors.accent, letterSpacing: 0.5, marginBottom: 3 },
-  selectedName: { fontSize: 17, fontWeight: "800", color: colors.foreground, marginBottom: 2 },
+  selectedLabel: { fontSize: 10, fontWeight: "700", color: colors.accent, letterSpacing: 0.5, marginBottom: 4 },
+  selectedName: { fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 3 },
   selectedMeta: { fontSize: 11, color: colors.mutedForeground },
-  changeCourseBtn: { backgroundColor: colors.muted, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, alignItems: "center" },
-  changeCourseBtnText: { fontSize: 11, fontWeight: "600", color: colors.textBody, textAlign: "center" },
+  changeCourseBtn: { backgroundColor: colors.background, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
+  changeCourseBtnText: { fontSize: 12, fontWeight: "500", color: colors.foreground },
 
   // Stats
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
@@ -379,16 +371,16 @@ const createStyles = (colors) => StyleSheet.create({
     marginHorizontal: 3,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: "center",
     shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  statTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
-  statLabel: { fontSize: 7, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.4, flex: 1, marginRight: 6 },
-  statNumber: { fontSize: 20, fontWeight: "800", color: colors.foreground },
-  statIconBg: { width: 26, height: 26, borderRadius: 7, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
+  statLabel: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground, marginTop: 2 },
+  statNumber: { fontSize: 22, fontWeight: "800", color: colors.foreground, marginTop: 6 },
+  statIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center" },
 
   // Action Buttons
   actionRow: {
