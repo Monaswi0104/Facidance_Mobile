@@ -28,13 +28,28 @@ The app features a premium, dark-mode-ready design with smooth animated transiti
 
 ## 📱 Screenshots
 
-| Login | Teacher Dashboard | Admin Dashboard |
-|:---:|:---:|:---:|
-| Premium auth flow with hero section | At-risk alerts, stats, quick actions | Institution-wide analytics |
+<p align="center">
+  <img src="screenshots/login.png" width="230" alt="Login Screen" />
+  &nbsp;&nbsp;
+  <img src="screenshots/teacher_dashboard.png" width="230" alt="Teacher Dashboard" />
+  &nbsp;&nbsp;
+  <img src="screenshots/admin_dashboard.png" width="230" alt="Admin Dashboard" />
+</p>
 
-| Attendance Camera | Student Portal | Dark Mode |
-|:---:|:---:|:---:|
-| Live AI face recognition sessions | Course tracking & history | Full dark theme support |
+<p align="center">
+  <img src="screenshots/student_dashboard.png" width="230" alt="Student Dashboard" />
+  &nbsp;&nbsp;
+  <img src="screenshots/attendance.png" width="230" alt="Attendance Camera" />
+  &nbsp;&nbsp;
+  <img src="screenshots/dark_theme.png" width="230" alt="Dark Theme" />
+</p>
+
+<p align="center">
+  <sub>Login Screen &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Teacher Dashboard &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Admin Dashboard</sub>
+</p>
+<p align="center">
+  <sub>Student Dashboard &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Attendance Session &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dark Theme</sub>
+</p>
 
 ---
 
