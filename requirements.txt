@@ -1,0 +1,124 @@
+# ============================================================
+# Facidance Mobile — Requirements & Setup Guide
+# ============================================================
+# This file lists everything you need to install before
+# running the Facidance Mobile application.
+# ============================================================
+
+
+# ====================
+# 1. SYSTEM TOOLS
+# ====================
+
+Node.js                   >= 22.11.0      # https://nodejs.org
+npm                       >= 10.x         # Comes bundled with Node.js
+Git                       >= 2.x          # https://git-scm.com
+Watchman (macOS)          >= 4.x          # brew install watchman (recommended by React Native)
+
+
+# ====================
+# 2. ANDROID SETUP
+# ====================
+
+Android Studio            >= Hedgehog     # https://developer.android.com/studio
+Android SDK               API Level 36    # Install via Android Studio SDK Manager
+Android Build Tools       >= 36.0.0       # Install via Android Studio SDK Manager
+Android Emulator          (any)           # Or use a physical device with USB debugging
+Java JDK                  >= 17           # Bundled with Android Studio
+Gradle                    8.13            # Auto-managed by the project wrapper
+
+
+# ====================
+# 3. iOS SETUP (macOS only)
+# ====================
+
+Xcode                     >= 16.0         # https://apps.apple.com/app/xcode/id497799835
+Xcode Command Line Tools                  # xcode-select --install
+CocoaPods                 >= 1.15         # sudo gem install cocoapods
+Ruby                      >= 2.7          # Pre-installed on macOS
+Bundler                   >= 2.x          # gem install bundler
+iOS Simulator             iPhone 17 Pro   # Included with Xcode
+
+
+# ====================
+# 4. BACKEND SERVER
+# ====================
+# The mobile app requires the Facidance backend to be running.
+# Repository: https://github.com/Monaswi0104/Facidance
+
+Python                    >= 3.10         # https://python.org
+FastAPI                                   # pip install fastapi
+Uvicorn                                   # pip install uvicorn
+Prisma (Node.js)                          # npx prisma generate
+PostgreSQL (NeonDB)                       # Cloud-hosted database
+
+
+# ====================
+# 5. NPM DEPENDENCIES (auto-installed via `npm install`)
+# ====================
+
+# --- Core ---
+react                                     19.2.3
+react-native                              0.84.1
+
+# --- Navigation ---
+@react-navigation/native                  ^7.1.33
+@react-navigation/native-stack            ^7.14.4
+@react-navigation/bottom-tabs             ^7.15.5
+
+# --- State Management ---
+@reduxjs/toolkit                          ^2.11.2
+react-redux                               ^9.2.0
+
+# --- Storage ---
+@react-native-async-storage/async-storage ^2.1.2
+
+# --- UI & Icons ---
+lucide-react-native                       ^1.8.0
+react-native-svg                          ^15.15.4
+react-native-safe-area-context            ^5.7.0
+react-native-screens                      ^4.24.0
+
+# --- Camera & Image ---
+react-native-camera-kit                   ^17.0.1
+react-native-image-picker                 ^8.2.1
+@bam.tech/react-native-image-resizer      ^3.0.11
+
+# --- File System & Sharing ---
+react-native-fs                           ^2.20.0
+react-native-document-picker              ^9.3.1
+react-native-share                        ^12.2.6
+
+# --- Utilities ---
+react-native-haptic-feedback              ^2.3.4
+react-native-device-info                  ^15.0.2
+@react-native-community/datetimepicker    ^8.6.0
+@react-native-picker/picker               ^2.11.4
+xlsx                                      ^0.18.5
+
+
+# ====================
+# 6. QUICK START
+# ====================
+#
+# Step 1: Clone the repo
+#   git clone https://github.com/Monaswi0104/Facidance_Mobile.git
+#   cd Facidance_Mobile
+#
+# Step 2: Install npm dependencies
+#   npm install
+#
+# Step 3: iOS only — Install CocoaPods
+#   cd ios && bundle install && bundle exec pod install && cd ..
+#
+# Step 4: Start Metro bundler
+#   npm start
+#
+# Step 5: Run the app
+#   npm run android        # For Android
+#   npm run ios            # For iOS (macOS only)
+#
+# Step 6: Make sure the backend server is running
+#   cd ../Facidance && python fast.py
+#
+# ====================
