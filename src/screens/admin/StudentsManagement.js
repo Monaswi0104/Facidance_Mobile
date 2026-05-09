@@ -539,8 +539,8 @@ const createStyles = (colors) => StyleSheet.create({
 
   // Filters
   filterRow: { flexDirection: "row", marginBottom: 16 },
-  filterPill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 16, backgroundColor: colors.muted, marginRight: 8 },
-  filterPillActive: { backgroundColor: colors.primaryDark },
+  filterPill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 16, backgroundColor: colors.muted, marginRight: 8, borderWidth: 1, borderColor: colors.border },
+  filterPillActive: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
   filterText: { fontSize: 12, fontWeight: "600", color: colors.mutedForeground },
   filterTextActive: { color: colors.primaryForeground },
 
