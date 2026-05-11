@@ -1,12 +1,11 @@
 import axios from "axios";
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from "./config";
 
-// Automatically use 10.0.2.2 for Android emulator pointing to localhost, or environment variable
-const BASE_URL = process.env.REACT_APP_API_URL || (Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000");
+const API_BASE_URL = process.env.REACT_APP_API_URL || BASE_URL;
 
 const API = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

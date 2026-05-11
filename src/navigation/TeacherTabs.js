@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions, BackHandler } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { useTheme } from "../theme/Theme";
 import { LayoutDashboard, BookOpen, Users, Camera, BarChart2, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
@@ -47,6 +47,7 @@ function AttendanceStack() {
 }
 
 export default function TeacherTabs({ navigation: rootNav }) {
+  const tabNavRef = useRef(null);
 
   const confirmLogout = () => {
     haptic.warning();
@@ -66,6 +67,23 @@ export default function TeacherTabs({ navigation: rootNav }) {
       ]
     );
   };
+
+  // Hardware back button handler
+  useEffect(() => {
+    const onBackPress = () => {
+      const state = tabNavRef.current?.getState?.();
+      if (!state) return false;
+      const activeRoute = state.routes[state.index]?.name;
+      if (activeRoute === "TeacherDashboard") {
+        confirmLogout();
+        return true;
+      }
+      tabNavRef.current?.navigate("TeacherDashboard");
+      return true;
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => sub.remove();
+  }, []);
 
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
@@ -157,6 +175,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
+          tabNavRef.current = navigation;
           const state = navigation.getState();
           return <CustomHeader navigation={navigation} state={state} />;
         },

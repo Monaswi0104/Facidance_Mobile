@@ -7,7 +7,7 @@ import { getTeacherCourses, getCourseStudents, trainModel as trainModelApi } fro
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
-import { SearchBarSkeleton, ListCardSkeleton, StatsRowSkeleton, TableSkeleton } from "../../components/SkeletonLoader";
+import SkeletonLoader, { SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 
 const { width } = Dimensions.get("window");
@@ -135,7 +135,7 @@ export default function AttendanceCamera({ navigation }) {
               filteredCourses.map((c) => (
                 <TouchableOpacity key={c.id} style={styles.courseItem} onPress={() => selectCourse(c)} activeOpacity={0.7}>
                   <Text style={styles.courseItemName}>{c.name}</Text>
-                  <Text style={styles.courseItemMeta}>{c.department} → {c.program} → {c.year}{c.semester ? ` → ${c.semester}` : ""}</Text>
+                  <Text style={styles.courseItemMeta}>{[c.department, c.program, c.year, c.semester].filter(Boolean).join(" → ")}</Text>
                 </TouchableOpacity>
               ))
             )}
@@ -163,141 +163,175 @@ export default function AttendanceCamera({ navigation }) {
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={styles.selectedLabel}>SELECTED COURSE</Text>
             <Text style={styles.selectedName}>{selectedCourse.name}</Text>
-            <Text style={styles.selectedMeta} numberOfLines={1}>{[selectedCourse.department, selectedCourse.program, selectedCourse.year, selectedCourse.semester].filter(Boolean).join(" → ")}</Text>
+            <Text style={styles.selectedMeta} numberOfLines={2}>{[selectedCourse.department, selectedCourse.program, selectedCourse.year, selectedCourse.semester].filter(Boolean).join(" → ")}</Text>
           </View>
           <TouchableOpacity style={styles.changeCourseBtn} onPress={() => { setSelectedCourse(null); setStudents([]); }}>
             <Text style={styles.changeCourseBtnText}>Change course</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stats Grid */}
+        {/* Stats, Actions, Table — all gated on loading */}
         {isLoadingStudents ? (
           <View>
-            <StatsRowSkeleton count={4} />
-            <TableSkeleton rows={4} columns={4} />
+            {/* Stat Cards Skeleton — matches new vertical centered layout */}
+            <View style={styles.statsRow}>
+              {[0,1,2,3].map(i => (
+                <View key={i} style={[styles.statCard, { alignItems: "center" }]}>
+                  <SkeletonLoader style={{ width: 30, height: 30, borderRadius: 8 }} />
+                  <SkeletonLoader style={{ width: 32, height: 22, borderRadius: 6, marginTop: 8 }} />
+                  <SkeletonLoader style={{ width: 44, height: 10, borderRadius: 4, marginTop: 4 }} />
+                </View>
+              ))}
+            </View>
+
+            {/* Action Buttons Skeleton */}
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+              <SkeletonLoader style={{ flex: 1, height: 44, borderRadius: 12 }} />
+              <SkeletonLoader style={{ flex: 1, height: 44, borderRadius: 12 }} />
+            </View>
+
+            {/* Table Skeleton */}
+            <View style={styles.tableCard}>
+              <SkeletonLoader style={{ width: 140, height: 16, borderRadius: 6, marginBottom: 6 }} />
+              <SkeletonLoader style={{ width: 100, height: 12, borderRadius: 4, marginBottom: 14 }} />
+              {[0,1,2,3,4].map(i => (
+                <View key={i} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.border }}>
+                  <View style={{ flex: 2 }}>
+                    <SkeletonLoader style={{ width: "70%", height: 13, borderRadius: 4, marginBottom: 4 }} />
+                    <SkeletonLoader style={{ width: "50%", height: 10, borderRadius: 4 }} />
+                  </View>
+                  <SkeletonLoader style={{ width: 50, height: 12, borderRadius: 4, flex: 0.8 }} />
+                  <SkeletonLoader style={{ width: 20, height: 12, borderRadius: 4, flex: 0.8, marginLeft: 6 }} />
+                  <SkeletonLoader style={{ width: 50, height: 20, borderRadius: 10, flex: 0.9, marginLeft: 6 }} />
+                </View>
+              ))}
+            </View>
           </View>
         ) : (
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
-              <Text style={styles.statNumber}>{students.length}</Text>
-              <Text style={styles.statLabel}>Students</Text>
+          <>
+            {/* Stats Grid */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <View style={styles.statIconBg}><Users size={14} color={colors.primaryForeground} /></View>
+                <Text style={styles.statNumber}>{students.length}</Text>
+                <Text style={styles.statLabel}>Students</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statIconBg}><ScanFace size={14} color={colors.primaryForeground} /></View>
+                <Text style={[styles.statNumber, { color: colors.accent }]}>{trained}</Text>
+                <Text style={styles.statLabel}>Trained</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statIconBg}><Camera size={14} color={colors.primaryForeground} /></View>
+                <Text style={styles.statNumber}>{withPhotos}</Text>
+                <Text style={styles.statLabel}>Photos</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={styles.statIconBg}><AlertCircle size={14} color={colors.primaryForeground} /></View>
+                <Text style={[styles.statNumber, { color: colors.destructive }]}>{notTrained}</Text>
+                <Text style={styles.statLabel}>Untrained</Text>
+              </View>
             </View>
-            <View style={styles.statCard}>
-              <View style={styles.statIconBg}><ScanFace size={14} color={colors.primaryForeground} /></View>
-              <Text style={[styles.statNumber, { color: colors.accent }]}>{trained}</Text>
-              <Text style={styles.statLabel}>Trained</Text>
+
+            {/* Action Buttons Row */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.trainBtnOutline, isTraining && { opacity: 0.6 }]}
+                onPress={trainModel}
+                disabled={isTraining}
+                activeOpacity={0.8}>
+                {isTraining ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : (
+                  <>
+                    <Cpu size={14} color={colors.accent} style={{ marginRight: 6 }} />
+                    <Text style={styles.trainBtnOutlineText}>Train Recognition Model</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.captureBtn}
+                onPress={() => navigation.navigate("AttendanceSession", {
+                  course: selectedCourse,
+                  studentCount: students.length,
+                  trainedCount: trained,
+                  notTrainedCount: notTrained,
+                })}
+                activeOpacity={0.8}>
+                <Play size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+                <Text style={styles.captureBtnText}>Capture Attendance</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.statCard}>
-              <View style={styles.statIconBg}><Camera size={14} color={colors.primaryForeground} /></View>
-              <Text style={styles.statNumber}>{withPhotos}</Text>
-              <Text style={styles.statLabel}>Photos</Text>
+
+            {/* Enrolled Students Table */}
+            <View style={styles.tableCard}>
+              <Text style={styles.tableTitle}>Enrolled Students</Text>
+              <Text style={styles.tableSubtitle}>{students.length} total enrolled</Text>
+
+              <View style={styles.tableHeaderRow}>
+                <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>PHOTOS</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>COUNT</Text>
+                <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>STATUS</Text>
+              </View>
+
+              {students.length === 0 ? (
+                <EmptyStateCompact icon={Users} title="No students enrolled" subtitle="Students need to enroll in this course" />
+              ) : (
+                students.map((s, i) => (
+                  <View key={s.id} style={[styles.tableRow, i < students.length - 1 && styles.tableBorder]}>
+                    <View style={{ flex: 2, paddingRight: 6 }}>
+                      <Text style={styles.studentName} numberOfLines={1}>{s.name}</Text>
+                      <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
+                    </View>
+                    <View style={{ flex: 0.8, alignItems: "center" }}>
+                      {s.hasPhotos ? (
+                        <View style={styles.photoAvailable}>
+                          <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
+                          <Text style={[styles.badgeText, { color: colors.success }]}>Available</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.photoMissing}>
+                          <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>None</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.cellNum, { flex: 0.8, textAlign: "center" }]}>{s.photoCount}</Text>
+                    <View style={{ flex: 0.9, alignItems: "center" }}>
+                      {s.trained ? (
+                        <View style={styles.trainedBadge}>
+                          <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
+                          <Text style={[styles.badgeText, { color: colors.success }]}>Trained</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.pendingBadge}>
+                          <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>Pending</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))
+              )}
             </View>
-            <View style={styles.statCard}>
-              <View style={styles.statIconBg}><AlertCircle size={14} color={colors.primaryForeground} /></View>
-              <Text style={[styles.statNumber, { color: colors.destructive }]}>{notTrained}</Text>
-              <Text style={styles.statLabel}>Untrained</Text>
+
+            {/* Info Card */}
+            <View style={styles.infoCard}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
+                <Text style={styles.infoTitle}>How cumulative attendance works</Text>
+              </View>
+              <Text style={styles.infoStep}>• Face recognition runs centrally via CCTV/webcam</Text>
+              <Text style={styles.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
+              <Text style={styles.infoStep}>• Once recognized, students stay marked present</Text>
+              <Text style={styles.infoStep}>• Submit at end to save the session record</Text>
+              <View style={styles.infoHighlight}>
+                <Text style={styles.infoHighlightText}>Students only need to be detected once — no need to stay in frame!</Text>
+              </View>
             </View>
-          </View>
+          </>
         )}
 
-        {/* Action Buttons Row */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.trainBtnOutline, isTraining && { opacity: 0.6 }]}
-            onPress={trainModel}
-            disabled={isTraining}
-            activeOpacity={0.8}>
-            {isTraining ? (
-              <ActivityIndicator size="small" color={colors.accent} />
-            ) : (
-              <>
-                <Cpu size={14} color={colors.accent} style={{ marginRight: 6 }} />
-                <Text style={styles.trainBtnOutlineText}>Train Recognition Model</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.captureBtn}
-            onPress={() => navigation.navigate("AttendanceSession", {
-              course: selectedCourse,
-              studentCount: students.length,
-              trainedCount: trained,
-              notTrainedCount: notTrained,
-            })}
-            activeOpacity={0.8}>
-            <Play size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
-            <Text style={styles.captureBtnText}>Capture Attendance</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Enrolled Students Table */}
-        <View style={styles.tableCard}>
-          <Text style={styles.tableTitle}>Enrolled Students</Text>
-          <Text style={styles.tableSubtitle}>{students.length} total enrolled</Text>
-
-          <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>PHOTOS</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.8, textAlign: "center" }]}>COUNT</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.9, textAlign: "center" }]}>STATUS</Text>
-          </View>
-
-          {students.length === 0 ? (
-            <EmptyStateCompact icon={Users} title="No students enrolled" subtitle="Students need to enroll in this course" />
-          ) : (
-            students.map((s, i) => (
-              <View key={s.id} style={[styles.tableRow, i < students.length - 1 && styles.tableBorder]}>
-                <View style={{ flex: 2, paddingRight: 6 }}>
-                  <Text style={styles.studentName} numberOfLines={1}>{s.name}</Text>
-                  <Text style={styles.studentEmail} numberOfLines={1}>{s.email}</Text>
-                </View>
-                <View style={{ flex: 0.8, alignItems: "center" }}>
-                  {s.hasPhotos ? (
-                    <View style={styles.photoAvailable}>
-                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: colors.success }]}>Available</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.photoMissing}>
-                      <XCircle size={11} color={colors.destructive} style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: colors.destructive }]}>Missing</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={[styles.cellNum, { flex: 0.8 }]}>{s.photoCount}</Text>
-                <View style={{ flex: 0.9, alignItems: "center" }}>
-                  {s.trained ? (
-                    <View style={styles.trainedBadge}>
-                      <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
-                      <Text style={[styles.badgeText, { color: colors.success }]}>Trained</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.pendingBadge}>
-                      <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>Pending</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))
-          )}
-        </View>
-
-        {/* Info Card */}
-        <View style={styles.infoCard}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
-            <Text style={styles.infoTitle}>How cumulative attendance works</Text>
-          </View>
-          <Text style={styles.infoStep}>• Face recognition runs centrally via CCTV/webcam</Text>
-          <Text style={styles.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
-          <Text style={styles.infoStep}>• Once recognized, students stay marked present</Text>
-          <Text style={styles.infoStep}>• Submit at end to save the session record</Text>
-          <View style={styles.infoHighlight}>
-            <Text style={styles.infoHighlightText}>Students only need to be detected once — no need to stay in frame!</Text>
-          </View>
-        </View>
 
       </ScrollView>
     </SafeAreaView>

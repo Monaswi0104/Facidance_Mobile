@@ -1,11 +1,27 @@
-// Auto-detect: emulator uses 10.0.2.2, physical device uses localhost via adb reverse
-import { Platform } from "react-native";
+// Auto-detect the host machine for local backend calls during development.
+import { NativeModules, Platform } from "react-native";
 import DeviceInfo from "react-native-device-info";
 import { getToken, clearAuth } from "./authStorage";
 
 const isEmulator = DeviceInfo.isEmulatorSync();
-// Android emulator needs 10.0.2.2 to reach host machine; iOS simulator uses localhost directly
-const HOST = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : "localhost";
+
+function getDevServerHost() {
+  const scriptURL = NativeModules.SourceCode?.scriptURL;
+  const match = scriptURL?.match(/\/\/([^:/]+)(?::\d+)?\//);
+  const host = match?.[1];
+
+  if (host && host !== "localhost" && host !== "127.0.0.1") {
+    return host;
+  }
+
+  // Fallback to the Mac's current local Wi-Fi IP address instead of 'localhost'
+  // so physical iPhones can connect to the backend over the network.
+  return "192.168.1.2";
+}
+
+// Android emulator needs 10.0.2.2 to reach the host machine.
+// iOS physical devices use the Metro host IP; iOS simulator falls back to localhost.
+export const HOST = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : getDevServerHost();
 
 // Service-specific base URLs (Local Backend Configuration)
 const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later

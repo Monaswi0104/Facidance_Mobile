@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions } from "react-native";
+import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions, BackHandler } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { useTheme } from "../theme/Theme";
 import { LayoutDashboard, Users, Building2, BookOpen, GraduationCap, Layers, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
@@ -25,6 +25,7 @@ const TAB_CONFIG = [
 ];
 
 export default function AdminTabs({ navigation: rootNav }) {
+  const tabNavRef = useRef(null);
 
   const confirmLogout = () => {
     haptic.warning();
@@ -44,6 +45,23 @@ export default function AdminTabs({ navigation: rootNav }) {
       ]
     );
   };
+
+  // Hardware back button handler
+  useEffect(() => {
+    const onBackPress = () => {
+      const state = tabNavRef.current?.getState?.();
+      if (!state) return false;
+      const activeRoute = state.routes[state.index]?.name;
+      if (activeRoute === "AdminDashboard") {
+        confirmLogout();
+        return true;
+      }
+      tabNavRef.current?.navigate("AdminDashboard");
+      return true;
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => sub.remove();
+  }, []);
 
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
@@ -135,6 +153,7 @@ export default function AdminTabs({ navigation: rootNav }) {
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
+          tabNavRef.current = navigation;
           const state = navigation.getState();
           return <CustomHeader navigation={navigation} state={state} />;
         },
