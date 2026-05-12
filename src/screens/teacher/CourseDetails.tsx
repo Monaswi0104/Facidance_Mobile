@@ -47,7 +47,7 @@ export default function CourseDetails({ route, navigation }) {
           attended: s._count?.attendance || s.attendance_count || 0,
           total: fetchedTotalSessions,
         })));
-      } catch (e) { console.log("[CourseDetails] Error:", e); }
+      } catch (e: any) { console.log("[CourseDetails] Error:", e); }
       finally { setIsLoading(false); }
     };
     load();
@@ -74,7 +74,7 @@ export default function CourseDetails({ route, navigation }) {
       const path = `${RNFS.DownloadDirectoryPath}/course_students_${Date.now()}.csv`;
       await RNFS.writeFile(path, csv, "utf8");
       await Share.open({ url: `file://${path}`, type: "text/csv", title: "Export Students", filename: "course_students" });
-    } catch (e) {
+    } catch (e: any) {
       if (e?.message !== "User did not share") console.log(e);
     }
   };

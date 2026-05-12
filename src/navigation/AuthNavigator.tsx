@@ -8,13 +8,15 @@ import AdminTabs from "./AdminTabs";
 import TeacherTabs from "./TeacherTabs";
 import StudentTabs from "./StudentTabs";
 
-const Stack = createNativeStackNavigator();
+import type { RootStackParamList } from "../types/navigation";
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AuthNavigator(){
 
 return(
 
-<Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
+<Stack.Navigator id="AuthStack" screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
 
 <Stack.Screen name="Login" component={LoginScreen}/>
 <Stack.Screen name="Register" component={RegisterScreen} options={{ animation: "slide_from_right" }}/>

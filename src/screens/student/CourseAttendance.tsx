@@ -7,7 +7,11 @@ import { AttendanceOverviewSkeleton } from "../../components/SkeletonLoader";
 
 const { width } = Dimensions.get('window');
 
-export default function CourseAttendance({ route, navigation }) {
+import type { StudentCoursesStackScreenProps } from "../../types/navigation";
+
+type CourseAttendanceProps = StudentCoursesStackScreenProps<"CourseAttendance">;
+
+export default function CourseAttendance({ route, navigation }: CourseAttendanceProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -30,7 +34,7 @@ export default function CourseAttendance({ route, navigation }) {
         ]);
         
         let records = summary.records || [];
-        records.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
+        records.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt).getTime() - new Date(a.timestamp || a.date || a.createdAt).getTime());
         
         setCourseRecords(records);
         setTotalClasses(summary.total_sessions || 0);
@@ -42,7 +46,7 @@ export default function CourseAttendance({ route, navigation }) {
           teacherDept: courseDets.teacher_department_name || courseDets.department_name || prev.teacherDept,
           students: courseDets.student_count !== undefined ? courseDets.student_count : prev.students,
         }));
-      } catch (e) {
+      } catch (e: any) {
         console.log("CourseAttendance load error:", e);
       } finally {
         setIsLoading(false);

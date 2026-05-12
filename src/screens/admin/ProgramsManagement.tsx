@@ -32,9 +32,9 @@ export default function ProgramsManagement() {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [adminStudents, setAdminStudents] = useState(0);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const [progData, deptData, statsData, coursesData, studentsData] = await Promise.all([
         getPrograms(), getDepartments(), getAdminStats(), getCourses(), getStudents()
       ]);
@@ -112,7 +112,7 @@ export default function ProgramsManagement() {
           totalCourses: courseCount,
         };
       }));
-    } catch (e) { console.log("[ProgramsManagement] Error:", e); }
+    } catch (e: any) { console.log("[ProgramsManagement] Error:", e); }
     finally { setIsLoading(false); }
   };
 
@@ -132,7 +132,7 @@ export default function ProgramsManagement() {
       setShowAddForm(false);
       Alert.alert("Success", "Program created.");
       loadData();
-    } catch (e) {
+    } catch (e: any) {
       console.error("[ProgramsManagement] Create failed:", e);
       Alert.alert("Error", e.message || "Failed to create program.");
     }
@@ -150,7 +150,7 @@ export default function ProgramsManagement() {
             loadData();
             Alert.alert("Success", "Program deleted.");
           }
-          catch (e) {
+          catch (e: any) {
             console.error("[ProgramsManagement] Delete failed:", e);
             Alert.alert("Error", e.message || "Failed to delete.");
           }

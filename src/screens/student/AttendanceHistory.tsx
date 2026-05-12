@@ -1,5 +1,6 @@
 import EmptyState, { EmptyStateWithSearch } from '../../components/EmptyState';
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, ScrollView, TextInput , RefreshControl } from "react-native";
 import { getAttendanceHistory, getStudentCourses } from "../../api/studentApi";
 import { Theme, useTheme } from "../../theme/Theme";
@@ -9,13 +10,36 @@ import BrandedRefresh from "../../components/BrandedRefresh";
 import RNFS from "react-native-fs";
 import Share from "react-native-share";
 
-export default function AttendanceHistory({ route }) {
+import type { StudentTabScreenProps } from "../../types/navigation";
+
+type AttendanceHistoryProps = StudentTabScreenProps<"AttendanceHistory">;
+
+interface AttendanceRecord {
+  id?: string;
+  status: boolean;
+  timestamp?: string;
+  date?: string;
+  createdAt?: string;
+  course?: { name: string };
+  course_name?: string;
+}
+
+interface CourseSummary {
+  course_name?: string;
+  name?: string;
+  rate: number;
+  total_sessions?: number;
+  total?: number;
+  present: number;
+}
+
+export default function AttendanceHistory({ route, navigation }: AttendanceHistoryProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'Overview');
-  const [data, setData] = useState([]);
-  const [courseSummaries, setCourseSummaries] = useState([]);
+  const [activeTab, setActiveTab] = useState<string>(route?.params?.initialTab || 'Overview');
+  const [data, setData] = useState<AttendanceRecord[]>([]);
+  const [courseSummaries, setCourseSummaries] = useState<CourseSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -27,11 +51,11 @@ export default function AttendanceHistory({ route }) {
       const historyList = Array.isArray(historyRes) ? historyRes : (historyRes.records || []);
       const sums = historyRes.summary || [];
       
-      historyList.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt) - new Date(a.timestamp || a.date || a.createdAt));
+      historyList.sort((a,b) => new Date(b.timestamp || b.date || b.createdAt).getTime() - new Date(a.timestamp || a.date || a.createdAt).getTime());
       
       setData(historyList);
       setCourseSummaries(sums);
-    } catch (e) {
+    } catch (e: any) {
       console.log("History load error:", e);
     } finally {
       setIsLoading(false);
@@ -84,12 +108,12 @@ export default function AttendanceHistory({ route }) {
       const path = `${RNFS.DownloadDirectoryPath}/attendance_history_${Date.now()}.csv`;
       await RNFS.writeFile(path, csv, "utf8");
       await Share.open({ url: `file://${path}`, type: "text/csv", title: "Export Attendance", filename: "attendance_history" });
-    } catch (e) {
+    } catch (e: any) {
       if (e?.message !== "User did not share") console.log("Export error:", e);
     }
   };
 
-  const formatShort = (dateString) => {
+  const formatShort = (dateString: string): string => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -97,7 +121,7 @@ export default function AttendanceHistory({ route }) {
     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
-  const getBarColor = (rate) => {
+  const getBarColor = (rate: number): string => {
     if (rate >= 90) return colors.success;
     if (rate >= 75) return colors.info;
     if (rate >= 50) return colors.warning;
@@ -137,7 +161,7 @@ export default function AttendanceHistory({ route }) {
             <Text style={styles.statLabel}>ATTENDANCE RATE</Text>
             <View style={styles.statIconBg}><TrendingUp size={14} color={colors.primaryForeground} /></View>
           </View>
-          <Text style={[styles.statNumber, { color: getBarColor(parseFloat(stats.rate)) }]} numberOfLines={1} adjustsFontSizeToFit>{stats.rate}%</Text>
+          <Text style={[styles.statNumber, { color: getBarColor(parseFloat(String(stats.rate))) }]} numberOfLines={1} adjustsFontSizeToFit>{stats.rate}%</Text>
         </View>
       </View>
 
@@ -300,7 +324,7 @@ export default function AttendanceHistory({ route }) {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 

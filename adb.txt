@@ -1,0 +1,5 @@
+adb -s 000323577000055 reverse tcp:8000 tcp:8000
+adb -s 000323577000055 reverse tcp:8001 tcp:8001
+adb -s 000323577000055 reverse tcp:8002 tcp:8002
+adb -s 000323577000055 reverse tcp:8003 tcp:8003
+adb -s 000323577000055 reverse tcp:3000 tcp:3000

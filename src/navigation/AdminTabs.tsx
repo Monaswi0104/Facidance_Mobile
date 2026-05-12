@@ -13,7 +13,9 @@ import ProgramsManagement from "../screens/admin/ProgramsManagement";
 import CoursesManagement from "../screens/admin/CoursesManagement";
 import StudentsManagement from "../screens/admin/StudentsManagement";
 
-const Tab = createBottomTabNavigator();
+import type { AdminTabParamList } from "../types/navigation";
+
+const Tab = createBottomTabNavigator<AdminTabParamList>();
 
 const TAB_CONFIG = [
   { name: "AdminDashboard", label: "Overview", Icon: LayoutDashboard },
@@ -77,7 +79,7 @@ export default function AdminTabs({ navigation: rootNav }) {
           const { width: screenWidth } = Dimensions.get("window");
           const scrollX = layout.x - screenWidth / 2 + layout.width / 2;
           scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated });
-        } catch (e) {
+        } catch (e: any) {
           console.log("[AdminTabs] Scroll error:", e);
         }
       }
@@ -150,12 +152,13 @@ export default function AdminTabs({ navigation: rootNav }) {
 
   return (
     <Tab.Navigator
+      id="AdminTabs"
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
-          tabNavRef.current = navigation;
+          tabNavRef.current = navigation as any;
           const state = navigation.getState();
-          return <CustomHeader navigation={navigation} state={state} />;
+          return <CustomHeader navigation={navigation as any} state={state} />;
         },
       }}
     >

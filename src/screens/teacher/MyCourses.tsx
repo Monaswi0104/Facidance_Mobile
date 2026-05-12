@@ -22,7 +22,7 @@ export default function MyCourses({ navigation }) {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    await loadData(); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
   const [search, setSearch] = useState("");
@@ -33,7 +33,7 @@ export default function MyCourses({ navigation }) {
         const data = await getTeacherCourses();
         console.log("[MyCourses] raw data:", JSON.stringify(data));
         // Handle both array and {courses: [...]} response
-        const list = Array.isArray(data) ? data : (data?.courses || []);
+        const list = Array.isArray(data) ? data : ((data as any)?.courses || []);
         console.log("[MyCourses] list length:", list.length);
         if (list.length > 0) console.log("[MyCourses] first course keys:", Object.keys(list[0]));
         setCourses(list.map((c) => ({
@@ -48,7 +48,7 @@ export default function MyCourses({ navigation }) {
           students: c._count?.students || c.student_count || c.students_count || c.total_students || 0,
           sessions: c.session_count || c._count?.attendance || c.attendance_count || c.sessions_count || c.total_sessions || 0,
         })));
-      } catch (e) { console.log("[MyCourses] Error:", e); }
+      } catch (e: any) { console.log("[MyCourses] Error:", e); }
       finally { setIsLoading(false); }
     };
 

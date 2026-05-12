@@ -38,7 +38,7 @@ export default function TeacherDashboard({ navigation }) {
         getTeacherMe().catch(() => null),
       ]);
 
-        const tempCourses = Array.isArray(coursesData) ? coursesData : (coursesData?.courses || []);
+        const tempCourses = Array.isArray(coursesData) ? coursesData : ((coursesData as any)?.courses || []);
         console.log("[TeacherDashboard] meData:", JSON.stringify(meData));
         console.log("[TeacherDashboard] user:", JSON.stringify(user));
         const teacherName = meData?.name || meData?.user?.name || user?.name;
@@ -110,13 +110,13 @@ export default function TeacherDashboard({ navigation }) {
                 });
               }
             });
-          } catch (e) {}
+          } catch (e: any) {}
         }
 
         setCourses(courseDetails);
         setAtRiskStudents(allAtRisk.sort((a, b) => a.percent - b.percent));
         setRecentActivity(activities.slice(0, 4));
-      } catch (e) { console.log("[TeacherDashboard] Error:", e); }
+      } catch (e: any) { console.log("[TeacherDashboard] Error:", e); }
       finally { setIsLoading(false); }
   }, []);
 

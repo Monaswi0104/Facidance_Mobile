@@ -88,13 +88,13 @@ export type TeacherAttendanceStackScreenProps<T extends keyof TeacherAttendanceS
 export type StudentTabParamList = {
   StudentDashboard: undefined;
   StudentCoursesTab: NavigatorScreenParams<StudentCoursesStackParamList>;
-  AttendanceHistory: undefined;
+  AttendanceHistory: { initialTab?: string } | undefined;
   ProfileUpload: undefined;
 };
 
 export type StudentCoursesStackParamList = {
   StudentCourses: undefined;
-  CourseAttendance: { courseId: string; courseName: string };
+  CourseAttendance: { course: any; tab?: string };
 };
 
 export type StudentTabScreenProps<T extends keyof StudentTabParamList> =

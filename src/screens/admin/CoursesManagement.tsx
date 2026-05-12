@@ -39,9 +39,9 @@ export default function CoursesManagement() {
     academicYear: "", semesterNumber: null, name: "", code: "", entryCode: ""
   });
 
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const [coursesData, deptsData, progsData, teachersData] = await Promise.all([
         getCourses(), getDepartments(), getPrograms(), getTeachers()
       ]);
@@ -76,7 +76,7 @@ export default function CoursesManagement() {
       setDepartments(deptsList);
       setPrograms(progsList);
       setTeachers(approvedTeachers);
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
@@ -93,7 +93,7 @@ export default function CoursesManagement() {
             loadData();
             Alert.alert("Success", "Course deleted.");
           }
-          catch (e) {
+          catch (e: any) {
             console.error("[CoursesManagement] Delete failed:", e);
             Alert.alert("Error", e.message || "Failed to delete.");
           }
@@ -120,7 +120,7 @@ export default function CoursesManagement() {
       setShowAddForm(false);
       setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "", code: "", entryCode: "" });
       loadData();
-    } catch (e) {
+    } catch (e: any) {
       console.error("[CoursesManagement] Create failed:", e);
       Alert.alert("Error", e.message || "Failed to create course.");
     } finally {
@@ -453,6 +453,7 @@ const createStyles = (colors) => StyleSheet.create({
   formCancelText: { fontSize: 12, fontWeight: "600", color: colors.mutedForeground },
   formSubmitBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   formSubmitText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
+  submitBtnDisabled: { opacity: 0.5 },
 
   // Search Bar
   searchBar: {

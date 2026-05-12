@@ -35,7 +35,7 @@ const lightColors = {
   navPillBg: '#f8fafc',
   navPillBorder: '#e2e8f0',
   navPillText: '#64748b',
-  statusBarStyle: 'dark-content' as const,
+  statusBarStyle: 'dark-content' as 'light-content' | 'dark-content',
   // Functional
   success: '#10B981',
   successLight: 'rgba(16,185,129,0.15)',
@@ -90,7 +90,7 @@ const darkColors = {
   navPillBg: '#1e293b',
   navPillBorder: '#334155',
   navPillText: '#94a3b8',
-  statusBarStyle: 'light-content' as const,
+  statusBarStyle: 'light-content' as 'light-content' | 'dark-content',
   // Functional
   success: '#34D399',
   successLight: 'rgba(52,211,153,0.15)',

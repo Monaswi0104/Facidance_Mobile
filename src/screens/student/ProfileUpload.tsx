@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, Dimensions, RefreshControl, Platform, PermissionsAndroid } from "react-native";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
@@ -9,21 +10,49 @@ import { ProfileSkeleton } from "../../components/SkeletonLoader";
 import haptic from "../../utils/haptics";
 import BrandedRefresh from "../../components/BrandedRefresh";
 
+import type { StudentTabScreenProps } from "../../types/navigation";
+
+type ProfileUploadProps = StudentTabScreenProps<"ProfileUpload">;
+
+interface StudentInfo {
+  id?: string;
+  studentId?: string;
+  name?: string;
+  email?: string;
+  student?: {
+    user?: { name?: string; email?: string };
+    joined_at?: string;
+    created_at?: string;
+    createdAt?: string;
+    program_name?: string;
+    program?: { name?: string; department?: { name?: string } };
+    department_name?: string;
+    face_embedding?: any;
+    hasFaceEmbedding?: boolean;
+  };
+}
+
+interface ImagesState {
+  front: string | null;
+  left: string | null;
+  right: string | null;
+}
+
 const uploadSteps = [
   { key: "front", label: "Front View", desc: "Look straight at the camera" },
   { key: "left", label: "Left Profile", desc: "Turn your head slightly to the left" },
   { key: "right", label: "Right Profile", desc: "Turn your head slightly to the right" },
 ];
 
-export default function ProfileUpload() {
+export default function ProfileUpload({ navigation }: ProfileUploadProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const [images, setImages] = useState({ front: null, left: null, right: null });
+  const [images, setImages] = useState<ImagesState>({ front: null, left: null, right: null });
   const [isUploading, setIsUploading] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
-  
-  const [studentInfo, setStudentInfo] = useState(null);
+
+  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -32,7 +61,7 @@ export default function ProfileUpload() {
       if (showLoading) setIsLoading(true);
       const meData = await getStudentMe();
       setStudentInfo(meData);
-    } catch (e) {
+    } catch (e: any) {
       console.log("Could not load student info:", e);
     } finally {
       setIsLoading(false);
@@ -94,7 +123,7 @@ export default function ProfileUpload() {
 
   const name = studentInfo?.name || studentInfo?.student?.user?.name || "Student Name";
   const email = studentInfo?.email || studentInfo?.student?.user?.email || "student@example.com";
-  const joinDateRaw = studentInfo?.student?.joined_at || studentInfo?.created_at || studentInfo?.student?.createdAt;
+  const joinDateRaw = studentInfo?.student?.joined_at || (studentInfo as any)?.created_at || studentInfo?.student?.createdAt;
   const program = studentInfo?.student?.program_name || studentInfo?.student?.program?.name || "Program Name";
   const department = studentInfo?.student?.department_name || studentInfo?.student?.program?.department?.name || "Department";
   const joinedDate = joinDateRaw ? new Date(joinDateRaw).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "Unknown";
@@ -300,7 +329,7 @@ export default function ProfileUpload() {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 

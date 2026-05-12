@@ -31,7 +31,7 @@ export default function StudentEnrollment() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    await loadData(); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
   const [isImporting, setIsImporting] = useState(false);
@@ -47,7 +47,7 @@ export default function StudentEnrollment() {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
-        const list = Array.isArray(data) ? data : (data?.courses || []);
+        const list = Array.isArray(data) ? data : ((data as any)?.courses || []);
         setCourses(list);
         
         // Fetch all programs from the system
@@ -60,9 +60,9 @@ export default function StudentEnrollment() {
           try {
             const stuData = await getCourseStudents(c.id);
             const stuList = Array.isArray(stuData) ? stuData : [];
-            stuList.forEach((s) => {
+            stuList.forEach((s: any) => {
               const sid = s.id || s.userId;
-              const existing = allStudents.find((x) => x.id === sid);
+              const existing = allStudents.find((x: any) => x.id === sid);
               if (existing) {
                 // Student already tracked — just add this course to their list
                 if (!existing.courseIds.includes(c.id)) existing.courseIds.push(c.id);
@@ -82,10 +82,10 @@ export default function StudentEnrollment() {
                 });
               }
             });
-          } catch (e) {}
+          } catch (e: any) {}
         }
         setStudents(allStudents);
-      } catch (e) { console.log(e); }
+      } catch (e: any) { console.log(e); }
       finally { setIsLoading(false); }
     };
 
@@ -229,9 +229,9 @@ export default function StudentEnrollment() {
         try {
           const stuData = await getCourseStudents(c.id);
           const stuList = Array.isArray(stuData) ? stuData : [];
-          stuList.forEach((s) => {
+          stuList.forEach((s: any) => {
             const sid = s.id || s.userId;
-            const existing = allStudents.find((x) => x.id === sid);
+            const existing = allStudents.find((x: any) => x.id === sid);
             if (existing) {
               if (!existing.courseIds.includes(c.id)) existing.courseIds.push(c.id);
             } else {
@@ -250,10 +250,10 @@ export default function StudentEnrollment() {
               });
             }
           });
-        } catch (e) {}
+        } catch (e: any) {}
       }
       setStudents(allStudents);
-    } catch (e) {
+    } catch (e: any) {
       console.log("Import error:", e);
       Alert.alert("Error", e.message || "Could not read or parse file.");
     } finally {

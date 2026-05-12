@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, ScrollView,
@@ -10,10 +11,14 @@ import { useTheme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
 import haptic from "../../utils/haptics";
 
+import type { RootStackScreenProps } from "../../types/navigation";
+
+type LoginScreenProps = RootStackScreenProps<"Login">;
+
 const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { colors, isDark, mode, toggleTheme } = useTheme();
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const insets = useSafeAreaInsets();
@@ -27,7 +32,7 @@ export default function LoginScreen({ navigation }) {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  const validateEmail = (emailStr) => {
+  const validateEmail = (emailStr: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
   };
 
@@ -60,7 +65,7 @@ export default function LoginScreen({ navigation }) {
       } else if (data.role === "STUDENT") {
         navigation.reset({ index: 0, routes: [{ name: "StudentTabs" }] });
       }
-    } catch (error) {
+    } catch (error: any) {
       haptic.error();
       Alert.alert("Login Failed", error.message || "Invalid credentials. Please try again.");
     } finally {
@@ -247,7 +252,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const createStyles = (colors, isDark) => StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   screenWrapper: { flex: 1, backgroundColor: colors.primary },
   scrollContent: { flexGrow: 1 },
 

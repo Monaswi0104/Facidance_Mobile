@@ -28,9 +28,9 @@ export default function DepartmentsManagement() {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const [data, progsData, teachersData] = await Promise.all([
         getDepartments(),
         getPrograms(),
@@ -63,7 +63,7 @@ export default function DepartmentsManagement() {
           }),
         };
       }));
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
@@ -82,7 +82,7 @@ export default function DepartmentsManagement() {
       setShowAddForm(false);
       Alert.alert("Success", "Department created.");
       loadData();
-    } catch (e) {
+    } catch (e: any) {
       console.error("[DepartmentsManagement] Create failed:", e);
       Alert.alert("Error", e.message || "Failed to create department.");
     }
@@ -100,7 +100,7 @@ export default function DepartmentsManagement() {
             loadData();
             Alert.alert("Success", "Department deleted.");
           }
-          catch (e) {
+          catch (e: any) {
             console.error("[DepartmentsManagement] Delete failed:", e);
             Alert.alert("Error", e.message || "Failed to delete.");
           }

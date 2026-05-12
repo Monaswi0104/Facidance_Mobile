@@ -33,9 +33,9 @@ export default function TeachersManagement() {
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const loadTeachers = async () => {
+  const loadTeachers = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const [teacherData, deptData, coursesData, studentsData] = await Promise.all([getTeachers(), getDepartments(), getCourses(), getStudents()]);
       const all = teacherData.teachers || teacherData || [];
       const allCourses = coursesData.courses || coursesData || [];
@@ -81,7 +81,7 @@ export default function TeachersManagement() {
       setApproved(app);
       setPending(pen);
       setStats({ total: all.length, pending: pen.length, approved: app.length });
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
@@ -108,7 +108,7 @@ export default function TeachersManagement() {
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
       loadTeachers();
-    } catch (e) { 
+    } catch (e: any) { 
       try {
         // Fallback: Backend sometimes returns 500 (e.g. SMTP email failure) but still approves the teacher in DB.
         // Let's verify if the teacher was actually approved before showing an error.
@@ -142,7 +142,7 @@ export default function TeachersManagement() {
             await deleteTeacher(teacher.userId || teacher.id);
             Alert.alert("Done", `${teacher.name} removed.`);
             loadTeachers();
-          } catch (e) {
+          } catch (e: any) {
             console.error("[TeachersManagement] Delete failed:", e);
             Alert.alert("Error", e.message || "Failed to delete.");
           }

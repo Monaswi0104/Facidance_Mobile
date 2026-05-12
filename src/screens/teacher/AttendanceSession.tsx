@@ -16,7 +16,7 @@ import {
   ScrollView, ActivityIndicator, Dimensions, Alert, Image, TextInput,
   Platform, PermissionsAndroid
 } from "react-native";
-import { Camera } from "react-native-camera-kit";
+import { Camera, CameraType } from "react-native-camera-kit";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import {
@@ -92,14 +92,14 @@ export default function AttendanceSession({ route, navigation }) {
       // Load students with face data status (like website's fetchStudents)
       try {
         const data = await getAttendanceStudents(course.id);
-        const list = Array.isArray(data) ? data : (data?.students || []);
+        const list = Array.isArray(data) ? data : ((data as any)?.students || []);
         setStudents(list.map((s) => ({
           id: s.id,
           name: s.name || s.user?.name || "Student",
           email: s.email || s.user?.email || "",
           hasFaceData: s.has_face_data || s.hasFaceData || false,
         })));
-      } catch (e) { console.log("Failed to load students:", e); }
+      } catch (e: any) { console.log("Failed to load students:", e); }
       // Load history
       fetchAttendanceHistory(course.id);
     })();
@@ -156,7 +156,7 @@ export default function AttendanceSession({ route, navigation }) {
       } else {
         setAttendanceHistory({});
       }
-    } catch (e) { console.log("History error:", e); }
+    } catch (e: any) { console.log("History error:", e); }
     finally { setIsLoadingHistory(false); }
   }
 
@@ -193,7 +193,7 @@ export default function AttendanceSession({ route, navigation }) {
             const finalUri = image.uri.startsWith("file://") ? image.uri : `file://${image.uri}`;
             frames.push({ uri: finalUri, type: "image/jpeg", name: `frame_0.jpg` });
           }
-        } catch (e) { 
+        } catch (e: any) { 
           console.log(`Camera capture failed:`, e); 
         }
       }
@@ -232,7 +232,7 @@ export default function AttendanceSession({ route, navigation }) {
         return next;
       });
 
-    } catch (e) {
+    } catch (e: any) {
       console.log("Capture/recognize error:", e);
     } finally {
       setIsCapturing(false);
@@ -347,7 +347,7 @@ export default function AttendanceSession({ route, navigation }) {
         setCurrentRecognition(null);
         fetchAttendanceHistory(course.id);
       }}]);
-    } catch (e) {
+    } catch (e: any) {
       console.log("Submit error:", e);
       Alert.alert("Submission Failed", e.message || "Please try again.");
     } finally {
@@ -473,7 +473,7 @@ export default function AttendanceSession({ route, navigation }) {
                 <Camera
                   ref={cameraRef}
                   style={s.camera}
-                  cameraType="back"
+                  cameraType={CameraType.Back}
                   flashMode="off"
                 />
               )
@@ -626,7 +626,7 @@ export default function AttendanceSession({ route, navigation }) {
                 const student = students.find((st) => st.id === sid);
                 if (!student) return null;
                 return (
-                  <View key={sid} style={s.recognizedRow}>
+                  <View key={String(sid)} style={s.recognizedRow}>
                     <View style={s.recognizedAvatar}>
                       <CheckCircle size={16} color={colors.success} />
                     </View>

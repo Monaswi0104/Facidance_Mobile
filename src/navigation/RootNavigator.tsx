@@ -84,7 +84,7 @@ export default function RootNavigator(){
 
 return(
 
-<NavigationContainer ref={navigationRef} linking={linking}>
+<NavigationContainer ref={navigationRef} linking={linking as any}>
 
 <AuthNavigator/>
 

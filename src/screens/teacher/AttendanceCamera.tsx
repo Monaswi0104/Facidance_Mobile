@@ -28,7 +28,7 @@ export default function AttendanceCamera({ navigation }) {
       try {
         setIsLoading(true);
         const data = await getTeacherCourses();
-        const list = Array.isArray(data) ? data : (data?.courses || []);
+        const list = Array.isArray(data) ? data : ((data as any)?.courses || []);
         setCourses(list.map((c) => ({
           id: c.id, 
           name: c.name || c.course_name || "Untitled", 
@@ -39,7 +39,7 @@ export default function AttendanceCamera({ navigation }) {
           year: c.academic_year || c.year || c.semester?.academicYear?.name || "",
           students: c.student_count || c._count?.students || c.students_count || c.total_students || 0,
         })));
-      } catch (e) { console.log(e); }
+      } catch (e: any) { console.log(e); }
       finally { setIsLoading(false); }
     };
     load();
@@ -52,13 +52,13 @@ export default function AttendanceCamera({ navigation }) {
       const list = Array.isArray(data) ? data : [];
       setStudents(list.map((s) => ({
         id: s.id,
-        name: s.user?.name || "Student",
-        email: s.user?.email || "—",
-        hasPhotos: !!s.faceEmbedding || s.photosUploaded || false,
-        trained: !!s.faceEmbedding,
+        name: (s as any).user?.name || s.name || "Student",
+        email: (s as any).user?.email || s.email || "—",
+        hasPhotos: !!(s as any).faceEmbedding || (s as any).photosUploaded || false,
+        trained: !!(s as any).faceEmbedding,
         photoCount: s.photoCount || 0,
       })));
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoadingStudents(false); }
   };
 
@@ -81,7 +81,7 @@ export default function AttendanceCamera({ navigation }) {
       Alert.alert("Training Complete", "Model training has been completed for all students.");
       // Reload students to get updated trained status
       loadStudents(selectedCourse.id);
-    } catch (e) {
+    } catch (e: any) {
       console.log("Training error:", e);
       Alert.alert("Error", e.message || "Failed to start training.");
     } finally { setIsTraining(false); }

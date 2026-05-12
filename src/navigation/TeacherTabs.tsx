@@ -15,8 +15,11 @@ import AttendanceSession from "../screens/teacher/AttendanceSession";
 import StudentEnrollment from "../screens/teacher/StudentEnrollment";
 import AttendanceReport from "../screens/teacher/AttendanceReport";
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+import type { TeacherTabParamList, TeacherCoursesStackParamList, TeacherAttendanceStackParamList } from "../types/navigation";
+
+const Tab = createBottomTabNavigator<TeacherTabParamList>();
+const CoursesStackNav = createNativeStackNavigator<TeacherCoursesStackParamList>();
+const AttendanceStackNav = createNativeStackNavigator<TeacherAttendanceStackParamList>();
 
 const TAB_CONFIG = [
   { name: "TeacherDashboard", label: "Overview", Icon: LayoutDashboard },
@@ -29,20 +32,20 @@ const TAB_CONFIG = [
 // Stack for MyCourses with nested CourseDetails
 function CoursesStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
-      <Stack.Screen name="MyCourses" component={MyCourses} />
-      <Stack.Screen name="CourseDetails" component={CourseDetails} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
-    </Stack.Navigator>
+    <CoursesStackNav.Navigator id="CoursesStack" screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
+      <CoursesStackNav.Screen name="MyCourses" component={MyCourses} />
+      <CoursesStackNav.Screen name="CourseDetails" component={CourseDetails} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
+    </CoursesStackNav.Navigator>
   );
 }
 
 // Stack for AttendanceCamera with nested AttendanceSession
 function AttendanceStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
-      <Stack.Screen name="AttendanceCamera" component={AttendanceCamera} />
-      <Stack.Screen name="AttendanceSession" component={AttendanceSession} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
-    </Stack.Navigator>
+    <AttendanceStackNav.Navigator id="AttendanceStack" screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
+      <AttendanceStackNav.Screen name="AttendanceCamera" component={AttendanceCamera} />
+      <AttendanceStackNav.Screen name="AttendanceSession" component={AttendanceSession} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
+    </AttendanceStackNav.Navigator>
   );
 }
 
@@ -99,7 +102,7 @@ export default function TeacherTabs({ navigation: rootNav }) {
           const { width: screenWidth } = Dimensions.get("window");
           const scrollX = layout.x - screenWidth / 2 + layout.width / 2;
           scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated });
-        } catch (e) {
+        } catch (e: any) {
           console.log("[TeacherTabs] Scroll error:", e);
         }
       }
@@ -172,12 +175,13 @@ export default function TeacherTabs({ navigation: rootNav }) {
 
   return (
     <Tab.Navigator
+      id="TeacherTabs"
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
-          tabNavRef.current = navigation;
+          tabNavRef.current = navigation as any;
           const state = navigation.getState();
-          return <CustomHeader navigation={navigation} state={state} />;
+          return <CustomHeader navigation={navigation as any} state={state} />;
         },
       }}
     >

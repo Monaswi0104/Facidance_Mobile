@@ -13,8 +13,10 @@ import AttendanceHistory from "../screens/student/AttendanceHistory";
 import CourseAttendance from "../screens/student/CourseAttendance";
 import ProfileUpload from "../screens/student/ProfileUpload";
 
-const Tab = createBottomTabNavigator();
-const CoursesStack = createNativeStackNavigator();
+import type { StudentTabParamList, StudentCoursesStackParamList } from "../types/navigation";
+
+const Tab = createBottomTabNavigator<StudentTabParamList>();
+const CoursesStack = createNativeStackNavigator<StudentCoursesStackParamList>();
 
 const TAB_CONFIG = [
   { name: "StudentDashboard", label: "Overview", Icon: LayoutDashboard },
@@ -26,7 +28,7 @@ const TAB_CONFIG = [
 // Nested stack for Courses tab: MyCourses -> CourseAttendance detail
 function CoursesStackScreen() {
   return (
-    <CoursesStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
+    <CoursesStack.Navigator id="StudentCoursesStack" screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
       <CoursesStack.Screen name="StudentCourses" component={MyCourses} />
       <CoursesStack.Screen name="CourseAttendance" component={CourseAttendance} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
     </CoursesStack.Navigator>
@@ -86,7 +88,7 @@ export default function StudentTabs({ navigation: rootNav }) {
           const { width: screenWidth } = Dimensions.get("window");
           const scrollX = layout.x - screenWidth / 2 + layout.width / 2;
           scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated });
-        } catch (e) {
+        } catch (e: any) {
           console.log("[StudentTabs] Scroll error:", e);
         }
       }
@@ -159,12 +161,13 @@ export default function StudentTabs({ navigation: rootNav }) {
 
   return (
     <Tab.Navigator
+      id="StudentTabs"
       tabBar={() => null}
       screenOptions={{
         header: ({ navigation }) => {
-          tabNavRef.current = navigation;
+          tabNavRef.current = navigation as any;
           const state = navigation.getState();
-          return <CustomHeader navigation={navigation} state={state} />;
+          return <CustomHeader navigation={navigation as any} state={state} />;
         },
       }}
     >

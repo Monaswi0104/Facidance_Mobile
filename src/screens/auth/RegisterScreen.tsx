@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
@@ -10,10 +11,14 @@ import { useTheme } from "../../theme/Theme";
 import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
 import haptic from "../../utils/haptics";
 
+import type { RootStackScreenProps } from "../../types/navigation";
+
+type RegisterScreenProps = RootStackScreenProps<"Register">;
+
 const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
 
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const { colors, isDark, mode, toggleTheme } = useTheme();
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const insets = useSafeAreaInsets();
@@ -29,7 +34,7 @@ export default function RegisterScreen({ navigation }) {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  const validateEmail = (emailStr) => {
+  const validateEmail = (emailStr: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
   };
 
@@ -66,7 +71,7 @@ export default function RegisterScreen({ navigation }) {
         "Your teacher account is pending admin approval. You'll be able to login once approved.",
         [{ text: "OK", onPress: () => navigation.navigate("Login") }]
       );
-    } catch (error) {
+    } catch (error: any) {
       haptic.error();
       Alert.alert("Registration Failed", error.message || "Something went wrong. Please try again.");
     } finally {
@@ -263,7 +268,7 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-const createStyles = (colors, isDark) => StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   screenWrapper: { flex: 1, backgroundColor: colors.primary },
   scrollContent: { flexGrow: 1 },
 

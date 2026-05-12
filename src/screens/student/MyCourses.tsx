@@ -10,7 +10,11 @@ import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width } = Dimensions.get('window');
 
-export default function MyCourses({ navigation }) {
+import type { StudentCoursesStackScreenProps } from "../../types/navigation";
+
+type MyCoursesProps = StudentCoursesStackScreenProps<"StudentCourses">;
+
+export default function MyCourses({ navigation }: MyCoursesProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
@@ -21,7 +25,7 @@ export default function MyCourses({ navigation }) {
     if (showLoading) setIsLoading(true);
     try {
       const data = await getStudentCourses();
-      const list = Array.isArray(data) ? data : (data?.courses || []);
+      const list = Array.isArray(data) ? data : ((data as any)?.courses || []);
       setCourses(list.map(c => ({
         id: c.id,
         name: c.name,
@@ -36,7 +40,7 @@ export default function MyCourses({ navigation }) {
         program: c.program_name || c.semester?.academicYear?.program?.name || "",
         department: c.department_name || c.semester?.academicYear?.program?.department?.name || "",
       })));
-    } catch (e) {
+    } catch (e: any) {
       console.log(e);
     } finally {
       setIsLoading(false);
@@ -86,7 +90,7 @@ export default function MyCourses({ navigation }) {
     </>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.courseCard}
       activeOpacity={0.7}

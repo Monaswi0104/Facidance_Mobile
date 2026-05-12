@@ -14,7 +14,11 @@ import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width } = Dimensions.get("window");
 
-export default function AdminDashboard({ navigation }) {
+import type { AdminTabScreenProps } from "../../types/navigation";
+
+type AdminDashboardProps = AdminTabScreenProps<"AdminDashboard">;
+
+export default function AdminDashboard({ navigation }: AdminDashboardProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0, attendance_rate: 0, graduated: 0 });
@@ -104,7 +108,7 @@ export default function AdminDashboard({ navigation }) {
         });
         setProgramDist(dist);
       }
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
@@ -120,7 +124,7 @@ export default function AdminDashboard({ navigation }) {
     const backAction = () => {
       Alert.alert("Logout", "Would you like to logout?", [
         { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: async () => { await clearAuth(); navigation.reset({ index: 0, routes: [{ name: "Login" }] }); } },
+        { text: "Logout", style: "destructive", onPress: async () => { await clearAuth(); (navigation as any).reset({ index: 0, routes: [{ name: "Login" }] }); } },
       ]);
       return true;
     };
@@ -128,9 +132,9 @@ export default function AdminDashboard({ navigation }) {
     return () => bh.remove();
   }, []);
 
-  const statCards = [
+  const statCards: { label: string, value: string | number, sub: string, subColor: string, icon: any, screen: any }[] = [
     { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: colors.success, icon: <Users size={16} color={colors.primaryForeground} />, screen: "TeachersManagement" },
-    { label: "TOTAL STUDENTS", value: stats.students, sub: `${stats.active_students ?? stats.students} active`, subColor: colors.success, icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "TOTAL STUDENTS", value: stats.students, sub: `${(stats as any).active_students ?? stats.students} active`, subColor: colors.success, icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
     { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: colors.mutedForeground, icon: <Building2 size={16} color={colors.primaryForeground} />, screen: "DepartmentsManagement" },
     { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: colors.success, icon: <BookOpen size={16} color={colors.primaryForeground} />, screen: "CoursesManagement" },
     { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? colors.success : colors.warning, icon: <TrendingUp size={16} color={colors.primaryForeground} />, screen: null },
@@ -157,7 +161,7 @@ export default function AdminDashboard({ navigation }) {
             <Text style={styles.subtitle}>Institution-wide overview — teachers, students, departments & analytics</Text>
           </View>
           <View style={styles.headerBtns}>
-            <TouchableOpacity style={styles.headerBtnOutline} onPress={loadData} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.headerBtnOutline} onPress={() => loadData()} activeOpacity={0.7}>
               <RefreshCw size={13} color={colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnText}>Refresh</Text>
             </TouchableOpacity>
@@ -315,7 +319,7 @@ export default function AdminDashboard({ navigation }) {
             { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={18} color={colors.primaryDark} /> },
             { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={18} color={colors.primaryDark} /> },
           ].map((action, i) => (
-            <TouchableOpacity key={i} style={styles.navRow} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen)}>
+            <TouchableOpacity key={i} style={styles.navRow} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen as any)}>
               <View style={styles.navIconBg}>{action.icon}</View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.navTitle}>{action.title}</Text>

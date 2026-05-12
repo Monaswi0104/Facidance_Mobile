@@ -28,7 +28,7 @@ export default function AttendanceReport() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
+    await loadData(); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
   const [isReportLoading, setIsReportLoading] = useState(false);
@@ -51,10 +51,10 @@ export default function AttendanceReport() {
       try {
         setIsLoading(true);
         const result = await getTeacherCourses();
-        const list = Array.isArray(result) ? result : (result?.courses || []);
+        const list = Array.isArray(result) ? result : ((result as any)?.courses || []);
         setCourses(list);
 
-      } catch (e) { console.log(e); }
+      } catch (e: any) { console.log(e); }
       finally { setIsLoading(false); }
     };
 
@@ -77,7 +77,7 @@ export default function AttendanceReport() {
       // The report API returns [{studentName, studentEmail, totalSessions, attended, percentage}]
       const reportList = Array.isArray(reportData) ? reportData : (reportData?.students || []);
       // Student details for enriching with program, face, joined date
-      const stuList = Array.isArray(studentData) ? studentData : (studentData?.students || studentData || []);
+      const stuList = Array.isArray(studentData) ? studentData : ((studentData as any)?.students || studentData || []);
 
       // Build email lookup from enrolled students
       const emailLookup = {};
@@ -110,7 +110,7 @@ export default function AttendanceReport() {
       parsed.sort((a, b) => b.percent - a.percent);
       setData(parsed);
       setReportGenerated(true);
-    } catch (e) {
+    } catch (e: any) {
       console.log("[AttendanceReport] Error:", e);
       setData([]);
     } finally {
@@ -138,7 +138,7 @@ export default function AttendanceReport() {
         type: "text/csv",
         title: "Export Attendance Report",
       });
-    } catch (e) {
+    } catch (e: any) {
       if (e?.message !== "User did not share") Alert.alert("Export Failed", "Could not export CSV.");
     }
   };

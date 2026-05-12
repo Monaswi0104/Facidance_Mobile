@@ -12,7 +12,14 @@ import haptic from "../utils/haptics";
  * Animated floating icon with decorative rings.
  * Creates a premium "illustrated" feel using only vector icons + animations.
  */
-function AnimatedIllustration({ Icon, colors }) {
+import type { LucideIcon } from "lucide-react-native";
+
+interface AnimatedIllustrationProps {
+  Icon: LucideIcon;
+  colors: any;
+}
+
+function AnimatedIllustration({ Icon, colors }: AnimatedIllustrationProps) {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -99,6 +106,16 @@ function AnimatedIllustration({ Icon, colors }) {
 /**
  * Main EmptyState — animated illustration with title, subtitle, and optional action.
  */
+interface EmptyStateProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+  actionText?: string;
+  onAction?: () => void;
+  actionIcon?: LucideIcon;
+  showImage?: boolean;
+}
+
 export default function EmptyState({
   icon: Icon = Inbox,
   title = "No Data Found",
@@ -106,7 +123,7 @@ export default function EmptyState({
   actionText,
   onAction,
   actionIcon: ActionIcon = RefreshCw,
-}) {
+}: EmptyStateProps) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
 
@@ -128,12 +145,20 @@ export default function EmptyState({
 /**
  * EmptyStateWithSearch — for filtered/search states that returned no results.
  */
+interface EmptyStateWithSearchProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+  onClearFilters?: () => void;
+  showImage?: boolean;
+}
+
 export function EmptyStateWithSearch({
   icon: Icon = Search,
   title = "No Results Found",
   subtitle = "Try adjusting your search terms or filters.",
   onClearFilters,
-}) {
+}: EmptyStateWithSearchProps) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
 
@@ -154,6 +179,15 @@ export function EmptyStateWithSearch({
 /**
  * EmptyStateWithCTA — prominent call-to-action for first-time/empty screens.
  */
+interface EmptyStateWithCTAProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaIcon?: LucideIcon;
+  onCTA?: () => void;
+}
+
 export function EmptyStateWithCTA({
   icon: Icon = Plus,
   title = "Get Started",
@@ -161,7 +195,7 @@ export function EmptyStateWithCTA({
   ctaText = "Add New",
   ctaIcon: CTAIcon = Plus,
   onCTA,
-}) {
+}: EmptyStateWithCTAProps) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
 
@@ -183,11 +217,17 @@ export function EmptyStateWithCTA({
 /**
  * EmptyStateCompact — smaller version for inline use within cards/sections.
  */
+interface EmptyStateCompactProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+}
+
 export function EmptyStateCompact({
   icon: Icon = Inbox,
   title = "Nothing here yet",
   subtitle = "",
-}) {
+}: EmptyStateCompactProps) {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -214,12 +254,19 @@ export function EmptyStateCompact({
 /**
  * EmptyStateWithActions — multiple action buttons.
  */
+interface EmptyStateWithActionsProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+  actions?: { text: string; icon?: LucideIcon; onPress?: () => void }[];
+}
+
 export function EmptyStateWithActions({
   icon: Icon = BookOpen,
   title = "No Data Found",
   subtitle = "There's nothing to display here yet.",
   actions = [],
-}) {
+}: EmptyStateWithActionsProps) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
 
@@ -245,11 +292,17 @@ export function EmptyStateWithActions({
 /**
  * EmptyStateWithIllustration — for read-only empty states with no actions.
  */
+interface EmptyStateWithIllustrationProps {
+  icon?: LucideIcon;
+  title?: string;
+  subtitle?: string;
+}
+
 export function EmptyStateWithIllustration({
   icon: Icon = BookOpen,
   title = "No Data Found",
   subtitle = "There's nothing to display here yet.",
-}) {
+}: EmptyStateWithIllustrationProps) {
   const { colors } = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
 

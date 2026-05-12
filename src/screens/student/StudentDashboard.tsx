@@ -1,4 +1,5 @@
 import React, {  useState, useCallback, useEffect , useMemo } from "react";
+
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   SafeAreaView, Dimensions, BackHandler, Alert, RefreshControl
@@ -11,9 +12,13 @@ import { BookOpen, BarChart3, Clock, ArrowUpRight, CheckCircle, Lightbulb, Alert
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
 
+import type { StudentTabScreenProps } from "../../types/navigation";
+
+type StudentDashboardProps = StudentTabScreenProps<"StudentDashboard">;
+
 const { width } = Dimensions.get('window');
 
-export default function StudentDashboard({ navigation }) {
+export default function StudentDashboard({ navigation }: StudentDashboardProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -28,7 +33,7 @@ export default function StudentDashboard({ navigation }) {
       const [courses, user, statsRes] = await Promise.all([getStudentCourses(), getUser(), getStudentStats()]);
       if (user?.name) setUserName(user.name);
       
-      const courseList = Array.isArray(courses) ? courses : (courses?.courses || []);
+      const courseList = Array.isArray(courses) ? courses : ((courses as any)?.courses || []);
       const rawPct = statsRes?.attendance_percentage ?? 0;
       
       setStats({
@@ -38,7 +43,7 @@ export default function StudentDashboard({ navigation }) {
         attended: statsRes?.total_present ?? 0,
         totalSessions: 0,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.log("Student dashboard load error:", e);
     } finally {
       setIsLoading(false);
@@ -68,7 +73,7 @@ export default function StudentDashboard({ navigation }) {
             style: "destructive",
             onPress: async () => {
               await clearAuth();
-              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+              (navigation as any).reset({ index: 0, routes: [{ name: "Login" }] });
             },
           },
         ]
@@ -79,7 +84,7 @@ export default function StudentDashboard({ navigation }) {
     return () => bh.remove();
   }, []);
 
-  const getAttendanceColor = (raw) => {
+  const getAttendanceColor = (raw: number): string => {
     if (raw >= 75) return colors.success;
     if (raw >= 50) return colors.warning;
     return colors.destructive;
@@ -232,7 +237,7 @@ export default function StudentDashboard({ navigation }) {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 

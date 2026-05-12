@@ -38,9 +38,9 @@ export default function StudentsManagement() {
   const [editForm, setEditForm] = useState({ name: "", email: "", programId: "" });
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       const data = await getStudents();
       const list = data.students || data || [];
       const progs = data.programs || [];
@@ -71,7 +71,7 @@ export default function StudentsManagement() {
           createdAt: u.joined_at || u.joinedAt || u.createdAt || new Date(),
         };
       }));
-    } catch (e) { console.log(e); }
+    } catch (e: any) { console.log(e); }
     finally { setIsLoading(false); }
   };
 
@@ -126,7 +126,7 @@ export default function StudentsManagement() {
       await updateStudent(selectedStudent.id, editForm);
       await loadData();
       closeModal();
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to update student.");
     } finally {
       setIsActionLoading(false);
@@ -139,7 +139,7 @@ export default function StudentsManagement() {
       await markStudentGraduated(selectedStudent.id);
       await loadData();
       closeModal();
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to graduate student.");
     } finally {
       setIsActionLoading(false);
@@ -155,7 +155,7 @@ export default function StudentsManagement() {
       await loadData();
       closeModal();
       Alert.alert("Success", "Student has been reactivated successfully.");
-    } catch (e) {
+    } catch (e: any) {
       console.error("[StudentsManagement] Activate error:", e);
       Alert.alert("Error", e.message || "Failed to activate student. Please try again.");
     } finally {
@@ -171,7 +171,7 @@ export default function StudentsManagement() {
       await loadData();
       closeModal();
       Alert.alert("Success", "Student deleted.");
-    } catch (e) {
+    } catch (e: any) {
       console.error("[StudentsManagement] Delete failed:", e);
       Alert.alert("Error", e.message || "Failed to delete student.");
     } finally {
