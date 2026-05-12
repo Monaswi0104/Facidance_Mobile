@@ -1,5 +1,5 @@
 /**
- * haptics.js
+ * haptics.ts
  *
  * Centralized haptic feedback utility.
  * Provides semantic methods so UI code reads naturally:
@@ -16,12 +16,27 @@
 
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 
-const options = {
+interface HapticOptions {
+  enableVibrateFallback: boolean;
+  ignoreAndroidSystemSettings: boolean;
+}
+
+const options: HapticOptions = {
   enableVibrateFallback: true,  // Use Vibration API as fallback on older Android
   ignoreAndroidSystemSettings: false,
 };
 
-const haptic = {
+interface HapticInterface {
+  light: () => void;
+  medium: () => void;
+  heavy: () => void;
+  success: () => void;
+  warning: () => void;
+  error: () => void;
+  selection: () => void;
+}
+
+const haptic: HapticInterface = {
   /** Subtle tap — tab switches, toggles, minor selections */
   light: () => {
     try { ReactNativeHapticFeedback.trigger("impactLight", options); } catch (_) {}

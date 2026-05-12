@@ -1,35 +1,35 @@
 import { apiFetch, ADMIN_URL } from "./config";
 
 // Dashboard stats
-export async function getAdminStats() {
+export async function getAdminStats(): Promise<any> {
   const res = await apiFetch("/admin/stats", {}, ADMIN_URL);
   return await res.json();
 }
 
 // Analytics – student count per program
-export async function getProgramDistribution() {
+export async function getProgramDistribution(): Promise<any> {
   const res = await apiFetch("/admin/analytics/program-distribution", {}, ADMIN_URL);
   return await res.json();
 }
 
 // Analytics – courses and students per teacher
-export async function getTeacherLoad() {
+export async function getTeacherLoad(): Promise<any> {
   const res = await apiFetch("/admin/analytics/teacher-load", {}, ADMIN_URL);
   return await res.json();
 }
 
 // Teachers
-export async function getTeachers() {
+export async function getTeachers(): Promise<any> {
   const res = await apiFetch("/admin/teachers", {}, ADMIN_URL);
   return await res.json();
 }
 
-export async function approveTeacher(userId, departmentId) {
+export async function approveTeacher(userId: string, departmentId: string): Promise<any> {
   const res = await apiFetch("/admin/approve-teacher", {
     method: "POST",
     body: JSON.stringify({ teacher_id: userId, department_id: departmentId }),
   }, ADMIN_URL);
-  
+
   if (!res.ok) {
     let errorMsg = "Failed to approve teacher";
     try {
@@ -46,7 +46,7 @@ export async function approveTeacher(userId, departmentId) {
   }
 }
 
-export async function deleteTeacher(id) {
+export async function deleteTeacher(id: string): Promise<any> {
   console.log("[adminApi] Deleting teacher with id:", id);
   const res = await apiFetch(`/admin/teachers/${id}`, {
     method: "DELETE",
@@ -60,12 +60,12 @@ export async function deleteTeacher(id) {
 }
 
 // Departments
-export async function getDepartments() {
+export async function getDepartments(): Promise<any> {
   const res = await apiFetch("/admin/departments", {}, ADMIN_URL);
   return await res.json();
 }
 
-export async function createDepartment(name) {
+export async function createDepartment(name: string): Promise<any> {
   console.log("[adminApi] Creating department with name:", name);
   const res = await apiFetch("/admin/departments", {
     method: "POST",
@@ -79,7 +79,7 @@ export async function createDepartment(name) {
   return json;
 }
 
-export async function deleteDepartment(id) {
+export async function deleteDepartment(id: string): Promise<any> {
   console.log("[adminApi] Deleting department with id:", id);
   const res = await apiFetch(`/admin/departments/${id}`, {
     method: "DELETE",
@@ -93,12 +93,12 @@ export async function deleteDepartment(id) {
 }
 
 // Programs
-export async function getPrograms() {
+export async function getPrograms(): Promise<any> {
   const res = await apiFetch("/admin/programs", {}, ADMIN_URL);
   return await res.json();
 }
 
-export async function createProgram(name, departmentId) {
+export async function createProgram(name: string, departmentId: string): Promise<any> {
   console.log("[adminApi] Creating program with name:", name, "departmentId:", departmentId);
   const res = await apiFetch("/admin/programs", {
     method: "POST",
@@ -112,7 +112,7 @@ export async function createProgram(name, departmentId) {
   return json;
 }
 
-export async function deleteProgram(id) {
+export async function deleteProgram(id: string): Promise<any> {
   console.log("[adminApi] Deleting program with id:", id);
   const res = await apiFetch(`/admin/programs/${id}`, {
     method: "DELETE",
@@ -126,12 +126,12 @@ export async function deleteProgram(id) {
 }
 
 // Courses
-export async function getCourses() {
+export async function getCourses(): Promise<any> {
   const res = await apiFetch("/admin/courses", {}, ADMIN_URL);
   return await res.json();
 }
 
-export async function createCourse(data) {
+export async function createCourse(data: any): Promise<any> {
   console.log("[adminApi] Creating course with data:", data);
   const backendData = {
     name: data.name,
@@ -152,7 +152,7 @@ export async function createCourse(data) {
   return json;
 }
 
-export async function deleteCourse(id) {
+export async function deleteCourse(id: string): Promise<any> {
   console.log("[adminApi] Deleting course with id:", id);
   const res = await apiFetch(`/admin/courses/${id}`, {
     method: "DELETE",
@@ -166,12 +166,12 @@ export async function deleteCourse(id) {
 }
 
 // Students
-export async function getStudents() {
+export async function getStudents(): Promise<any> {
   const res = await apiFetch("/admin/students", {}, ADMIN_URL);
   return await res.json();
 }
 
-export async function updateStudent(id, data) {
+export async function updateStudent(id: string, data: any): Promise<any> {
   const backendData = {
     name: data.name,
     email: data.email,
@@ -189,7 +189,7 @@ export async function updateStudent(id, data) {
   return json;
 }
 
-export async function markStudentGraduated(id) {
+export async function markStudentGraduated(id: string): Promise<any> {
   const res = await apiFetch(`/admin/students/${id}/graduate`, {
     method: "POST",
   }, ADMIN_URL);
@@ -200,7 +200,7 @@ export async function markStudentGraduated(id) {
   return json;
 }
 
-export async function ungraduateStudent(id) {
+export async function ungraduateStudent(id: string): Promise<any> {
   // Try dedicated endpoint first
   try {
     const res = await apiFetch(`/admin/students/${id}/ungraduate`, {
@@ -213,7 +213,7 @@ export async function ungraduateStudent(id) {
     return json;
   } catch (e) {
     // Fallback to generic PATCH if dedicated endpoint doesn't exist
-    console.log("[adminApi] Dedicated endpoint failed, trying fallback:", e.message);
+    console.log("[adminApi] Dedicated endpoint failed, trying fallback:", (e as Error).message);
     const res = await apiFetch(`/admin/students/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status: "active" }),
@@ -226,7 +226,7 @@ export async function ungraduateStudent(id) {
   }
 }
 
-export async function deleteStudent(id) {
+export async function deleteStudent(id: string): Promise<any> {
   console.log("[adminApi] Deleting student with id:", id);
   const res = await apiFetch(`/admin/students/${id}`, {
     method: "DELETE",

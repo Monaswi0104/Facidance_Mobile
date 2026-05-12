@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useColorScheme } from "react-native";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useColorScheme, ColorSchemeName } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ const lightColors = {
   navPillBg: '#f8fafc',
   navPillBorder: '#e2e8f0',
   navPillText: '#64748b',
-  statusBarStyle: 'dark-content',
+  statusBarStyle: 'dark-content' as const,
   // Functional
   success: '#10B981',
   successLight: 'rgba(16,185,129,0.15)',
@@ -43,7 +43,6 @@ const lightColors = {
   warningLight: 'rgba(245,158,11,0.15)',
   danger: '#EF4444',
   dangerLight: 'rgba(239,68,68,0.15)',
-  destructive: '#e11d48',
   destructiveLight: 'rgba(225,29,72,0.15)',
   info: '#3B82F6',
   infoLight: 'rgba(59,130,246,0.15)',
@@ -91,7 +90,7 @@ const darkColors = {
   navPillBg: '#1e293b',
   navPillBorder: '#334155',
   navPillText: '#94a3b8',
-  statusBarStyle: 'light-content',
+  statusBarStyle: 'light-content' as const,
   // Functional
   success: '#34D399',
   successLight: 'rgba(52,211,153,0.15)',
@@ -99,7 +98,6 @@ const darkColors = {
   warningLight: 'rgba(251,191,36,0.15)',
   danger: '#f87171',
   dangerLight: 'rgba(248,113,113,0.15)',
-  destructive: '#f87171',
   destructiveLight: 'rgba(248,113,113,0.15)',
   info: '#60A5FA',
   infoLight: 'rgba(96,165,250,0.15)',
@@ -116,6 +114,9 @@ const darkColors = {
   // Modal
   modalOverlay: 'rgba(0,0,0,0.7)',
 };
+
+export type ThemeColors = typeof lightColors;
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 // ---------------------------------------------------------------------------
 // Static theme (non-color values)
@@ -140,13 +141,15 @@ const statics = {
 // ---------------------------------------------------------------------------
 // Build shadows dynamically based on current color palette
 // ---------------------------------------------------------------------------
-function buildShadows(colors) {
+function buildShadows(colors: ThemeColors) {
   return {
     sm: { shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
     md: { shadowColor: colors.shadowColor, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 4 },
     lg: { shadowColor: colors.accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 24, elevation: 8 },
   };
 }
+
+type ThemeShadows = ReturnType<typeof buildShadows>;
 
 // ---------------------------------------------------------------------------
 // Legacy export — keeps all existing `Theme.colors.xxx` references working
@@ -163,33 +166,48 @@ export const Theme = {
 // ---------------------------------------------------------------------------
 const STORAGE_KEY = '@facidance_theme';
 
-const ThemeContext = createContext({
+interface ThemeContextType {
+  isDark: boolean;
+  colors: ThemeColors;
+  shadows: ThemeShadows;
+  mode?: ThemeMode;
+  toggleTheme: () => void;
+  radius: typeof statics.radius;
+  fonts: typeof statics.fonts;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
   isDark: false,
   colors: lightColors,
   shadows: buildShadows(lightColors),
   toggleTheme: () => {},
+  ...statics,
 });
 
-export function ThemeProvider({ children }) {
-  const systemScheme = useColorScheme();
-  const [mode, setMode] = useState('system'); // 'light' | 'dark' | 'system'
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps): React.JSX.Element {
+  const systemScheme: ColorSchemeName = useColorScheme();
+  const [mode, setMode] = useState<ThemeMode>('system');
 
   // Load saved preference
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
-      .then(saved => { if (saved) setMode(saved); })
+      .then(saved => { if (saved) setMode(saved as ThemeMode); })
       .catch(() => {});
   }, []);
 
-  const isDark =
+  const isDark: boolean =
     mode === 'dark' ||
     (mode === 'system' && systemScheme === 'dark');
 
-  const colors = isDark ? darkColors : lightColors;
-  const shadows = buildShadows(colors);
+  const colors: ThemeColors = isDark ? darkColors : lightColors;
+  const shadows: ThemeShadows = buildShadows(colors);
 
-  const toggleTheme = async () => {
-    const next = mode === 'system'
+  const toggleTheme = async (): Promise<void> => {
+    const next: ThemeMode = mode === 'system'
       ? 'dark'
       : mode === 'dark'
         ? 'light'
@@ -205,6 +223,6 @@ export function ThemeProvider({ children }) {
   );
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextType {
   return useContext(ThemeContext);
 }

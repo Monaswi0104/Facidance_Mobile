@@ -1,29 +1,38 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { AlertTriangle, RefreshCw } from 'lucide-react-native';
-import { Theme, useTheme } from "../theme/Theme";
+import { Theme } from "../theme/Theme";
 
-export class ErrorBoundary extends React.Component {
-  constructor(props) {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // You can also log the error to an error reporting service like Sentry or Crashlytics here
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
-  handleReset = () => {
+  handleReset = (): void => {
     this.setState({ hasError: false, error: null });
   };
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
         <SafeAreaView style={styles.container}>
@@ -49,7 +58,7 @@ export class ErrorBoundary extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'Theme.colors.secondary',
+    backgroundColor: Theme.colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -63,13 +72,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: 'Theme.colors.foreground',
+    color: Theme.colors.foreground,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: 'Theme.colors.mutedForeground',
+    color: Theme.colors.mutedForeground,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
@@ -88,7 +97,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: 'Theme.colors.primaryForeground',
+    color: Theme.colors.primaryForeground,
     fontSize: 16,
     fontWeight: '600',
   },

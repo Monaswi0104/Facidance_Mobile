@@ -1,7 +1,7 @@
 import { BASE_URL } from "./config";
 import { saveToken, saveUser } from "./authStorage";
 
-export async function loginUser(email, password) {
+export async function loginUser(email: string, password: string): Promise<any> {
   const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -25,7 +25,7 @@ export async function loginUser(email, password) {
   return data; // { token, role, name, email, redirectUrl }
 }
 
-export async function registerTeacher(name, email, password) {
+export async function registerTeacher(name: string, email: string, password: string): Promise<any> {
   const response = await fetch(`${BASE_URL}/auth/register-teacher`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

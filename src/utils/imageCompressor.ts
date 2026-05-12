@@ -1,5 +1,5 @@
 /**
- * imageCompressor.js
+ * imageCompressor.ts
  *
  * Utility for compressing images before upload.
  * Reduces file size by resizing to a target resolution and adjusting JPEG quality.
@@ -9,22 +9,29 @@
 
 import ImageResizer from "@bam.tech/react-native-image-resizer";
 import RNFS from "react-native-fs";
+import type { CompressedImage, ImageFrame } from "../types/models";
 
 // Target dimensions: 720p landscape (suitable for face recognition)
 const TARGET_WIDTH = 1280;
 const TARGET_HEIGHT = 720;
 const JPEG_QUALITY = 75; // 0-100, 75 is a good balance of quality vs size
 
+interface CompressOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+}
+
 /**
  * Compress a single image file.
- * @param {string} uri - file:// URI of the source image
- * @param {object} options - Optional overrides
- * @param {number} options.maxWidth - Max width in px (default 1280)
- * @param {number} options.maxHeight - Max height in px (default 720)
- * @param {number} options.quality - JPEG quality 0-100 (default 75)
- * @returns {Promise<{uri: string, size: number}>} Compressed image URI and byte size
+ * @param uri - file:// URI of the source image
+ * @param options - Optional overrides
+ * @returns Compressed image URI and byte size
  */
-export async function compressImage(uri, options = {}) {
+export async function compressImage(
+  uri: string,
+  options: CompressOptions = {}
+): Promise<CompressedImage> {
   const {
     maxWidth = TARGET_WIDTH,
     maxHeight = TARGET_HEIGHT,
@@ -61,7 +68,7 @@ export async function compressImage(uri, options = {}) {
       size: result.size,
     };
   } catch (err) {
-    console.warn("[ImageCompressor] Compression failed, using original:", err.message);
+    console.warn("[ImageCompressor] Compression failed, using original:", (err as Error).message);
     // Fallback: return original URI unchanged
     return { uri, size: 0 };
   }
@@ -72,8 +79,11 @@ export async function compressImage(uri, options = {}) {
  * Each frame is expected to have { uri, type, name }.
  * Returns the same array shape with compressed URIs.
  */
-export async function compressFrames(frames, options = {}) {
-  const compressed = [];
+export async function compressFrames(
+  frames: ImageFrame[],
+  options: CompressOptions = {}
+): Promise<ImageFrame[]> {
+  const compressed: ImageFrame[] = [];
 
   for (const frame of frames) {
     const result = await compressImage(frame.uri, options);

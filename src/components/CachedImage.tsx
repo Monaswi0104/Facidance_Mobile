@@ -1,35 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { Image, View, ActivityIndicator, StyleSheet } from "react-native";
+import { Image, View, ActivityIndicator, StyleSheet, ImageSourcePropType, ImageResizeMode, ImageProps } from "react-native";
 import RNFS from "react-native-fs";
 import { useTheme } from "../theme/Theme";
 import { Image as ImageIcon } from "lucide-react-native";
+
+interface CachedImageProps extends Omit<ImageProps, 'source'> {
+  source: ImageSourcePropType | { uri: string } | null;
+  style?: any;
+  resizeMode?: ImageResizeMode;
+}
 
 /**
  * CachedImage component with built-in loading placeholders and local file caching.
  * Uses react-native-fs to save images to disk to prevent flickering and reduce network load.
  */
-export default function CachedImage({ source, style, resizeMode = "cover", ...props }) {
+export default function CachedImage({ source, style, resizeMode = "cover", ...props }: CachedImageProps): React.JSX.Element {
   const { colors } = useTheme();
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [localSource, setLocalSource] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [localSource, setLocalSource] = useState<ImageSourcePropType | null>(null);
 
-  const isInvalidSource = !source || (source.uri !== undefined && !source.uri);
+  const isInvalidSource = !source || ((source as any).uri !== undefined && !(source as any).uri);
 
   useEffect(() => {
     let isMounted = true;
 
-    const cacheImage = async () => {
-      if (isInvalidSource || typeof source === 'number' || !source.uri) {
-        setLocalSource(source);
+    const cacheImage = async (): Promise<void> => {
+      if (isInvalidSource || typeof source === 'number' || !(source as any).uri) {
+        setLocalSource(source as ImageSourcePropType);
         setIsLoading(false);
         return;
       }
 
-      const uri = source.uri;
+      const uri: string = (source as any).uri;
       // Use a simple hash for the filename to avoid invalid characters
-      const filename = uri.split('/').pop().split('?')[0]; 
-      const hash = Math.abs(uri.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0));
+      const filename = uri.split('/').pop()?.split('?')[0] || 'img';
+      const hash = Math.abs(uri.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0));
       const ext = filename.includes('.') ? filename.split('.').pop() : 'jpg';
       const cachePath = `${RNFS.CachesDirectoryPath}/cached_${hash}.${ext}`;
 
@@ -47,9 +53,9 @@ export default function CachedImage({ source, style, resizeMode = "cover", ...pr
             toFile: cachePath,
             background: true, // Continue in background
           });
-          
+
           await ret.promise;
-          
+
           if (isMounted) {
             setLocalSource({ uri: `file://${cachePath}` });
             setIsLoading(false);
@@ -59,7 +65,7 @@ export default function CachedImage({ source, style, resizeMode = "cover", ...pr
         console.log("CachedImage err:", err);
         if (isMounted) {
           // Fallback to network URL if cache fails
-          setLocalSource(source);
+          setLocalSource(source as ImageSourcePropType);
           setHasError(true);
           setIsLoading(false);
         }

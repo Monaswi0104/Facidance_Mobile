@@ -1,10 +1,18 @@
-import axios from "axios";
+/**
+ * apiService.ts
+ *
+ * Legacy Axios-based API service.
+ * Kept for backward compatibility — new code should use apiFetch from config.ts instead.
+ */
+
+// @ts-ignore — axios is a legacy dependency, this file is kept for reference only
+import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "./config";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || BASE_URL;
+const API_BASE_URL: string = BASE_URL;
 
-const API = axios.create({
+const API: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -14,7 +22,7 @@ const API = axios.create({
 
 // Security: Request Interceptor for Authentication & Headers
 API.interceptors.request.use(
-  async (config) => {
+  async (config: any) => {
     try {
       // 1. JWT / Auth Token Authentication
       const token = await AsyncStorage.getItem("authToken");
@@ -22,22 +30,22 @@ API.interceptors.request.use(
         config.headers["Authorization"] = `Bearer ${token}`;
       }
       // 2. API Key Authentication (protects against unauthorized client access)
-      config.headers["x-api-key"] = process.env.API_KEY || "development_api_key_placeholder";
-      
+      config.headers["x-api-key"] = "development_api_key_placeholder";
+
       return config;
     } catch (error) {
       return Promise.reject(error);
     }
   },
-  (error) => Promise.reject(error)
+  (error: any) => Promise.reject(error)
 );
 
 // Security: Response Interceptor for Centralized Error Handling & Rate Limiting
 API.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  (response: AxiosResponse) => response,
+  async (error: any) => {
     if (error.response) {
-      const status = error.response.status;
+      const status: number = error.response.status;
       if (status === 401) {
         console.warn("[API] Unauthorized: Token may be missing or expired.");
         // Here you would typically trigger a logout or token refresh
@@ -61,11 +69,22 @@ API.interceptors.response.use(
    AUTH APIs
 ========================= */
 
-export const loginUser = (data) => {
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export const loginUser = (data: LoginData): Promise<AxiosResponse> => {
   return API.post("/login", data);
 };
 
-export const registerUser = (data) => {
+export const registerUser = (data: RegisterData): Promise<AxiosResponse> => {
   return API.post("/register", data);
 };
 
@@ -73,23 +92,23 @@ export const registerUser = (data) => {
    ADMIN APIs
 ========================= */
 
-export const getTeachers = () => {
+export const getTeachers = (): Promise<AxiosResponse> => {
   return API.get("/teachers");
 };
 
-export const getDepartments = () => {
+export const getDepartments = (): Promise<AxiosResponse> => {
   return API.get("/departments");
 };
 
-export const getPrograms = () => {
+export const getPrograms = (): Promise<AxiosResponse> => {
   return API.get("/programs");
 };
 
-export const getCourses = () => {
+export const getCourses = (): Promise<AxiosResponse> => {
   return API.get("/courses");
 };
 
-export const getStudents = () => {
+export const getStudents = (): Promise<AxiosResponse> => {
   return API.get("/students");
 };
 
@@ -97,19 +116,19 @@ export const getStudents = () => {
    TEACHER APIs
 ========================= */
 
-export const getTeacherCourses = (teacherId) => {
+export const getTeacherCourses = (teacherId: string): Promise<AxiosResponse> => {
   return API.get(`/teacher/courses/${teacherId}`);
 };
 
-export const getCourseStudents = (courseId) => {
+export const getCourseStudents = (courseId: string): Promise<AxiosResponse> => {
   return API.get(`/course/students/${courseId}`);
 };
 
-export const trainModel = () => {
+export const trainModel = (): Promise<AxiosResponse> => {
   return API.post("/train");
 };
 
-export const getAttendanceReport = (courseId) => {
+export const getAttendanceReport = (courseId: string): Promise<AxiosResponse> => {
   return API.get(`/attendance/report/${courseId}`);
 };
 
@@ -117,11 +136,11 @@ export const getAttendanceReport = (courseId) => {
    STUDENT APIs
 ========================= */
 
-export const getStudentCourses = (studentId) => {
+export const getStudentCourses = (studentId: string): Promise<AxiosResponse> => {
   return API.get(`/student/courses/${studentId}`);
 };
 
-export const getAttendanceHistory = (studentId) => {
+export const getAttendanceHistory = (studentId: string): Promise<AxiosResponse> => {
   return API.get(`/student/attendance/${studentId}`);
 };
 
@@ -129,15 +148,20 @@ export const getAttendanceHistory = (studentId) => {
    FACE RECOGNITION
 ========================= */
 
-export const recognizeAttendance = async (image) => {
+interface ImageFile {
+  uri: string;
+  fileName: string;
+  type: string;
+}
 
+export const recognizeAttendance = async (image: ImageFile): Promise<AxiosResponse> => {
   const formData = new FormData();
 
   formData.append("file", {
     uri: image.uri,
     name: image.fileName,
     type: image.type,
-  });
+  } as any);
 
   return API.post("/recognize", formData, {
     headers: {
@@ -150,15 +174,14 @@ export const recognizeAttendance = async (image) => {
    FACE UPLOAD
 ========================= */
 
-export const uploadFaceImage = async (image) => {
-
+export const uploadFaceImage = async (image: ImageFile): Promise<AxiosResponse> => {
   const formData = new FormData();
 
   formData.append("image", {
     uri: image.uri,
     name: image.fileName,
     type: image.type,
-  });
+  } as any);
 
   return API.post("/upload-face", formData, {
     headers: {

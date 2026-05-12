@@ -5,7 +5,7 @@ import { getToken, clearAuth } from "./authStorage";
 
 const isEmulator = DeviceInfo.isEmulatorSync();
 
-function getDevServerHost() {
+function getDevServerHost(): string {
   const scriptURL = NativeModules.SourceCode?.scriptURL;
   const match = scriptURL?.match(/\/\/([^:/]+)(?::\d+)?\//);
   const host = match?.[1];
@@ -21,7 +21,7 @@ function getDevServerHost() {
 
 // Android emulator needs 10.0.2.2 to reach the host machine.
 // iOS physical devices use the Metro host IP; iOS simulator falls back to localhost.
-export const HOST = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : getDevServerHost();
+export const HOST: string = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : getDevServerHost();
 
 // Service-specific base URLs (Local Backend Configuration)
 const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later
@@ -33,14 +33,19 @@ export const STUDENT_URL = `http://${HOST}:8003`;    // Student Service
 export const WEB_URL = `http://${HOST}:3000`;        // Next.js Frontend for specific APIs
 
 // ─── Response Cache ────────────────────────────────────────────────────────────
-const apiCache = new Map();
+interface CachedResponse {
+  timestamp: number;
+  response: Response;
+}
+
+const apiCache = new Map<string, CachedResponse>();
 const CACHE_TTL = 30000; // 30 seconds
 
 /**
  * Invalidate all cached API responses.
  * Call this after mutations (POST/PUT/DELETE) that affect cached data.
  */
-export function invalidateCache(pattern) {
+export function invalidateCache(pattern?: string): void {
   if (!pattern) {
     apiCache.clear();
     return;
@@ -52,22 +57,20 @@ export function invalidateCache(pattern) {
 
 // ─── Auth Session Listener (for 401 interceptor) ──────────────────────────────
 // The navigation root sets this callback so we can force-logout from anywhere.
-let _onSessionExpired = null;
+let _onSessionExpired: (() => void) | null = null;
 
 /**
  * Register a callback that fires when the API receives a 401 Unauthorized.
  * Typically wired up in the root navigator to reset to the Login screen.
- *
- * @param {() => void} callback
  */
-export function setOnSessionExpired(callback) {
+export function setOnSessionExpired(callback: () => void): void {
   _onSessionExpired = callback;
 }
 
 // Prevents multiple simultaneous logout triggers
 let _isHandlingExpiry = false;
 
-async function handleSessionExpired() {
+async function handleSessionExpired(): Promise<void> {
   if (_isHandlingExpiry) return;
   _isHandlingExpiry = true;
 
@@ -86,14 +89,28 @@ async function handleSessionExpired() {
 }
 
 // ─── Request / Response Interceptors ──────────────────────────────────────────
-const _requestInterceptors = [];
-const _responseInterceptors = [];
+interface InterceptorRequest {
+  endpoint: string;
+  options: RequestInit;
+  baseUrl: string;
+}
+
+interface InterceptorResponse {
+  ok: boolean;
+  status: number;
+  headers: Headers;
+  text: () => Promise<string>;
+  json: () => Promise<any>;
+}
+
+const _requestInterceptors: Array<(endpoint: string, options: RequestInit, baseUrl: string) => InterceptorRequest | void> = [];
+const _responseInterceptors: Array<(response: any, endpoint: string, options: RequestInit) => any> = [];
 
 /**
  * Add a request interceptor. Receives (endpoint, options, baseUrl) and must
  * return { endpoint, options, baseUrl } (possibly modified).
  */
-export function addRequestInterceptor(fn) {
+export function addRequestInterceptor(fn: (endpoint: string, options: RequestInit, baseUrl: string) => InterceptorRequest | void): () => void {
   _requestInterceptors.push(fn);
   return () => {
     const idx = _requestInterceptors.indexOf(fn);
@@ -105,7 +122,7 @@ export function addRequestInterceptor(fn) {
  * Add a response interceptor. Receives (response, endpoint, options) and must
  * return the response (possibly modified).
  */
-export function addResponseInterceptor(fn) {
+export function addResponseInterceptor(fn: (response: any, endpoint: string, options: RequestInit) => any): () => void {
   _responseInterceptors.push(fn);
   return () => {
     const idx = _responseInterceptors.indexOf(fn);
@@ -122,13 +139,13 @@ export function addResponseInterceptor(fn) {
  * - Exponential backoff retries for 5xx / network errors
  * - 401 interception → auto-logout + redirect to Login
  * - Request/response interceptor pipeline
- *
- * @param {string} endpoint - API path (e.g. "/teacher/me")
- * @param {RequestInit} options - fetch options
- * @param {string} baseUrl - Base URL for the target service
- * @param {number} retries - Number of retries for transient errors (default 2)
  */
-export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retries = 2) {
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit = {},
+  baseUrl: string = BASE_URL,
+  retries: number = 2
+): Promise<Response> {
   // ── Run request interceptors ──
   let reqEndpoint = endpoint;
   let reqOptions = { ...options };
@@ -143,7 +160,7 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
         reqBaseUrl = result.baseUrl ?? reqBaseUrl;
       }
     } catch (e) {
-      console.warn("[Request Interceptor] Error:", e.message);
+      console.warn("[Request Interceptor] Error:", (e as Error).message);
     }
   }
 
@@ -152,7 +169,7 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
 
   // ── Cache check (GET only) ──
   if (isGet && apiCache.has(cacheKey)) {
-    const cached = apiCache.get(cacheKey);
+    const cached = apiCache.get(cacheKey)!;
     if (Date.now() - cached.timestamp < CACHE_TTL) {
       console.log(`[API CACHE HIT] GET ${reqEndpoint}`);
       return cached.response.clone(); // Return a clone so .json() works multiple times
@@ -164,10 +181,10 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
   // ── Build headers ──
   const token = await getToken();
 
-  const headers = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...reqOptions.headers,
+    ...(reqOptions.headers as Record<string, string> || {}),
   };
 
   // Don't override Content-Type for FormData
@@ -203,11 +220,11 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
         const text = await response.text();
         console.log(`[API FAIL] Response text:`, text.substring(0, 200));
 
-        let errorResponse = { 
-          ok: false, 
-          status: response.status, 
-          headers: response.headers, 
-          text: async () => text, 
+        let errorResponse: InterceptorResponse = {
+          ok: false,
+          status: response.status,
+          headers: response.headers,
+          text: async () => text,
           json: async () => {
             try {
               return JSON.parse(text);
@@ -224,7 +241,7 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
           } catch (e) { /* skip */ }
         }
 
-        return errorResponse;
+        return errorResponse as any;
       }
 
       // ── Cache successful GET responses ──
@@ -241,25 +258,28 @@ export async function apiFetch(endpoint, options = {}, baseUrl = BASE_URL, retri
         try {
           finalResponse = interceptor(finalResponse, reqEndpoint, reqOptions) || finalResponse;
         } catch (e) {
-          console.warn("[Response Interceptor] Error:", e.message);
+          console.warn("[Response Interceptor] Error:", (e as Error).message);
         }
       }
 
       return finalResponse;
     } catch (err) {
-      if (err.message === "UNAUTHORIZED") {
+      if ((err as Error).message === "UNAUTHORIZED") {
         // Don't retry auth failures
         throw err;
       }
 
       if (attempt < retries) {
-        console.warn(`[API RETRY ${attempt + 1}/${retries}] ${reqOptions.method || 'GET'} ${reqEndpoint} failed (${err.message}). Retrying in ${backoffDelay}ms...`);
-        await new Promise(res => setTimeout(res, backoffDelay));
+        console.warn(`[API RETRY ${attempt + 1}/${retries}] ${reqOptions.method || 'GET'} ${reqEndpoint} failed (${(err as Error).message}). Retrying in ${backoffDelay}ms...`);
+        await new Promise<void>(res => setTimeout(() => res(), backoffDelay));
         backoffDelay *= 2; // Exponential backoff
         continue;
       }
-      console.error(`[API NETWORK ERROR] ${reqOptions.method || 'GET'} ${reqEndpoint} failed completely after ${attempt + 1} attempts:`, err.message);
+      console.error(`[API NETWORK ERROR] ${reqOptions.method || 'GET'} ${reqEndpoint} failed completely after ${attempt + 1} attempts:`, (err as Error).message);
       throw err;
     }
   }
+
+  // This should never be reached, but TypeScript needs it
+  throw new Error("Unexpected error in apiFetch");
 }

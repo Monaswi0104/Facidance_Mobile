@@ -1,43 +1,48 @@
-import { apiFetch, TEACHER_URL, ADMIN_URL } from "./config";
+import { apiFetch, TEACHER_URL } from "./config";
+import type { Course, Student, Hierarchy, RecognitionResult, ReportData, ImageFrame } from "../types/models";
 
 // Teacher profile
-export async function getTeacherMe() {
+export async function getTeacherMe(): Promise<any> {
   const res = await apiFetch("/teacher/me", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Teacher stats
-export async function getTeacherStats() {
+export async function getTeacherStats(): Promise<any> {
   const res = await apiFetch("/teacher/stats", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Teacher courses
-export async function getTeacherCourses() {
+export async function getTeacherCourses(): Promise<Course[]> {
   const res = await apiFetch("/teacher/courses", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Students enrolled in a course
-export async function getCourseStudents(courseId) {
+export async function getCourseStudents(courseId: string): Promise<Student[]> {
   const res = await apiFetch(`/teacher/students?course_id=${courseId}`, {}, TEACHER_URL);
   return await res.json();
 }
 
 // Full course details — fetches students for a specific course
-export async function getCourseDetails(courseId) {
+export async function getCourseDetails(courseId: string): Promise<any> {
   const res = await apiFetch(`/teacher/courses/${courseId}/students`, {}, TEACHER_URL);
   return await res.json();
 }
 
 // Attendance for a course
-export async function getCourseAttendance(courseId) {
+export async function getCourseAttendance(courseId: string): Promise<any> {
   const res = await apiFetch(`/teacher/attendance/history?course_id=${courseId}`, {}, TEACHER_URL);
   return await res.json();
 }
 
 // Reports
-export async function getTeacherReports(courseId, startDate, endDate) {
+export async function getTeacherReports(
+  courseId: string,
+  startDate?: string | null,
+  endDate?: string | null
+): Promise<ReportData> {
   let url = `/teacher/reports?course_id=${courseId}`;
   if (startDate) url += `&start_date=${startDate}`;
   if (endDate) url += `&end_date=${endDate}`;
@@ -46,13 +51,13 @@ export async function getTeacherReports(courseId, startDate, endDate) {
 }
 
 // Get all programs (for student import) — extracted from teacher's own hierarchy
-export async function getAllPrograms() {
+export async function getAllPrograms(): Promise<{ id: string; name: string; departmentId: string }[]> {
   const hierarchy = await getHierarchy();
   const departments = hierarchy?.departments || [];
-  const programs = [];
-  const seen = new Set();
+  const programs: { id: string; name: string; departmentId: string }[] = [];
+  const seen = new Set<string>();
   for (const dept of departments) {
-    const progs = Array.isArray(dept.programs) ? dept.programs : Object.values(dept.programs || {});
+    const progs: any[] = Array.isArray(dept.programs) ? dept.programs : Object.values(dept.programs || {});
     for (const p of progs) {
       if (!seen.has(p.id)) {
         seen.add(p.id);
@@ -64,13 +69,16 @@ export async function getAllPrograms() {
 }
 
 // Hierarchy (departments > programs > semesters)
-export async function getHierarchy() {
+export async function getHierarchy(): Promise<Hierarchy> {
   const res = await apiFetch("/teacher/hierarchy", {}, TEACHER_URL);
   return await res.json();
 }
 
 // Import students into a course
-export async function importStudentsCsv(courseId, students) {
+export async function importStudentsCsv(
+  courseId: string,
+  students: { name: string; email: string; rollNumber?: string }[]
+): Promise<any> {
   const res = await apiFetch(`/teacher/courses/${courseId}/import`, {
     method: "POST",
     body: JSON.stringify({ students }),
@@ -85,7 +93,7 @@ export async function importStudentsCsv(courseId, students) {
 // ─── Attendance APIs (matches website frontend exactly) ────
 
 // Get students for attendance marking (with training/face status)
-export async function getAttendanceStudents(courseId) {
+export async function getAttendanceStudents(courseId: string): Promise<Student[]> {
   const res = await apiFetch("/teacher/attendance/get-students", {
     method: "POST",
     body: JSON.stringify({ course_id: courseId }),
@@ -94,7 +102,7 @@ export async function getAttendanceStudents(courseId) {
 }
 
 // Trigger model training for a course
-export async function trainModel(courseId) {
+export async function trainModel(courseId: string): Promise<any> {
   const res = await apiFetch("/teacher/attendance/run-training", {
     method: "POST",
     body: JSON.stringify({ course_id: courseId }),
@@ -104,7 +112,12 @@ export async function trainModel(courseId) {
 
 // Send camera frame(s) for face recognition
 // frames: array of { uri, type, name } objects
-export async function recognizeFaces(courseId, frames, batchId = null, autoSubmit = false) {
+export async function recognizeFaces(
+  courseId: string,
+  frames: ImageFrame[],
+  batchId: string | null = null,
+  autoSubmit: boolean = false
+): Promise<RecognitionResult> {
   const formData = new FormData();
   formData.append("course_id", courseId);
   if (batchId) formData.append("batch_id", batchId);
@@ -115,7 +128,7 @@ export async function recognizeFaces(courseId, frames, batchId = null, autoSubmi
       uri: frame.uri,
       type: frame.type || "image/jpeg",
       name: frame.name || `frame_${i}.jpg`,
-    });
+    } as any);
   });
 
   const res = await apiFetch("/teacher/attendance/recognize", {
@@ -126,7 +139,11 @@ export async function recognizeFaces(courseId, frames, batchId = null, autoSubmi
 }
 
 // Submit final attendance — matches website: sends recognizedStudents array, not IDs
-export async function submitSessionAttendance(courseId, recognizedStudents, date = null) {
+export async function submitSessionAttendance(
+  courseId: string,
+  recognizedStudents: any[],
+  date: string | null = null
+): Promise<any> {
   const res = await apiFetch("/teacher/attendance/submit", {
     method: "POST",
     body: JSON.stringify({
@@ -137,5 +154,3 @@ export async function submitSessionAttendance(courseId, recognizedStudents, date
   }, TEACHER_URL);
   return await res.json();
 }
-
-
