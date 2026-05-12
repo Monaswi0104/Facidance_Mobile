@@ -14,6 +14,8 @@ import {
 } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import CourseAttendanceBarChart from "../../components/CourseAttendanceBarChart";
+import AttendancePieChart from "../../components/AttendancePieChart";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +28,7 @@ export default function TeacherDashboard({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [courses, setCourses] = useState([]);
   const [atRiskStudents, setAtRiskStudents] = useState([]);
+  const [onTrackStudents, setOnTrackStudents] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
 
   const loadData = useCallback(async (showLoading = true) => {
@@ -62,6 +65,7 @@ export default function TeacherDashboard({ navigation }) {
         // Build course overview with attendance data
         const courseDetails = [];
         const allAtRisk = [];
+        const allOnTrack = [];
         const activities = [];
 
         for (const c of tempCourses) {
@@ -96,18 +100,21 @@ export default function TeacherDashboard({ navigation }) {
               time: totalSessions > 0 ? "Recent" : "—",
             });
 
-            // At-risk students (below 75%)
+            // Categorize students by attendance
             reportList.forEach((r) => {
               const pct = r.percentage ?? (r.totalSessions > 0 ? Math.round(((r.attended || r.attendedSessions || 0) / (r.totalSessions || 1)) * 100) : 100);
+              const studentInfo = {
+                name: r.studentName || r.name || "Student",
+                email: r.studentEmail || r.email || "",
+                course: c.name || "Course",
+                attended: r.attended || r.attendedSessions || 0,
+                total: r.totalSessions || r.total || 0,
+                percent: pct,
+              };
               if (pct < 75) {
-                allAtRisk.push({
-                  name: r.studentName || r.name || "Student",
-                  email: r.studentEmail || r.email || "",
-                  course: c.name || "Course",
-                  attended: r.attended || r.attendedSessions || 0,
-                  total: r.totalSessions || r.total || 0,
-                  percent: pct,
-                });
+                allAtRisk.push(studentInfo);
+              } else {
+                allOnTrack.push(studentInfo);
               }
             });
           } catch (e: any) {}
@@ -115,6 +122,7 @@ export default function TeacherDashboard({ navigation }) {
 
         setCourses(courseDetails);
         setAtRiskStudents(allAtRisk.sort((a, b) => a.percent - b.percent));
+        setOnTrackStudents(allOnTrack.sort((a, b) => b.percent - a.percent));
         setRecentActivity(activities.slice(0, 4));
       } catch (e: any) { console.log("[TeacherDashboard] Error:", e); }
       finally { setIsLoading(false); }
@@ -155,6 +163,31 @@ export default function TeacherDashboard({ navigation }) {
     if (pct >= 50) return colors.warning;
     return colors.danger;
   };
+
+  // Prepare chart data
+  const courseBarChartData = useMemo(() => {
+    const labels = courses.map(c => c.name.substring(0, 10) + (c.name.length > 10 ? "..." : ""));
+    const data = courses.map(c => c.attendance);
+    return { labels, datasets: [{ data }] };
+  }, [courses]);
+
+  const overallPieChartData = useMemo(() => {
+    const onTrackCount = onTrackStudents.length;
+    const atRiskCount = atRiskStudents.length;
+
+    return [
+      {
+        name: "On Track",
+        population: onTrackCount,
+        color: colors.success,
+      },
+      {
+        name: "At Risk",
+        population: atRiskCount,
+        color: colors.danger,
+      },
+    ];
+  }, [onTrackStudents.length, atRiskStudents.length, colors]);
 
   const statCards = [
     { label: "MY COURSES", value: stats.courses, icon: <BookOpen size={18} color={colors.primaryForeground} />, sub: stats.semesters ? `${stats.semesters} semester` : "" },
@@ -219,6 +252,27 @@ export default function TeacherDashboard({ navigation }) {
                 </View>
               ))}
             </View>
+
+            {/* Attendance Charts */}
+            {!isLoading && courses.length > 0 && (
+              <>
+                {/* Course Attendance Bar Chart */}
+                <CourseAttendanceBarChart
+                  data={courseBarChartData}
+                  title="Attendance by Course"
+                  subtitle="Attendance rate across your courses"
+                />
+
+                {/* Overall Attendance Distribution */}
+                {stats.students > 0 && (
+                  <AttendancePieChart
+                    data={overallPieChartData}
+                    title="Student Attendance Status"
+                    subtitle="Overall student attendance distribution"
+                  />
+                )}
+              </>
+            )}
 
             {/* At-Risk Students */}
             {atRiskStudents.length > 0 && (
