@@ -8,7 +8,7 @@ import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, ge
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
-import { StatsRowSkeleton, SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import { StatsRowSkeleton, SearchBarSkeleton, CourseListSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
 
@@ -142,7 +142,7 @@ export default function CoursesManagement() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={filteredCourses}
+        data={isLoading ? [] : filteredCourses}
         keyExtractor={(c) => c.id.toString()}
         refreshControl={
           <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -172,7 +172,7 @@ export default function CoursesManagement() {
           <View>
             <StatsRowSkeleton count={3} />
             <SearchBarSkeleton />
-            <ListCardSkeleton rows={4} />
+            <CourseListSkeleton rows={4} />
           </View>
         ) : (
           <>
@@ -350,7 +350,7 @@ export default function CoursesManagement() {
           </View>
         )}
         ListFooterComponent={
-          <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+          isLoading ? null : <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
         }
       />
 

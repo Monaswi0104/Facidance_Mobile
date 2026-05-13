@@ -22,7 +22,7 @@ export default function AttendancePieChart({
   title = "Attendance Distribution",
   subtitle = "Your overall attendance breakdown",
 }: AttendancePieChartProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const chartConfig = {
     color: () => colors.foreground,
@@ -39,33 +39,41 @@ export default function AttendancePieChart({
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
       </View>
 
-      <View style={styles.chartContainer}>
-        <PieChart
-          data={data.map(item => ({
-            ...item,
-            legendFontColor: item.legendFontColor || colors.mutedForeground,
-            legendFontSize: item.legendFontSize || 12,
-          }))}
-          width={SCREEN_WIDTH - 80}
-          height={200}
-          chartConfig={chartConfig}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
-          style={styles.chart}
-        />
-      </View>
+      <View style={styles.contentContainer}>
+        <View style={styles.chartContainer}>
+          <PieChart
+            data={data.map(item => ({
+              ...item,
+              legendFontColor: item.legendFontColor || colors.mutedForeground,
+              legendFontSize: item.legendFontSize || 12,
+            }))}
+            width={160}
+            height={160}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="40"
+            hasLegend={false}
+            center={[0, 0]}
+            style={styles.chart}
+          />
+        </View>
 
-      <View style={styles.legend}>
-        {data.map((item, index) => (
-          <View key={index} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-            <Text style={[styles.legendText, { color: colors.mutedForeground }]}>
-              {item.name}: {item.population} ({total > 0 ? ((item.population / total) * 100).toFixed(0) : 0}%)
-            </Text>
-          </View>
-        ))}
+        <View style={styles.legend}>
+          {data.map((item, index) => (
+            <View key={index} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+              <View>
+                <Text style={[styles.legendText, { color: colors.foreground, fontWeight: "600" }]}>
+                  {item.name}
+                </Text>
+                <Text style={[styles.legendSubText, { color: colors.mutedForeground }]}>
+                  {item.population} ({total > 0 ? ((item.population / total) * 100).toFixed(0) : 0}%)
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -90,6 +98,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.7,
   },
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -98,20 +111,26 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   legend: {
-    marginTop: 16,
+    flex: 1,
+    marginLeft: 16,
+    justifyContent: "center",
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 10,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginRight: 12,
   },
   legendText: {
-    fontSize: 13,
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  legendSubText: {
+    fontSize: 12,
   },
 });

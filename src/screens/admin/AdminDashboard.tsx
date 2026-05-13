@@ -11,6 +11,7 @@ import { Theme, useTheme } from "../../theme/Theme";
 import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight, UserCheck } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import CourseAttendanceBarChart from "../../components/CourseAttendanceBarChart";
 
 const { width } = Dimensions.get("window");
 
@@ -143,6 +144,11 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
 
   const maxProgramStudents = Math.max(...programDist.map(p => p.students), 1);
 
+  // Mock data matching the website screenshot
+  const monthlyAttendanceData = {
+    labels: ["Jan 26", "Feb 26", "Mar 26", "Apr 26", "May 26"],
+    datasets: [{ data: [75, 78, 76, 75, 15] }]
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -228,6 +234,15 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
               </TouchableOpacity>
             ))}
           </View>
+        )}
+
+        {/* Monthly Attendance Chart */}
+        {!isLoading && (
+          <CourseAttendanceBarChart 
+            data={monthlyAttendanceData} 
+            title="Monthly Attendance Rate %" 
+            subtitle="Color-coded: ≥75% high · ≥50% medium · <50% low" 
+          />
         )}
 
         {/* Teacher Workload */}

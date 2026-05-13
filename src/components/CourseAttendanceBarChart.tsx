@@ -21,19 +21,20 @@ export default function CourseAttendanceBarChart({
   title = "Attendance by Course",
   subtitle = "Your attendance rate across enrolled courses",
 }: CourseAttendanceBarChartProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const chartConfig = {
     backgroundColor: colors.background,
     backgroundGradientFrom: colors.background,
     backgroundGradientTo: colors.background,
     decimalPlaces: 0,
-    color: () => colors.primary,
+    color: () => isDark ? '#10B981' : '#059669', // Green for bar chart
     labelColor: () => colors.mutedForeground,
     style: {
       borderRadius: 16,
     },
-    barPercentage: 0.6,
+    barPercentage: 0.8,
+    barRadius: 6,
     propsForBackgroundLines: {
       strokeDasharray: "",
       stroke: colors.border,
@@ -43,6 +44,10 @@ export default function CourseAttendanceBarChart({
     },
     propsForHorizontalLabels: {
       fontSize: 10,
+    },
+    propsForTopLabels: {
+      fill: colors.foreground,
+      fontSize: 12,
     },
   };
 
@@ -57,6 +62,7 @@ export default function CourseAttendanceBarChart({
     datasets: [
       {
         data: data.datasets[0].data,
+        colors: data.datasets[0].data.map((val) => () => getBarColor(val)),
       },
     ],
   };
@@ -76,6 +82,9 @@ export default function CourseAttendanceBarChart({
           chartConfig={chartConfig}
           style={styles.chart}
           showValuesOnTopOfBars={true}
+          showBarTops={false}
+          withCustomBarColorFromData={true}
+          flatColor={true}
           withHorizontalLabels={true}
           withVerticalLabels={true}
           segments={5}

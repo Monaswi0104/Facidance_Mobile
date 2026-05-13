@@ -167,7 +167,7 @@ export default function TeachersManagement() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={filteredApproved}
+        data={isLoading ? [] : filteredApproved}
         keyExtractor={(t) => t.id.toString()}
         refreshControl={
           <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -340,7 +340,7 @@ export default function TeachersManagement() {
           </View>
         )}
         ListFooterComponent={
-          <View style={[styles.sectionCard, { marginLeft: 6, paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+          isLoading ? null : <View style={[styles.sectionCard, { marginLeft: 6, paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
         }
       />
 

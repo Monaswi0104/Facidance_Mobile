@@ -36,7 +36,7 @@ const BrandedRefresh = forwardRef<RefreshControl, BrandedRefreshProps>(
         tintColor={colors.accent}
         title={refreshing ? (title || "Refreshing…") : "Pull to refresh"}
         titleColor={colors.mutedForeground}
-        progressViewOffset={Platform.OS === "android" ? 8 : 0}
+        progressViewOffset={Platform.OS === "android" ? 50 : 0}
         {...props}
       />
     );

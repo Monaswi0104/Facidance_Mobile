@@ -61,34 +61,34 @@ const lightColors = {
 };
 
 const darkColors = {
-  background: '#0f172a',
+  background: '#1e1e1e',
   foreground: '#f1f5f9',
   primary: '#0FA4AF',
   primaryDark: '#0FA4AF',
   accent: '#22d3ee',
   accentLight: 'rgba(34,211,238,0.15)',
   primaryForeground: '#ffffff',
-  secondary: '#1e293b',
+  secondary: '#2c2c2c',
   secondaryForeground: '#f1f5f9',
-  muted: '#1e293b',
+  muted: '#2c2c2c',
   mutedForeground: '#94a3b8',
   destructive: '#f87171',
   destructiveForeground: '#f8fafc',
-  border: '#334155',
+  border: '#3a3a3a',
   borderFocus: 'rgba(34,211,238,0.35)',
-  input: '#334155',
+  input: '#3a3a3a',
   ring: '#22d3ee',
-  cardBg: '#1e293b',
+  cardBg: '#2c2c2c',
   textSoft: '#cbd5e1',
   textBody: '#94a3b8',
   // Dashboard-specific tokens
-  card: '#1e293b',
-  cardBorder: '#334155',
+  card: '#2c2c2c',
+  cardBorder: '#3a3a3a',
   shadowColor: '#000000',
-  headerBg: '#0f172a',
-  headerBorder: '#1e293b',
-  navPillBg: '#1e293b',
-  navPillBorder: '#334155',
+  headerBg: '#1e1e1e',
+  headerBorder: '#2c2c2c',
+  navPillBg: '#2c2c2c',
+  navPillBorder: '#3a3a3a',
   navPillText: '#94a3b8',
   statusBarStyle: 'light-content' as 'light-content' | 'dark-content',
   // Functional
@@ -108,11 +108,11 @@ const darkColors = {
   // Stat card
   statLabel: '#94A3B8',
   // Input
-  inputBg: '#334155',
+  inputBg: '#3a3a3a',
   inputText: '#f1f5f9',
   inputPlaceholder: '#64748b',
   // Modal
-  modalOverlay: 'rgba(0,0,0,0.7)',
+  modalOverlay: 'rgba(0,0,0,0.75)',
 };
 
 export type ThemeColors = typeof lightColors;

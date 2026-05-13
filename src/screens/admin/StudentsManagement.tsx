@@ -9,7 +9,7 @@ import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, de
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
-import { StatsRowSkeleton, SearchBarSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
+import { StatsRowSkeleton, StudentSearchFilterSkeleton, StudentListSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
 
 const { width, height } = Dimensions.get("window");
@@ -139,6 +139,7 @@ export default function StudentsManagement() {
       await markStudentGraduated(selectedStudent.id);
       await loadData();
       closeModal();
+      Alert.alert("Success", "Student has been graduated successfully.");
     } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to graduate student.");
     } finally {
@@ -182,7 +183,7 @@ export default function StudentsManagement() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={filtered}
+        data={isLoading ? [] : filtered}
         keyExtractor={(s) => s.id.toString()}
         refreshControl={
           <BrandedRefresh refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -201,8 +202,8 @@ export default function StudentsManagement() {
             {isLoading ? (
               <View>
                 <StatsRowSkeleton count={3} />
-                <SearchBarSkeleton />
-                <ListCardSkeleton rows={5} />
+                <StudentSearchFilterSkeleton />
+                <StudentListSkeleton rows={5} />
               </View>
             ) : (
               <View style={styles.statsRow}>
@@ -357,7 +358,7 @@ export default function StudentsManagement() {
           </View>
         )}
         ListFooterComponent={
-          <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+          isLoading ? null : <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
         }
       />
 

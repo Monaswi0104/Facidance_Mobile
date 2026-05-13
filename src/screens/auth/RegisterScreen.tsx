@@ -99,7 +99,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         {/* Hero */}
         <View style={[styles.hero, { paddingTop: topPadding }]}>
           <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
-          <View style={[styles.heroOverlay, { backgroundColor: isDark ? 'rgba(15,23,42,0.92)' : 'rgba(0,49,53,0.85)' }]} />
+          <View style={[styles.heroOverlay, { backgroundColor: isDark ? 'rgba(18,18,18,0.65)' : 'rgba(0,49,53,0.65)' }]} />
 
           <View style={styles.heroInner}>
             {/* Brand + Theme Toggle Row */}
@@ -318,8 +318,22 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.primaryForeground,
   },
-  brandName: { color: colors.primaryForeground, fontSize: 20, fontWeight: "800" },
-  brandSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500" },
+  brandName: { 
+    color: colors.primaryForeground, 
+    fontSize: 20, 
+    fontWeight: "800",
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  brandSub: { 
+    color: "rgba(255,255,255,0.8)", 
+    fontSize: 11, 
+    fontWeight: "600",
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
 
   // Theme Toggle
   themeToggle: {
@@ -351,12 +365,18 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     color: colors.primaryForeground,
     letterSpacing: -0.5,
     marginBottom: 6,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 5,
   },
   heroSubtitle: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.5)",
+    color: "rgba(255,255,255,0.75)",
     lineHeight: 17,
     marginBottom: 20,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   // Features

@@ -3,7 +3,7 @@ import { View, StyleSheet, Animated, Easing } from "react-native";
 import { useTheme } from "../theme/Theme";
 
 // Animated shimmer effect
-function ShimmerView({ style, colors }) {
+function ShimmerView({ style, colors, isDark }) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -32,7 +32,7 @@ function ShimmerView({ style, colors }) {
           styles.shimmer,
           {
             transform: [{ translateX }],
-            backgroundColor: colors.borderFocus || 'rgba(255,255,255,0.1)',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
           },
         ]}
       />
@@ -41,8 +41,8 @@ function ShimmerView({ style, colors }) {
 }
 
 export default function SkeletonLoader({ style }) {
-  const { colors } = useTheme();
-  return <ShimmerView style={style} colors={colors} />;
+  const { colors, isDark } = useTheme();
+  return <ShimmerView style={style} colors={colors} isDark={isDark} />;
 }
 
 // ═══════════════════════════════════════════
@@ -475,6 +475,95 @@ export function ProfileSkeleton() {
   );
 }
 
+
+/**
+ * Student List Card Skeleton — exact layout for StudentsManagement
+ */
+export function StudentListSkeleton({ rows = 4 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={[styles.mgmtListCard, { paddingBottom: 0, borderBottomWidth: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}>
+      <View style={styles.mgmtListHeader}>
+        <SkeletonLoader style={{ width: 100, height: 16, borderRadius: 6, flex: 1 }} />
+        <SkeletonLoader style={{ width: 40, height: 18, borderRadius: 10 }} />
+      </View>
+      {Array.from({ length: rows }).map((_, i) => (
+        <View key={i} style={[styles.mgmtListRow, { flexDirection: "column", alignItems: "stretch", paddingVertical: 14 }, i < rows - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+          <SkeletonLoader style={{ width: "40%", height: 15, borderRadius: 6, marginBottom: 4 }} />
+          <SkeletonLoader style={{ width: "60%", height: 12, borderRadius: 4, marginBottom: 12 }} />
+          
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+            <SkeletonLoader style={{ width: 60, height: 18, borderRadius: 6 }} />
+            <SkeletonLoader style={{ width: 50, height: 18, borderRadius: 6 }} />
+            <SkeletonLoader style={{ width: 40, height: 18, borderRadius: 6 }} />
+          </View>
+
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8 }}>
+            <SkeletonLoader style={{ width: 34, height: 34, borderRadius: 8 }} />
+            <SkeletonLoader style={{ width: 34, height: 34, borderRadius: 8 }} />
+            <SkeletonLoader style={{ width: 34, height: 34, borderRadius: 8 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * Student Search & Filter Skeleton — Search bar + Dropdown + Filter Pills
+ */
+export function StudentSearchFilterSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View>
+      <View style={{ flexDirection: "row", marginBottom: 10, gap: 8 }}>
+        <View style={[styles.mgmtSearchBar, { flex: 1, marginBottom: 0, paddingVertical: 10 }]}>
+          <SkeletonLoader style={{ width: 14, height: 14, borderRadius: 7, marginRight: 8 }} />
+          <SkeletonLoader style={{ flex: 1, height: 14, borderRadius: 6 }} />
+        </View>
+        <SkeletonLoader style={{ width: 130, height: 40, borderRadius: 10 }} />
+      </View>
+      <View style={{ flexDirection: "row", marginBottom: 16, gap: 8 }}>
+        <SkeletonLoader style={{ width: 50, height: 26, borderRadius: 13 }} />
+        <SkeletonLoader style={{ width: 70, height: 26, borderRadius: 13 }} />
+        <SkeletonLoader style={{ width: 80, height: 26, borderRadius: 13 }} />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Course List Card Skeleton — exact layout for CoursesManagement
+ */
+export function CourseListSkeleton({ rows = 4 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={[styles.mgmtListCard, { paddingBottom: 0, borderBottomWidth: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}>
+      <View style={styles.mgmtListHeader}>
+        <SkeletonLoader style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+        <SkeletonLoader style={{ width: 100, height: 14, borderRadius: 6, flex: 1 }} />
+        <SkeletonLoader style={{ width: 50, height: 18, borderRadius: 10 }} />
+      </View>
+      {Array.from({ length: rows }).map((_, i) => (
+        <View key={i} style={[styles.mgmtListRow, i < rows - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+          <SkeletonLoader style={{ width: 34, height: 34, borderRadius: 17, marginRight: 10 }} />
+          <View style={{ flex: 1 }}>
+            <SkeletonLoader style={{ width: "50%", height: 13, borderRadius: 6, marginBottom: 6 }} />
+            <View style={{ flexDirection: "row", gap: 6 }}>
+              <SkeletonLoader style={{ width: 40, height: 10, borderRadius: 4 }} />
+              <SkeletonLoader style={{ width: 60, height: 10, borderRadius: 4 }} />
+              <SkeletonLoader style={{ width: 50, height: 10, borderRadius: 4 }} />
+            </View>
+          </View>
+          <SkeletonLoader style={{ width: 50, height: 24, borderRadius: 6 }} />
+        </View>
+      ))}
+    </View>
+  );
+}
 
 const createStyles = (colors) => StyleSheet.create({
   skeleton: {
