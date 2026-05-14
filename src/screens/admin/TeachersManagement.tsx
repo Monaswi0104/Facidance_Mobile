@@ -4,90 +4,99 @@ import {
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions, TextInput
 , RefreshControl, FlatList } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getTeachers, approveTeacher, deleteTeacher, getDepartments, getCourses, getStudents } from "../../api/adminApi";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
 import EmptyState from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import { Haptics } from "../../utils/haptics";
+import {
+  useGetTeachersQuery,
+  useGetDepartmentsQuery,
+  useGetCoursesQuery,
+  useGetStudentsQuery,
+  useApproveTeacherMutation,
+  useDeleteTeacherMutation,
+} from "../../store/api/adminApi";
 
 export default function TeachersManagement() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [approved, setApproved] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // ── RTK Query ──
+  const { data: teacherData, isLoading: teachersLoading, refetch: refetchTeachers } = useGetTeachersQuery(undefined, { refetchOnFocus: true });
+  const { data: deptData } = useGetDepartmentsQuery();
+  const { data: coursesData } = useGetCoursesQuery();
+  const { data: studentsData } = useGetStudentsQuery();
+  const [approveTeacherMut] = useApproveTeacherMutation();
+  const [deleteTeacherMut] = useDeleteTeacherMutation();
+
+  const isLoading = teachersLoading;
+
+  // Derive display data from RTK Query cache
+  const departments = useMemo(() => deptData?.departments || deptData || [], [deptData]);
+
+  const { approved, pending, stats } = useMemo(() => {
+    const all = teacherData?.teachers || teacherData || [];
+    const allCourses = coursesData?.courses || coursesData || [];
+    const allStudents = studentsData?.students || studentsData || [];
+
+    const app = all.filter((t: any) => !t.isPending).map((t: any) => {
+      const myCourses = allCourses.filter((c: any) => c.teacher_id === t.id || c.teacherId === t.id || c.teacher?.id === t.id || c.teacher_name === t.name);
+      const coursesToMap = t.courses && t.courses.length > 0 ? t.courses : myCourses;
+
+      const mappedCourses = coursesToMap.map((c: any) => {
+        const partialCourse = c.course || c;
+        const fullCourse = allCourses.find((ac: any) => ac.id === partialCourse.id) || partialCourse;
+        const enrolledStudentsCount = allStudents.filter((u: any) => {
+          const studentCourses = u.courses || u.student?.courses || [];
+          return studentCourses.some((sc: any) => sc.id === fullCourse.id);
+        }).length;
+
+        return {
+          id: fullCourse.id || `${Math.random()}`,
+          name: fullCourse.name || "Unknown Course",
+          code: fullCourse.code || "—",
+          program: fullCourse.program_name || fullCourse.program?.name || fullCourse.program || fullCourse.semester?.academicYear?.program?.name || "—",
+          semester: fullCourse.semester_name || fullCourse.semester?.name || fullCourse.semester || "—",
+          students: fullCourse.student_count || fullCourse.students_count || fullCourse._count?.students || fullCourse.students?.length || fullCourse.students || enrolledStudentsCount || 0,
+        };
+      });
+
+      return {
+        id: t.id, userId: t.userId, name: t.name || t.user?.name,
+        email: t.email || t.user?.email || "—",
+        dept: t.departmentName || t.department?.name || "Unassigned",
+        courses: mappedCourses,
+        createdAt: t.createdAt,
+      };
+    });
+
+    const pen = all.filter((t: any) => t.isPending).map((t: any) => ({
+      id: t.id, userId: t.userId, name: t.name || t.user?.name,
+      email: t.email || t.user?.email || "—",
+      dept: "—",
+    }));
+
+    return {
+      approved: app,
+      pending: pen,
+      stats: { total: all.length, pending: pen.length, approved: app.length },
+    };
+  }, [teacherData, coursesData, studentsData]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     Haptics.light();
-    await loadTeachers(false); // Assume it accepts showLoading=false, but just await it
+    await refetchTeachers();
     setIsRefreshing(false);
-  }, []);
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  }, [refetchTeachers]);
 
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [selectedTeacherForDept, setSelectedTeacherForDept] = useState(null);
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const loadTeachers = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const [teacherData, deptData, coursesData, studentsData] = await Promise.all([getTeachers(), getDepartments(), getCourses(), getStudents()]);
-      const all = teacherData.teachers || teacherData || [];
-      const allCourses = coursesData.courses || coursesData || [];
-      const allStudents = studentsData.students || studentsData || [];
-      setDepartments(deptData.departments || deptData || []);
-
-      const app = all.filter(t => !t.isPending).map(t => {
-        const myCourses = allCourses.filter(c => c.teacher_id === t.id || c.teacherId === t.id || c.teacher?.id === t.id || c.teacher_name === t.name);
-        const coursesToMap = t.courses && t.courses.length > 0 ? t.courses : myCourses;
-        
-        const mappedCourses = coursesToMap.map(c => {
-          const partialCourse = c.course || c;
-          const fullCourse = allCourses.find(ac => ac.id === partialCourse.id) || partialCourse;
-          const enrolledStudentsCount = allStudents.filter(u => {
-            const studentCourses = u.courses || u.student?.courses || [];
-            return studentCourses.some(sc => sc.id === fullCourse.id);
-          }).length;
-          
-          return {
-            id: fullCourse.id || `${Math.random()}`,
-            name: fullCourse.name || "Unknown Course",
-            code: fullCourse.code || "—",
-            program: fullCourse.program_name || fullCourse.program?.name || fullCourse.program || fullCourse.semester?.academicYear?.program?.name || "—",
-            semester: fullCourse.semester_name || fullCourse.semester?.name || fullCourse.semester || "—",
-            students: fullCourse.student_count || fullCourse.students_count || fullCourse._count?.students || fullCourse.students?.length || fullCourse.students || enrolledStudentsCount || 0,
-          };
-        });
-
-        return {
-          id: t.id, userId: t.userId, name: t.name || t.user?.name,
-          email: t.email || t.user?.email || "—",
-          dept: t.departmentName || t.department?.name || "Unassigned",
-          courses: mappedCourses,
-          createdAt: t.createdAt,
-        };
-      });
-      const pen = all.filter(t => t.isPending).map(t => ({
-        id: t.id, userId: t.userId, name: t.name || t.user?.name,
-        email: t.email || t.user?.email || "—",
-        dept: "—",
-      }));
-
-      setApproved(app);
-      setPending(pen);
-      setStats({ total: all.length, pending: pen.length, approved: app.length });
-    } catch (e: any) { console.log(e); }
-    finally { setIsLoading(false); }
-  };
-
-  useFocusEffect(useCallback(() => { loadTeachers(); }, []));
 
   const handleApprove = (teacher) => {
     Haptics.selection();
@@ -106,34 +115,16 @@ export default function TeachersManagement() {
       return;
     }
     try {
-      await approveTeacher(teacher.userId || teacher.id, selectedDeptId);
+      await approveTeacherMut({ teacherId: teacher.userId || teacher.id, departmentId: selectedDeptId }).unwrap();
       Haptics.success();
       Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
-      loadTeachers();
-    } catch (e: any) { 
-      try {
-        // Fallback: Backend sometimes returns 500 (e.g. SMTP email failure) but still approves the teacher in DB.
-        // Let's verify if the teacher was actually approved before showing an error.
-        const teacherData = await getTeachers();
-        const all = teacherData.teachers || teacherData || [];
-        const targetId = teacher.userId || teacher.id;
-        const updatedTeacher = all.find(x => x.userId === targetId || x.id === targetId);
-        
-        if (updatedTeacher && !updatedTeacher.isPending) {
-          Haptics.success();
-          Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
-          setSelectedTeacherForDept(null);
-          setSelectedDeptId(null);
-          loadTeachers();
-          return;
-        }
-      } catch (errCheck) {
-        // Ignore check errors and show the original error
-      }
+    } catch (e: any) {
+      // Fallback: Backend sometimes returns 500 (e.g. SMTP email failure) but still approves the teacher in DB.
+      // The tag invalidation will refetch anyway, so just show the error.
       Haptics.error();
-      Alert.alert("Error", e.message || "Failed to approve."); 
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to approve.");
     }
   };
 
@@ -144,15 +135,12 @@ export default function TeachersManagement() {
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
-            console.log("[TeachersManagement] Deleting teacher:", teacher.userId || teacher.id, teacher.name);
-            await deleteTeacher(teacher.userId || teacher.id);
+            await deleteTeacherMut(teacher.userId || teacher.id).unwrap();
             Haptics.success();
             Alert.alert("Done", `${teacher.name} removed.`);
-            loadTeachers();
           } catch (e: any) {
-            console.error("[TeachersManagement] Delete failed:", e);
             Haptics.error();
-            Alert.alert("Error", e.message || "Failed to delete.");
+            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
           }
         }
       },

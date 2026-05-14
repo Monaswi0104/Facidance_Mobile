@@ -5,30 +5,63 @@ import {
   ScrollView, ActivityIndicator, Dimensions, TextInput, Alert, Platform,
   Modal, KeyboardAvoidingView, FlatList
 , RefreshControl } from "react-native";
-import { getStudents, updateStudent, markStudentGraduated, ungraduateStudent, deleteStudent } from "../../api/adminApi";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
 import { StatsRowSkeleton, StudentSearchFilterSkeleton, StudentListSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import { Haptics } from "../../utils/haptics";
+import {
+  useGetStudentsQuery,
+  useUpdateStudentMutation,
+  useGraduateStudentMutation,
+  useUngraduateStudentMutation,
+  useDeleteStudentMutation,
+} from "../../store/api/adminApi";
 
 const { width, height } = Dimensions.get("window");
 
 export default function StudentsManagement() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [students, setStudents] = useState([]);
-  const [programs, setPrograms] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    Haptics.light();
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
-    setIsRefreshing(false);
-  }, []);
+  // ── RTK Query ──
+  const { data: rawData, isLoading, isFetching, refetch } = useGetStudentsQuery(undefined, {
+    refetchOnFocus: true,
+  });
+  const [updateStudentMut] = useUpdateStudentMutation();
+  const [graduateStudentMut] = useGraduateStudentMutation();
+  const [ungraduateStudentMut] = useUngraduateStudentMutation();
+  const [deleteStudentMut] = useDeleteStudentMutation();
+
+  // Derive display data from RTK Query cache
+  const students = useMemo(() => {
+    const list = rawData?.students || rawData || [];
+    return list.map((u: any) => {
+      const primaryProgram = u.program_name || u.student?.program?.name || "";
+      const primaryProgramId = u.program_id || u.student?.program?.id || "";
+      const coursePrograms = (u.courses || u.student?.courses || [])
+        .map((c: any) => c.program_name || c.semester?.academicYear?.program?.name)
+        .filter(Boolean);
+      const allPrograms = [...new Set([primaryProgram, ...coursePrograms].filter(Boolean))];
+      return {
+        id: u.id,
+        name: u.name || "Student",
+        email: u.email || "—",
+        status: u.status || u.student?.status || "active",
+        primaryProgram,
+        primaryProgramId,
+        primaryDepartment: u.department_name || u.student?.program?.department?.name || "",
+        allPrograms,
+        courseCount: u.courses_count || u.courses?.length || u.student?.courses?.length || 0,
+        coursesList: u.courses || u.student?.courses || [],
+        createdAt: u.joined_at || u.joinedAt || u.createdAt || new Date(),
+      };
+    });
+  }, [rawData]);
+
+  const programs = useMemo(() => rawData?.programs || [], [rawData]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState("all"); 
   const [search, setSearch] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("all");
@@ -39,45 +72,12 @@ export default function StudentsManagement() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", email: "", programId: "" });
   const [isActionLoading, setIsActionLoading] = useState(false);
-
-  const loadData = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const data = await getStudents();
-      const list = data.students || data || [];
-      const progs = data.programs || [];
-      
-      setPrograms(progs);
-
-      setStudents(list.map((u) => {
-        const primaryProgram = u.program_name || u.student?.program?.name || "";
-        const primaryProgramId = u.program_id || u.student?.program?.id || "";
-        
-        const coursePrograms = (u.courses || u.student?.courses || [])
-          .map((c) => c.program_name || c.semester?.academicYear?.program?.name)
-          .filter(Boolean);
-          
-        const allPrograms = [...new Set([primaryProgram, ...coursePrograms].filter(Boolean))];
-
-        return {
-          id: u.id, 
-          name: u.name || "Student",
-          email: u.email || "—",
-          status: u.status || u.student?.status || "active",
-          primaryProgram,
-          primaryProgramId,
-          primaryDepartment: u.department_name || u.student?.program?.department?.name || "",
-          allPrograms,
-          courseCount: u.courses_count || u.courses?.length || u.student?.courses?.length || 0,
-          coursesList: u.courses || u.student?.courses || [],
-          createdAt: u.joined_at || u.joinedAt || u.createdAt || new Date(),
-        };
-      }));
-    } catch (e: any) { console.log(e); }
-    finally { setIsLoading(false); }
-  };
-
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    Haptics.light();
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
 
   const filtered = students.filter((s) => {
     if (filter === "active" && s.status !== "active") return false;
@@ -97,7 +97,7 @@ export default function StudentsManagement() {
   const totalActive = students.filter((s) => s.status === "active").length;
   const totalGraduated = students.filter((s) => s.status === "graduated").length;
 
-  const uniquePrograms = [...new Set(students.flatMap(s => s.allPrograms))].filter(Boolean);
+  const uniquePrograms = [...new Set(students.flatMap(s => s.allPrograms))].filter(Boolean) as string[];
 
   // --- ACTIONS ---
   const openModal = (type, student) => {
@@ -125,11 +125,12 @@ export default function StudentsManagement() {
     }
     try {
       setIsActionLoading(true);
-      await updateStudent(selectedStudent.id, editForm);
-      await loadData();
+      await updateStudentMut({ id: selectedStudent.id, data: editForm }).unwrap();
+      Haptics.success();
       closeModal();
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to update student.");
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to update student.");
     } finally {
       setIsActionLoading(false);
     }
@@ -138,12 +139,13 @@ export default function StudentsManagement() {
   const handleGraduate = async () => {
     try {
       setIsActionLoading(true);
-      await markStudentGraduated(selectedStudent.id);
-      await loadData();
+      await graduateStudentMut(selectedStudent.id).unwrap();
+      Haptics.success();
       closeModal();
       Alert.alert("Success", "Student has been graduated successfully.");
     } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to graduate student.");
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to graduate student.");
     } finally {
       setIsActionLoading(false);
     }
@@ -152,17 +154,13 @@ export default function StudentsManagement() {
   const handleActivate = async () => {
     try {
       setIsActionLoading(true);
-      console.log("[StudentsManagement] Activating student:", selectedStudent.id, selectedStudent.name);
-      const result = await ungraduateStudent(selectedStudent.id);
+      await ungraduateStudentMut(selectedStudent.id).unwrap();
       Haptics.success();
-      console.log("[StudentsManagement] Activate result:", result);
-      await loadData();
       closeModal();
       Alert.alert("Success", "Student has been reactivated successfully.");
     } catch (e: any) {
-      console.error("[StudentsManagement] Activate error:", e);
       Haptics.error();
-      Alert.alert("Error", e.message || "Failed to activate student. Please try again.");
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to activate student.");
     } finally {
       setIsActionLoading(false);
     }
@@ -171,16 +169,13 @@ export default function StudentsManagement() {
   const handleDelete = async () => {
     try {
       setIsActionLoading(true);
-      console.log("[StudentsManagement] Deleting student:", selectedStudent.id, selectedStudent.name);
-      await deleteStudent(selectedStudent.id);
-      await loadData();
-      closeModal();
+      await deleteStudentMut(selectedStudent.id).unwrap();
       Haptics.success();
+      closeModal();
       Alert.alert("Success", "Student deleted.");
     } catch (e: any) {
-      console.error("[StudentsManagement] Delete failed:", e);
       Haptics.error();
-      Alert.alert("Error", e.message || "Failed to delete student.");
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to delete student.");
     } finally {
       setIsActionLoading(false);
     }

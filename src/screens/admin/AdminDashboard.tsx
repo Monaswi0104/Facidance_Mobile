@@ -4,14 +4,21 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   BackHandler, SafeAreaView, Dimensions, Alert, RefreshControl
 } from "react-native";
-import { getAdminStats, getTeachers, getPrograms, getCourses, getStudents, getTeacherLoad, getProgramDistribution } from "../../api/adminApi";
 import { getUser, clearAuth } from "../../api/authStorage";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, GraduationCap, Building2, BookOpen, TrendingUp, UserX, RefreshCw, ChevronRight, UserCheck } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import CourseAttendanceBarChart from "../../components/CourseAttendanceBarChart";
+import {
+  useGetStatsQuery,
+  useGetTeachersQuery,
+  useGetProgramsQuery,
+  useGetCoursesQuery,
+  useGetStudentsQuery,
+  useGetTeacherLoadQuery,
+  useGetProgramDistributionQuery,
+} from "../../store/api/adminApi";
 
 const { width } = Dimensions.get("window");
 
@@ -22,104 +29,96 @@ type AdminDashboardProps = AdminTabScreenProps<"AdminDashboard">;
 export default function AdminDashboard({ navigation }: AdminDashboardProps) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [stats, setStats] = useState({ teachers: 0, students: 0, departments: 0, programs: 0, courses: 0, attendance_rate: 0, graduated: 0 });
   const [userName, setUserName] = useState("Admin");
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [teacherWorkload, setTeacherWorkload] = useState([]);
-  const [programDist, setProgramDist] = useState([]);
-  const [pendingTeachersCount, setPendingTeachersCount] = useState(0);
 
-  const loadData = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const [statsData, user, teachersList, programsList, coursesList, studentsList] = await Promise.all([
-        getAdminStats(),
-        getUser(),
-        getTeachers().catch(() => []),
-        getPrograms().catch(() => []),
-        getCourses().catch(() => []),
-        getStudents().catch(() => []),
-      ]);
-      if (statsData) setStats(statsData);
+  // ── RTK Query ──
+  const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useGetStatsQuery(undefined, { refetchOnFocus: true });
+  const { data: teachersRaw } = useGetTeachersQuery();
+  const { data: programsRaw } = useGetProgramsQuery();
+  const { data: coursesRaw } = useGetCoursesQuery();
+  const { data: studentsRaw } = useGetStudentsQuery();
+  const { data: teacherLoadRaw } = useGetTeacherLoadQuery();
+  const { data: distRaw } = useGetProgramDistributionQuery();
+
+  const isLoading = statsLoading;
+
+  // Derive stats
+  const stats = useMemo(() => {
+    const base = statsData || { teachers: 0, students: 0, departments: 0, programs: 0, courses: 0, attendance_rate: 0, graduated: 0 };
+    const sList = studentsRaw?.students || [];
+    const graduatedCount = sList.filter((s: any) => (s.status || s.student?.status) === "graduated").length;
+    const activeCount = sList.length - graduatedCount;
+    return {
+      ...base,
+      graduated: base.graduated || graduatedCount,
+      active_students: activeCount,
+    };
+  }, [statsData, studentsRaw]);
+
+  // Derive pending teachers count
+  const pendingTeachersCount = useMemo(() => {
+    const tList = teachersRaw?.teachers || teachersRaw || [];
+    return Array.isArray(tList) ? tList.filter((t: any) => t.isPending).length : 0;
+  }, [teachersRaw]);
+
+  // Derive teacher workload
+  const teacherWorkload = useMemo(() => {
+    const loadList = teacherLoadRaw?.teachers || [];
+    if (loadList.length > 0) {
+      return loadList.map((t: any) => ({
+        name: t.teacher_name || "Teacher",
+        dept: t.department_name || "Department",
+        courses: t.course_count || 0,
+        students: t.student_count || 0,
+      }));
+    }
+    // Fallback
+    const tList = teachersRaw?.teachers || teachersRaw || [];
+    return (Array.isArray(tList) ? tList : []).filter((t: any) => !t.isPending).slice(0, 4).map((t: any) => ({
+      name: t.name || t.teacher_name || t.user?.name || "Teacher",
+      dept: t.department?.name || t.department_name || "Department",
+      courses: t.course_count || 0,
+      students: t.student_count || 0,
+    }));
+  }, [teacherLoadRaw, teachersRaw]);
+
+  // Derive program distribution
+  const programDist = useMemo(() => {
+    const distList = distRaw?.programs || [];
+    if (distList.length > 0) {
+      return distList.slice(0, 5).map((p: any) => ({
+        name: p.program_name || "Program",
+        dept: p.department_name || "",
+        students: p.student_count || 0,
+      }));
+    }
+    // Fallback
+    const pList = programsRaw?.programs || programsRaw || [];
+    const sList = studentsRaw?.students || [];
+    return (Array.isArray(pList) ? pList : []).slice(0, 4).map((p: any) => {
+      const pStudents = sList.filter((s: any) => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
+      return {
+        name: p.name || "Program",
+        dept: p.department?.name || p.department_name || "",
+        students: pStudents.length,
+      };
+    });
+  }, [distRaw, programsRaw, studentsRaw]);
+
+  // Load user name on mount
+  useEffect(() => {
+    (async () => {
+      const user = await getUser();
       if (user?.name) setUserName(user.name);
-      
-      // Extract arrays from API responses
-      const tList = Array.isArray(teachersList?.teachers || teachersList) ? (teachersList?.teachers || teachersList) : [];
-      const pList = Array.isArray(programsList?.programs || programsList) ? (programsList?.programs || programsList) : [];
-      const cList = Array.isArray(coursesList?.courses || coursesList) ? (coursesList?.courses || coursesList) : [];
-      const sList = Array.isArray(studentsList?.students || studentsList) ? (studentsList?.students || studentsList) : [];
-
-      const pendingCount = tList.filter(t => t.isPending).length;
-      setPendingTeachersCount(pendingCount);
-
-      // Build teacher workload from the dedicated analytics endpoint (accurate counts)
-      try {
-        const loadData2 = await getTeacherLoad();
-        const loadList = loadData2?.teachers || [];
-        setTeacherWorkload(loadList.map(t => ({
-          name: t.teacher_name || "Teacher",
-          dept: t.department_name || "Department",
-          courses: t.course_count || 0,
-          students: t.student_count || 0,
-        })));
-      } catch (loadErr) {
-        console.log("[AdminDashboard] Teacher load fetch failed:", loadErr);
-        // Fallback: use basic teacher list
-        const workload = tList
-          .filter(t => !t.isPending)
-          .slice(0, 4)
-          .map(t => ({
-            name: t.name || t.teacher_name || t.user?.name || "Teacher",
-            dept: t.department?.name || t.department_name || "Department",
-            courses: t.course_count || 0,
-            students: t.student_count || 0,
-          }));
-        setTeacherWorkload(workload);
-      }
-
-      // Compute graduated/active counts from student list as fallback
-      const graduatedCount = sList.filter(s => (s.status || s.student?.status) === "graduated").length;
-      const activeCount = sList.length - graduatedCount;
-      if (statsData) {
-        statsData.graduated = statsData.graduated || graduatedCount;
-        statsData.active_students = activeCount;
-        setStats(statsData);
-      }
-
-      // Build program distribution from analytics endpoint (accurate counts)
-      try {
-        const distData = await getProgramDistribution();
-        const distList = distData?.programs || [];
-        setProgramDist(distList.slice(0, 5).map(p => ({
-          name: p.program_name || "Program",
-          dept: p.department_name || "",
-          students: p.student_count || 0,
-        })));
-      } catch (distErr) {
-        console.log("[AdminDashboard] Program distribution fetch failed:", distErr);
-        // Fallback: cross-reference from student list
-        const dist = pList.slice(0, 4).map(p => {
-          const pStudents = sList.filter(s => s.program_id === p.id || s.program_name === p.name || s.student?.program?.id === p.id);
-          return {
-            name: p.name || "Program",
-            dept: p.department?.name || p.department_name || "",
-            students: pStudents.length,
-          };
-        });
-        setProgramDist(dist);
-      }
-    } catch (e: any) { console.log(e); }
-    finally { setIsLoading(false); }
-  };
+    })();
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData(false);
+    await refetchStats();
     setIsRefreshing(false);
-  }, []);
-
-  useFocusEffect(useCallback(() => { loadData(true); }, []));
+  }, [refetchStats]);
 
   useEffect(() => {
     const backAction = () => {
@@ -167,7 +166,7 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
             <Text style={styles.subtitle}>Institution-wide overview — teachers, students, departments & analytics</Text>
           </View>
           <View style={styles.headerBtns}>
-            <TouchableOpacity style={styles.headerBtnOutline} onPress={() => loadData()} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.headerBtnOutline} onPress={() => refetchStats()} activeOpacity={0.7}>
               <RefreshCw size={13} color={colors.textBody} style={{ marginRight: 4 }} />
               <Text style={styles.headerBtnText}>Refresh</Text>
             </TouchableOpacity>

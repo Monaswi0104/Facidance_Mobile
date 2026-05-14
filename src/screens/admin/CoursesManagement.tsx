@@ -4,100 +4,103 @@ import {
   ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal, FlatList
 , RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getCourses, deleteCourse, createCourse, getDepartments, getPrograms, getTeachers } from "../../api/adminApi";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
 import { StatsRowSkeleton, SearchBarSkeleton, CourseListSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import { Haptics } from "../../utils/haptics";
+import {
+  useGetCoursesQuery,
+  useGetDepartmentsQuery,
+  useGetProgramsQuery,
+  useGetTeachersQuery,
+  useCreateCourseMutation,
+  useDeleteCourseMutation,
+} from "../../store/api/adminApi";
 
 const { width } = Dimensions.get("window");
 
 export default function CoursesManagement() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [courses, setCourses] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [programs, setPrograms] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // ── RTK Query ──
+  const { data: coursesData, isLoading: coursesLoading, refetch: refetchCourses } = useGetCoursesQuery(undefined, { refetchOnFocus: true });
+  const { data: deptsData } = useGetDepartmentsQuery();
+  const { data: progsData } = useGetProgramsQuery();
+  const { data: teachersData } = useGetTeachersQuery();
+  const [createCourseMut] = useCreateCourseMutation();
+  const [deleteCourseMut] = useDeleteCourseMutation();
+
+  const isLoading = coursesLoading;
+
+  // Derive display data from RTK Query cache
+  const deptsList = useMemo(() => deptsData?.departments || deptsData || [], [deptsData]);
+  const progsList = useMemo(() => progsData?.programs || progsData || [], [progsData]);
+  const allTeachers = useMemo(() => {
+    const t = teachersData?.teachers || teachersData || [];
+    return t.filter((t: any) => t.id && !t.isPending);
+  }, [teachersData]);
+
+  const courses = useMemo(() => {
+    const list = coursesData?.courses || coursesData || [];
+    return list.map((c: any) => {
+      const matchedTeacher = allTeachers.find((t: any) => t.id === c.teacher_id || t.userId === c.teacher_id);
+      const matchedProgram = progsList.find((p: any) => p.id === c.program_id);
+      const programDeptId = matchedProgram?.department_id || matchedProgram?.departmentId || null;
+      const programDept = programDeptId ? deptsList.find((d: any) => d.id === programDeptId) : null;
+      return {
+        id: c.id, name: c.name, code: c.code || "—",
+        entryCode: c.entry_code || c.entryCode || "—",
+        teacher: c.teacher_name || matchedTeacher?.name || "—",
+        teacherEmail: c.teacher_email || matchedTeacher?.email || "",
+        teacherDept: matchedTeacher?.departmentName || matchedTeacher?.department_name || "—",
+        semester: c.semester_name || "—",
+        year: c.academic_year_name || "—",
+        program: c.program_name || matchedProgram?.name || "—",
+        department: matchedTeacher?.departmentName || matchedTeacher?.department_name || programDept?.name || "—",
+        students: c.student_count || c.students_count || c._count?.students || 0,
+        sessions: c.session_count || c.sessions_count || c._count?.sessions || 0,
+      };
+    });
+  }, [coursesData, allTeachers, progsList, deptsList]);
+
+  const departments = deptsList;
+  const programs = progsList;
+  const teachers = allTeachers;
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    Haptics.light();
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
-    setIsRefreshing(false);
-  }, []);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [search, setSearch] = useState("");
-  
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState({
     departmentId: null, teacherId: null, programId: null,
     academicYear: "", semesterNumber: null, name: "", code: "", entryCode: ""
   });
 
-  const loadData = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const [coursesData, deptsData, progsData, teachersData] = await Promise.all([
-        getCourses(), getDepartments(), getPrograms(), getTeachers()
-      ]);
-
-      const list = coursesData.courses || coursesData || [];
-      const deptsList = deptsData.departments || deptsData || [];
-      const progsList = progsData.programs || progsData || [];
-      const allTeachers = teachersData.teachers || teachersData || [];
-      const approvedTeachers = allTeachers.filter(t => t.id && !t.isPending);
-
-      setCourses(list.map((c) => {
-        const matchedTeacher = allTeachers.find(t => t.id === c.teacher_id || t.userId === c.teacher_id);
-        const matchedProgram = progsList.find(p => p.id === c.program_id);
-        const programDeptId = matchedProgram?.department_id || matchedProgram?.departmentId || null;
-        const programDept = programDeptId ? deptsList.find(d => d.id === programDeptId) : null;
-
-        return {
-          id: c.id, name: c.name, code: c.code || "—",
-          entryCode: c.entry_code || c.entryCode || "—",
-          teacher: c.teacher_name || matchedTeacher?.name || "—",
-          teacherEmail: c.teacher_email || matchedTeacher?.email || "",
-          teacherDept: matchedTeacher?.departmentName || matchedTeacher?.department_name || "—",
-          semester: c.semester_name || "—",
-          year: c.academic_year_name || "—",
-          program: c.program_name || matchedProgram?.name || "—",
-          department: matchedTeacher?.departmentName || matchedTeacher?.department_name || programDept?.name || "—",
-          students: c.student_count || c.students_count || c._count?.students || 0,
-          sessions: c.session_count || c.sessions_count || c._count?.sessions || 0,
-        };
-      }));
-
-      setDepartments(deptsList);
-      setPrograms(progsList);
-      setTeachers(approvedTeachers);
-    } catch (e: any) { console.log(e); }
-    finally { setIsLoading(false); }
-  };
-
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    Haptics.light();
+    await refetchCourses();
+    setIsRefreshing(false);
+  }, [refetchCourses]);
 
   const handleDelete = (course) => {
+    Haptics.selection();
     Alert.alert("Delete Course", `Remove "${course.name}"?`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
-            console.log("[CoursesManagement] Deleting course:", course.id, course.name);
-            await deleteCourse(course.id);
-            loadData();
+            await deleteCourseMut(course.id).unwrap();
+            Haptics.success();
             Alert.alert("Success", "Course deleted.");
           }
           catch (e: any) {
-            console.error("[CoursesManagement] Delete failed:", e);
-            Alert.alert("Error", e.message || "Failed to delete.");
+            Haptics.error();
+            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
           }
         }
       },
@@ -112,19 +115,14 @@ export default function CoursesManagement() {
     }
     setIsSubmitting(true);
     try {
-      console.log("[CoursesManagement] Creating course:", { name, teacherId, programId, academicYear, semesterNumber });
-      const result = await createCourse({ name, code, teacherId, programId, academicYear, semesterNumber, entryCode });
-      if (result.error) {
-        Alert.alert("Error", result.error + (result.hint ? `\n\n${result.hint}` : ""));
-        return;
-      }
+      await createCourseMut({ name, teacherId, programId, academicYear, semesterNumber }).unwrap();
+      Haptics.success();
       Alert.alert("Success", "Course added successfully!");
       setShowAddForm(false);
       setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "", code: "", entryCode: "" });
-      loadData();
     } catch (e: any) {
-      console.error("[CoursesManagement] Create failed:", e);
-      Alert.alert("Error", e.message || "Failed to create course.");
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to create course.");
     } finally {
       setIsSubmitting(false);
     }

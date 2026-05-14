@@ -4,119 +4,117 @@ import {
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 , RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { getPrograms, createProgram, deleteProgram, getDepartments, getAdminStats, getCourses, getStudents, getProgramDistribution } from "../../api/adminApi";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building2, Users, GraduationCap, Plus, Trash2, X, Key } from "lucide-react-native";
 import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import { Haptics } from "../../utils/haptics";
+import {
+  useGetProgramsQuery,
+  useGetDepartmentsQuery,
+  useGetStatsQuery,
+  useGetCoursesQuery,
+  useGetStudentsQuery,
+  useGetProgramDistributionQuery,
+  useCreateProgramMutation,
+  useDeleteProgramMutation,
+} from "../../store/api/adminApi";
 
 export default function ProgramsManagement() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [programs, setPrograms] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
-    setIsRefreshing(false);
-  }, []);
+  // ── RTK Query ──
+  const { data: progData, isLoading: progsLoading, refetch: refetchProgs } = useGetProgramsQuery(undefined, { refetchOnFocus: true });
+  const { data: deptData } = useGetDepartmentsQuery();
+  const { data: statsData } = useGetStatsQuery();
+  const { data: coursesData } = useGetCoursesQuery();
+  const { data: studentsData } = useGetStudentsQuery();
+  const { data: distData } = useGetProgramDistributionQuery();
+  const [createProgramMut] = useCreateProgramMutation();
+  const [deleteProgramMut] = useDeleteProgramMutation();
+
+  const isLoading = progsLoading;
+
+  // Derive display data
+  const departments = useMemo(() => deptData?.departments || deptData || [], [deptData]);
+  const adminStudents = statsData?.students || 0;
+
+  const programs = useMemo(() => {
+    const progList = progData?.programs || progData || [];
+    const deptList = departments;
+    const courseList = coursesData?.courses || coursesData || [];
+    let studentList = studentsData?.students || [];
+    if (!Array.isArray(studentList)) studentList = [];
+
+    const distMap: Record<string, number> = {};
+    const distList = distData?.programs || [];
+    distList.forEach((d: any) => { distMap[d.program_id] = d.student_count || 0; });
+
+    const deptMap: Record<string, string> = {};
+    deptList.forEach((d: any) => { deptMap[d.id] = d.name; });
+
+    return progList.map((p: any) => {
+      const pCourses = courseList.filter((c: any) =>
+        c.program_id === p.id || c.programId === p.id ||
+        c.program_name === p.name ||
+        c.semester?.academicYear?.programId === p.id ||
+        c.semester?.academicYear?.program_id === p.id
+      );
+
+      const pStudents = studentList.filter((s: any) =>
+        s.program_id === p.id || s.programId === p.id ||
+        s.program_name === p.name ||
+        s.student?.program?.id === p.id || s.student?.programId === p.id
+      );
+
+      const teacherSet = new Set<string>();
+      pCourses.forEach((c: any) => {
+        const tName = c.teacher_name || c.teacher?.user?.name;
+        if (tName) teacherSet.add(tName);
+      });
+
+      const studentCount = (distMap[p.id] ?? pStudents.length) || p.students_count || p._count?.students || p.students?.length || 0;
+      const courseCount = pCourses.length || p.courses_count || p._count?.courses || p.courses?.length || 0;
+
+      return {
+        id: p.id,
+        name: p.name,
+        departmentId: p.department_id || p.departmentId,
+        dept: p.department_name || p.department?.name || deptMap[p.department_id || p.departmentId] || "—",
+        students: studentCount,
+        courses: pCourses.map((c: any) => {
+          const courseStudentCount = pStudents.filter((s: any) => {
+            const sCourses = s.courses || [];
+            return sCourses.some((sc: any) => sc.id === c.id);
+          }).length;
+          return {
+            id: c.id, name: c.name, code: c.code || "—",
+            teacher: c.teacher_name || c.teacher?.user?.name || "—",
+            semester: c.semester_name || c.semester?.name || "—",
+            students: c.student_count || c.students_count || c._count?.students || courseStudentCount || 0,
+          };
+        }),
+        teachers: Array.from(teacherSet),
+        totalCourses: courseCount,
+      };
+    });
+  }, [progData, departments, coursesData, studentsData, distData]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [adminStudents, setAdminStudents] = useState(0);
 
-  const loadData = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const [progData, deptData, statsData, coursesData, studentsData] = await Promise.all([
-        getPrograms(), getDepartments(), getAdminStats(), getCourses(), getStudents()
-      ]);
-
-      // Fetch program distribution separately so failure doesn't break everything
-      let distMap = {};
-      try {
-        const distData = await getProgramDistribution();
-        const distList = distData?.programs || [];
-        distList.forEach(d => { distMap[d.program_id] = d.student_count || 0; });
-      } catch (distErr) {
-        console.log("[ProgramsManagement] Distribution fetch failed (non-critical):", distErr);
-      }
-
-      if (statsData?.students) setAdminStudents(statsData.students);
-      const progList = progData.programs || progData || [];
-      const deptList = deptData.departments || deptData || [];
-      const courseList = coursesData.courses || coursesData || [];
-
-      let studentList = [];
-      if (studentsData.students) studentList = studentsData.students;
-      else if (Array.isArray(studentsData)) studentList = studentsData;
-
-      setDepartments(deptList);
-
-      const deptMap = {};
-      deptList.forEach((d) => { deptMap[d.id] = d.name; });
-
-      setPrograms(progList.map((p) => {
-        // Match courses to this program — try all possible field name variants
-        const pCourses = courseList.filter(c => 
-          c.program_id === p.id || c.programId === p.id || 
-          c.program_name === p.name || 
-          c.semester?.academicYear?.programId === p.id ||
-          c.semester?.academicYear?.program_id === p.id
-        );
-        
-        // Match students to this program for per-course counting
-        const pStudents = studentList.filter(s => 
-          s.program_id === p.id || s.programId === p.id || 
-          s.program_name === p.name || 
-          s.student?.program?.id === p.id || s.student?.programId === p.id
-        );
-
-        const teacherSet = new Set();
-        pCourses.forEach(c => {
-          const tName = c.teacher_name || c.teacher?.user?.name;
-          if (tName) teacherSet.add(tName);
-        });
-
-        // Use the analytics endpoint count (most accurate), then computed, then API fallbacks
-        const studentCount = (distMap[p.id] ?? pStudents.length) || p.students_count || p._count?.students || p.students?.length || 0;
-        const courseCount = pCourses.length || p.courses_count || p._count?.courses || p.courses?.length || 0;
-
-        return {
-          id: p.id,
-          name: p.name,
-          departmentId: p.department_id || p.departmentId,
-          dept: p.department_name || p.department?.name || deptMap[p.department_id || p.departmentId] || "—",
-          students: studentCount,
-          courses: pCourses.map(c => {
-            // Count students enrolled in this specific course
-            const courseStudentCount = pStudents.filter(s => {
-              const sCourses = s.courses || [];
-              return sCourses.some(sc => sc.id === c.id);
-            }).length;
-            return {
-              id: c.id, name: c.name, code: c.code || "—",
-              teacher: c.teacher_name || c.teacher?.user?.name || "—",
-              semester: c.semester_name || c.semester?.name || "—",
-              students: c.student_count || c.students_count || c._count?.students || courseStudentCount || 0,
-            };
-          }),
-          teachers: Array.from(teacherSet),
-          totalCourses: courseCount,
-        };
-      }));
-    } catch (e: any) { console.log("[ProgramsManagement] Error:", e); }
-    finally { setIsLoading(false); }
-  };
-
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    Haptics.light();
+    await refetchProgs();
+    setIsRefreshing(false);
+  }, [refetchProgs]);
 
   const uniqueDepts = new Set(programs.map(p => p.dept).filter(d => d !== "—"));
   const totalStudents = adminStudents || programs.reduce((a, p) => a + p.students, 0);
@@ -126,33 +124,32 @@ export default function ProgramsManagement() {
     if (!selectedDeptId) { Alert.alert("Error", "Select a department."); return; }
     try {
       setIsCreating(true);
-      console.log("[ProgramsManagement] Creating program:", newName.trim(), "for department:", selectedDeptId);
-      await createProgram(newName.trim(), selectedDeptId);
+      await createProgramMut({ name: newName.trim(), departmentId: selectedDeptId }).unwrap();
+      Haptics.success();
       setNewName("");
       setShowAddForm(false);
       Alert.alert("Success", "Program created.");
-      loadData();
     } catch (e: any) {
-      console.error("[ProgramsManagement] Create failed:", e);
-      Alert.alert("Error", e.message || "Failed to create program.");
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to create program.");
     }
     finally { setIsCreating(false); }
   };
 
   const handleDelete = (prog) => {
+    Haptics.selection();
     Alert.alert("Delete Program", `Remove "${prog.name}"?`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
-            console.log("[ProgramsManagement] Deleting program:", prog.id, prog.name);
-            await deleteProgram(prog.id);
-            loadData();
+            await deleteProgramMut(prog.id).unwrap();
+            Haptics.success();
             Alert.alert("Success", "Program deleted.");
           }
           catch (e: any) {
-            console.error("[ProgramsManagement] Delete failed:", e);
-            Alert.alert("Error", e.message || "Failed to delete.");
+            Haptics.error();
+            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
           }
         }
       },

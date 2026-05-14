@@ -3,71 +3,74 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 , RefreshControl } from "react-native";
-import { getDepartments, createDepartment, deleteDepartment, getPrograms, getTeachers } from "../../api/adminApi";
-import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Building2, GraduationCap, Users, Plus, Trash2, X } from "lucide-react-native";
 import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import { Haptics } from "../../utils/haptics";
+import {
+  useGetDepartmentsQuery,
+  useGetProgramsQuery,
+  useGetTeachersQuery,
+  useCreateDepartmentMutation,
+  useDeleteDepartmentMutation,
+} from "../../store/api/adminApi";
 
 export default function DepartmentsManagement() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadData(false); // Assume it accepts showLoading=false, but just await it
-    setIsRefreshing(false);
-  }, []);
+  // ── RTK Query ──
+  const { data: deptData, isLoading: deptsLoading, refetch: refetchDepts } = useGetDepartmentsQuery(undefined, { refetchOnFocus: true });
+  const { data: progsData } = useGetProgramsQuery();
+  const { data: teachersData } = useGetTeachersQuery();
+  const [createDepartmentMut] = useCreateDepartmentMutation();
+  const [deleteDepartmentMut] = useDeleteDepartmentMutation();
+
+  const isLoading = deptsLoading;
+
+  // Derive display data from RTK Query cache
+  const departments = useMemo(() => {
+    const list = deptData?.departments || deptData || [];
+    const allPrograms = progsData?.programs || progsData || [];
+    const allTeachers = teachersData?.teachers || teachersData || [];
+
+    return list.map((d: any) => {
+      const dPrograms = d.programs && d.programs.length > 0 ? d.programs : allPrograms.filter((p: any) => p.departmentId === d.id || p.department_id === d.id);
+      const dTeachers = d.teachers && d.teachers.length > 0 ? d.teachers : allTeachers.filter((t: any) => t.departmentId === d.id || t.department_id === d.id || t.department?.id === d.id);
+
+      return {
+        id: d.id,
+        name: d.name,
+        programs: d.programs_count || d._count?.programs || dPrograms.length || 0,
+        teachers: d.teachers_count || d._count?.teachers || dTeachers.length || 0,
+        programsList: dPrograms,
+        teachersList: dTeachers.map((t: any) => {
+          const progs = new Set();
+          if (t.courses) {
+            t.courses.forEach((c: any) => {
+              const pName = c.program_name || c?.semester?.academicYear?.program?.name || c.program?.name;
+              if (pName) progs.add(pName);
+            });
+          }
+          return { ...t, allottedPrograms: Array.from(progs).join(" • ") };
+        }),
+      };
+    });
+  }, [deptData, progsData, teachersData]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-
-  const loadData = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoading(true);
-      const [data, progsData, teachersData] = await Promise.all([
-        getDepartments(),
-        getPrograms(),
-        getTeachers()
-      ]);
-
-      const list = data.departments || data || [];
-      const allPrograms = progsData.programs || progsData || [];
-      const allTeachers = teachersData.teachers || teachersData || [];
-
-      setDepartments(list.map((d) => {
-        const dPrograms = d.programs && d.programs.length > 0 ? d.programs : allPrograms.filter(p => p.departmentId === d.id || p.department_id === d.id);
-        const dTeachers = d.teachers && d.teachers.length > 0 ? d.teachers : allTeachers.filter(t => t.departmentId === d.id || t.department_id === d.id || t.department?.id === d.id);
-
-        return {
-          id: d.id, 
-          name: d.name,
-          programs: d.programs_count || d._count?.programs || dPrograms.length || 0,
-          teachers: d.teachers_count || d._count?.teachers || dTeachers.length || 0,
-          programsList: dPrograms,
-          teachersList: dTeachers.map(t => {
-            const progs = new Set();
-            if (t.courses) {
-              t.courses.forEach(c => {
-                 const pName = c.program_name || c?.semester?.academicYear?.program?.name || c.program?.name;
-                 if (pName) progs.add(pName);
-              });
-            }
-            return { ...t, allottedPrograms: Array.from(progs).join(" • ") };
-          }),
-        };
-      }));
-    } catch (e: any) { console.log(e); }
-    finally { setIsLoading(false); }
-  };
-
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    Haptics.light();
+    await refetchDepts();
+    setIsRefreshing(false);
+  }, [refetchDepts]);
 
   const totalPrograms = departments.reduce((a, d) => a + d.programs, 0);
   const totalTeachers = departments.reduce((a, d) => a + d.teachers, 0);
@@ -76,33 +79,32 @@ export default function DepartmentsManagement() {
     if (!newName.trim()) { Alert.alert("Error", "Please enter a department name."); return; }
     try {
       setIsCreating(true);
-      console.log("[DepartmentsManagement] Creating department:", newName.trim());
-      await createDepartment(newName.trim());
+      await createDepartmentMut(newName.trim()).unwrap();
+      Haptics.success();
       setNewName("");
       setShowAddForm(false);
       Alert.alert("Success", "Department created.");
-      loadData();
     } catch (e: any) {
-      console.error("[DepartmentsManagement] Create failed:", e);
-      Alert.alert("Error", e.message || "Failed to create department.");
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to create department.");
     }
     finally { setIsCreating(false); }
   };
 
   const handleDelete = (dept) => {
+    Haptics.selection();
     Alert.alert("Delete Department", `Remove "${dept.name}"?`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
-            console.log("[DepartmentsManagement] Deleting department:", dept.id, dept.name);
-            await deleteDepartment(dept.id);
-            loadData();
+            await deleteDepartmentMut(dept.id).unwrap();
+            Haptics.success();
             Alert.alert("Success", "Department deleted.");
           }
           catch (e: any) {
-            console.error("[DepartmentsManagement] Delete failed:", e);
-            Alert.alert("Error", e.message || "Failed to delete.");
+            Haptics.error();
+            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
           }
         }
       },
