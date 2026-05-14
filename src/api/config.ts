@@ -14,14 +14,18 @@ function getDevServerHost(): string {
     return host;
   }
 
-  // Fallback to the Mac's current local Wi-Fi IP address instead of 'localhost'
-  // so physical iPhones can connect to the backend over the network.
-  return "192.168.1.2";
+  // Fallback to localhost if we're on the iOS Simulator, otherwise try to guess the IP.
+  return "127.0.0.1";
 }
 
 // Android emulator needs 10.0.2.2 to reach the host machine.
-// iOS physical devices use the Metro host IP; iOS simulator falls back to localhost.
-export const HOST: string = (Platform.OS === "android" && isEmulator) ? "10.0.2.2" : getDevServerHost();
+// iOS simulator works perfectly with 127.0.0.1
+// Physical devices should be handled dynamically by the SourceCode scriptURL.
+export const HOST: string = (Platform.OS === "android" && isEmulator) 
+  ? "10.0.2.2" 
+  : (Platform.OS === "ios" && isEmulator)
+    ? "127.0.0.1"
+    : getDevServerHost();
 
 // Service-specific base URLs (Local Backend Configuration)
 const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later
