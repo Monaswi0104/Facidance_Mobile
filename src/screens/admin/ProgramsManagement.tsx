@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Modal, TextInput, Dimensions
 , RefreshControl } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, Building2, Users, GraduationCap, Plus, Trash2, X, Key } from "lucide-react-native";
 import { StatsRowSkeleton, ListCardSkeleton } from "../../components/SkeletonLoader";
@@ -236,21 +236,13 @@ export default function ProgramsManagement() {
                 <View style={styles.addFormRow}>
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={styles.addFormLabel}>DEPARTMENT</Text>
-                    <View style={styles.pickerWrapper}>
-                      <Picker
-                        selectedValue={selectedDeptId}
-                        onValueChange={(v) => setSelectedDeptId(v)}
-                        style={styles.picker}
-                        mode="dropdown"
-                        dropdownIconColor={colors.foreground}
-                        itemStyle={{ fontSize: 13, color: colors.foreground }}
-                      >
-                        <Picker.Item label="Select a department" value={null} color={colors.mutedForeground} />
-                        {departments.map(d => (
-                          <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} />
-                        ))}
-                      </Picker>
-                    </View>
+                    <DropdownPicker
+                      selectedValue={selectedDeptId}
+                      onValueChange={(v) => setSelectedDeptId(v)}
+                      items={departments.map(d => ({ label: d.name, value: d.id }))}
+                      placeholder="Select a department"
+                      colors={colors}
+                    />
                   </View>
                   <TouchableOpacity style={styles.addFormBtn} onPress={handleAdd} disabled={isCreating}>
                     <Plus size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} />

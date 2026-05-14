@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Alert, ActivityIndicator, Dimensions, TextInput, Modal, FlatList
 , RefreshControl } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
 import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
 import { StatsRowSkeleton, SearchBarSkeleton, CourseListSkeleton } from "../../components/SkeletonLoader";
@@ -215,33 +215,36 @@ export default function CoursesManagement() {
                 <View style={styles.formRow}>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>FILTER BY DEPARTMENT</Text>
-                    <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="All Departments" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
-                        {departments.map(d => <Picker.Item key={d.id} label={d.name} value={d.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
-                      </Picker>
-                    </View>
+                    <DropdownPicker
+                      selectedValue={form.departmentId}
+                      onValueChange={(v) => setForm({ ...form, departmentId: v, programId: null })}
+                      items={departments.map(d => ({ label: d.name, value: d.id }))}
+                      placeholder="All Departments"
+                      colors={colors}
+                    />
                   </View>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>TEACHER *</Text>
-                    <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select Teacher" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
-                        {teachers.map(t => <Picker.Item key={t.id} label={t.name} value={t.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
-                      </Picker>
-                    </View>
+                    <DropdownPicker
+                      selectedValue={form.teacherId}
+                      onValueChange={(v) => setForm({ ...form, teacherId: v })}
+                      items={teachers.map(t => ({ label: t.name, value: t.id }))}
+                      placeholder="Select Teacher"
+                      colors={colors}
+                    />
                   </View>
                 </View>
 
                 <View style={styles.formRow}>
                   <View style={styles.formFieldFull}>
                     <Text style={styles.formLabel}>PROGRAM *</Text>
-                    <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.programId} onValueChange={(v) => setForm({ ...form, programId: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select Program" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
-                        {filteredPrograms.map(p => <Picker.Item key={p.id} label={p.name} value={p.id} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
-                      </Picker>
-                    </View>
+                    <DropdownPicker
+                      selectedValue={form.programId}
+                      onValueChange={(v) => setForm({ ...form, programId: v })}
+                      items={filteredPrograms.map(p => ({ label: p.name, value: p.id }))}
+                      placeholder="Select Program"
+                      colors={colors}
+                    />
                   </View>
                 </View>
 
@@ -253,12 +256,13 @@ export default function CoursesManagement() {
                   </View>
                   <View style={styles.formField}>
                     <Text style={styles.formLabel}>SEMESTER *</Text>
-                    <View style={styles.pickerBox}>
-                      <Picker selectedValue={form.semesterNumber} onValueChange={(v) => setForm({ ...form, semesterNumber: v })} style={styles.picker} dropdownIconColor={colors.foreground}>
-                        <Picker.Item label="Select" value={null} color={colors.mutedForeground} style={{ backgroundColor: colors.background }} />
-                        {["1","2","3","4","5","6","7","8"].map(s => <Picker.Item key={s} label={`Semester ${s}`} value={s} color={colors.foreground} style={{ backgroundColor: colors.background }} />)}
-                      </Picker>
-                    </View>
+                    <DropdownPicker
+                      selectedValue={form.semesterNumber}
+                      onValueChange={(v) => setForm({ ...form, semesterNumber: v })}
+                      items={["1","2","3","4","5","6","7","8"].map(s => ({ label: `Semester ${s}`, value: s }))}
+                      placeholder="Select"
+                      colors={colors}
+                    />
                   </View>
                 </View>
 

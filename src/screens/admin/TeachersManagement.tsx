@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions, TextInput
 , RefreshControl, FlatList } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
@@ -260,17 +260,13 @@ export default function TeachersManagement() {
                           <Text style={styles.assignmentLabel}>ASSIGN DEPARTMENT</Text>
                           <View style={styles.assignmentControls}>
                             <View style={styles.pickerContainer}>
-                              <Picker
+                              <DropdownPicker
                                 selectedValue={selectedDeptId}
                                 onValueChange={(v) => setSelectedDeptId(v)}
-                                style={styles.picker}
-                                mode="dropdown"
-                              >
-                                <Picker.Item label="Select department" value={null} />
-                                {departments.map(d => (
-                                  <Picker.Item key={d.id} label={d.name} value={d.id} />
-                                ))}
-                              </Picker>
+                                items={departments.map(d => ({ label: d.name, value: d.id }))}
+                                placeholder="Select department"
+                                colors={colors}
+                              />
                             </View>
                             <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
                               <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
