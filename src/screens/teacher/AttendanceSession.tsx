@@ -558,7 +558,7 @@ export default function AttendanceSession({ route, navigation }) {
             <View style={s.activeControlsRow}>
               {!sessionPaused ? (
                 <TouchableOpacity style={s.pauseBtn} onPress={pauseSession} activeOpacity={0.8}>
-                  <Pause size={14} color="#B45309" style={{ marginRight: 6 }} />
+                  <Pause size={14} color={colors.warning} style={{ marginRight: 6 }} />
                   <Text style={s.pauseBtnText}>Pause</Text>
                 </TouchableOpacity>
               ) : (
@@ -727,10 +727,10 @@ const createStyles = (colors) => StyleSheet.create({
   statLabel: { fontSize: 8, fontWeight: "600", color: colors.mutedForeground, letterSpacing: 0.3, marginTop: 4 },
   statNumber: { fontSize: 22, fontWeight: "900", color: colors.foreground, letterSpacing: -0.5 },
 
-  cameraCard: { backgroundColor: colors.foreground, borderRadius: 16, padding: 16, marginBottom: 16 },
+  cameraCard: { backgroundColor: "#0f172a", borderRadius: 16, padding: 16, marginBottom: 16 },
   cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  cameraTitle: { fontSize: 16, fontWeight: "700", color: colors.primaryForeground },
-  cameraSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+  cameraTitle: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
+  cameraSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 },
   liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16,185,129,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.background, marginRight: 6 },
   liveText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700" },
@@ -760,8 +760,8 @@ const createStyles = (colors) => StyleSheet.create({
   startBtn: { flexDirection: "row", backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   startBtnText: { color: colors.primaryForeground, fontSize: 15, fontWeight: "700" },
   activeControlsRow: { flexDirection: "row", gap: 8 },
-  pauseBtn: { flex: 1, flexDirection: "row", backgroundColor: "#FFFBEB", paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(245,158,11,0.3)" },
-  pauseBtnText: { color: "#B45309", fontSize: 12, fontWeight: "700" },
+  pauseBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.warningLight, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(245,158,11,0.3)" },
+  pauseBtnText: { color: colors.warning, fontSize: 12, fontWeight: "700" },
   resumeBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.accent, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   resumeBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
   stopBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.background, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(239,68,68,0.3)" },
@@ -807,7 +807,7 @@ const createStyles = (colors) => StyleSheet.create({
   infoTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground },
   infoStep: { fontSize: 12, color: colors.mutedForeground, lineHeight: 22, marginBottom: 2 },
   infoHighlight: { backgroundColor: colors.warningLight, borderRadius: 8, padding: 10, marginTop: 10 },
-  infoHighlightText: { fontSize: 11, color: "#92400E", fontWeight: "600" },
+  infoHighlightText: { fontSize: 11, color: colors.warning, fontWeight: "600" },
 
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 30 },
   permTitle: { fontSize: 18, fontWeight: "700", color: colors.foreground, marginTop: 16 },
