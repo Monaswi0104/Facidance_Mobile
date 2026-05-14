@@ -11,6 +11,7 @@ import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Search, CheckCircle, Eye, Edit2, Trash2, BookOpen, RefreshCw, ChevronDown, UserCheck } from "lucide-react-native";
 import { StatsRowSkeleton, StudentSearchFilterSkeleton, StudentListSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import { Haptics } from "../../utils/haptics";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +25,7 @@ export default function StudentsManagement() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    Haptics.light();
     await loadData(false); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
@@ -152,12 +154,14 @@ export default function StudentsManagement() {
       setIsActionLoading(true);
       console.log("[StudentsManagement] Activating student:", selectedStudent.id, selectedStudent.name);
       const result = await ungraduateStudent(selectedStudent.id);
+      Haptics.success();
       console.log("[StudentsManagement] Activate result:", result);
       await loadData();
       closeModal();
       Alert.alert("Success", "Student has been reactivated successfully.");
     } catch (e: any) {
       console.error("[StudentsManagement] Activate error:", e);
+      Haptics.error();
       Alert.alert("Error", e.message || "Failed to activate student. Please try again.");
     } finally {
       setIsActionLoading(false);
@@ -171,9 +175,11 @@ export default function StudentsManagement() {
       await deleteStudent(selectedStudent.id);
       await loadData();
       closeModal();
+      Haptics.success();
       Alert.alert("Success", "Student deleted.");
     } catch (e: any) {
       console.error("[StudentsManagement] Delete failed:", e);
+      Haptics.error();
       Alert.alert("Error", e.message || "Failed to delete student.");
     } finally {
       setIsActionLoading(false);

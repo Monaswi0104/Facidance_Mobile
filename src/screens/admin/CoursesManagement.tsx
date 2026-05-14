@@ -11,6 +11,7 @@ import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X
 import { StatsRowSkeleton, SearchBarSkeleton, CourseListSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import { Haptics } from "../../utils/haptics";
 
 const { width } = Dimensions.get("window");
 
@@ -27,6 +28,7 @@ export default function CoursesManagement() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    Haptics.light();
     await loadData(false); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
@@ -158,7 +160,7 @@ export default function CoursesManagement() {
             <Text style={styles.title}>Courses</Text>
             <Text style={styles.subtitle}>Manage academic courses — teachers, programs, semesters.</Text>
           </View>
-          <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddForm(!showAddForm)} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.addBtn} onPress={() => { Haptics.selection(); setShowAddForm(!showAddForm); }} activeOpacity={0.7}>
             {showAddForm ? (
               <><X size={13} color={colors.primaryForeground} style={{ marginRight: 3 }} /><Text style={styles.addBtnText}>Close</Text></>
             ) : (

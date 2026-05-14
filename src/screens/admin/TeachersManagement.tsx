@@ -11,6 +11,7 @@ import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Sta
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
 import EmptyState from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
+import { Haptics } from "../../utils/haptics";
 
 export default function TeachersManagement() {
   const { colors, isDark } = useTheme();
@@ -23,6 +24,7 @@ export default function TeachersManagement() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    Haptics.light();
     await loadTeachers(false); // Assume it accepts showLoading=false, but just await it
     setIsRefreshing(false);
   }, []);
@@ -88,6 +90,7 @@ export default function TeachersManagement() {
   useFocusEffect(useCallback(() => { loadTeachers(); }, []));
 
   const handleApprove = (teacher) => {
+    Haptics.selection();
     if (selectedTeacherForDept === teacher.id) {
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
@@ -104,6 +107,7 @@ export default function TeachersManagement() {
     }
     try {
       await approveTeacher(teacher.userId || teacher.id, selectedDeptId);
+      Haptics.success();
       Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
@@ -118,6 +122,7 @@ export default function TeachersManagement() {
         const updatedTeacher = all.find(x => x.userId === targetId || x.id === targetId);
         
         if (updatedTeacher && !updatedTeacher.isPending) {
+          Haptics.success();
           Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
           setSelectedTeacherForDept(null);
           setSelectedDeptId(null);
@@ -127,12 +132,13 @@ export default function TeachersManagement() {
       } catch (errCheck) {
         // Ignore check errors and show the original error
       }
-      
+      Haptics.error();
       Alert.alert("Error", e.message || "Failed to approve."); 
     }
   };
 
   const handleDelete = (teacher) => {
+    Haptics.selection();
     Alert.alert("Delete Teacher", `Remove ${teacher.name}?`, [
       { text: "Cancel", style: "cancel" },
       {
@@ -140,10 +146,12 @@ export default function TeachersManagement() {
           try {
             console.log("[TeachersManagement] Deleting teacher:", teacher.userId || teacher.id, teacher.name);
             await deleteTeacher(teacher.userId || teacher.id);
+            Haptics.success();
             Alert.alert("Done", `${teacher.name} removed.`);
             loadTeachers();
           } catch (e: any) {
             console.error("[TeachersManagement] Delete failed:", e);
+            Haptics.error();
             Alert.alert("Error", e.message || "Failed to delete.");
           }
         }
