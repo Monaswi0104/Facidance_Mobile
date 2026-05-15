@@ -27,14 +27,14 @@ export const HOST: string = (Platform.OS === "android" && isEmulator)
     ? "127.0.0.1"
     : getDevServerHost();
 
-// Service-specific base URLs (Local Backend Configuration)
-const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later
-export const BASE_URL = `http://${HOST}:8000`;       // Auth Service
-export const AUTH_URL = `http://${HOST}:8000`;       // Auth Service
-export const ADMIN_URL = `http://${HOST}:8001`;      // Admin Service
-export const TEACHER_URL = `http://${HOST}:8002`;    // Teacher Service
-export const STUDENT_URL = `http://${HOST}:8003`;    // Student Service
-export const WEB_URL = `http://${HOST}:3000`;        // Next.js Frontend for specific APIs
+// Service-specific base URLs (Production Backend Configuration)
+const PROD_URL = "https://facidance.online";
+export const BASE_URL = `${PROD_URL}/auth`;           // Auth Service (nginx: /auth/ → auth:8000, router prefix: /auth)
+export const AUTH_URL = `${PROD_URL}/auth`;           // Auth Service
+export const ADMIN_URL = `${PROD_URL}/admin-api`;     // Admin Service (nginx: /admin-api/ → admin:8001)
+export const TEACHER_URL = `${PROD_URL}/teacher-api`; // Teacher Service (nginx: /teacher-api/ → teacher:8002)
+export const STUDENT_URL = `${PROD_URL}/student-api`; // Student Service (nginx: /student-api/ → student:8003)
+export const WEB_URL = PROD_URL;                      // Next.js Frontend
 
 // ─── Response Cache ────────────────────────────────────────────────────────────
 interface CachedResponse {
