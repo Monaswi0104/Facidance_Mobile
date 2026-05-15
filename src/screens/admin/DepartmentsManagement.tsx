@@ -43,8 +43,8 @@ export default function DepartmentsManagement() {
       return {
         id: d.id,
         name: d.name,
-        programs: d.programs_count || d._count?.programs || dPrograms.length || 0,
-        teachers: d.teachers_count || d._count?.teachers || dTeachers.length || 0,
+        programs: dPrograms.length,
+        teachers: dTeachers.filter((t: any) => !t.isPending).length,
         programsList: dPrograms,
         teachersList: dTeachers.map((t: any) => {
           const progs = new Set();
@@ -242,7 +242,7 @@ export default function DepartmentsManagement() {
               <View style={styles.detailHeaderIcon}><Building2 size={20} color={colors.primaryForeground} /></View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.detailTitle}>{selectedDept?.name}</Text>
-                <Text style={styles.detailSubtitle}>{selectedDept?.programs} Programs • {selectedDept?.teachers} Teachers</Text>
+                <Text style={styles.detailSubtitle}>{selectedDept?.programsList?.length || 0} Programs • {selectedDept?.teachersList?.length || 0} Teachers</Text>
               </View>
             </View>
 

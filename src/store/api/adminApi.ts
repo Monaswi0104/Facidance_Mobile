@@ -75,11 +75,11 @@ export const adminApi = createApi({
       providesTags: ["Programs"],
     }),
 
-    createProgram: builder.mutation<any, { name: string; departmentId: string }>({
-      query: ({ name, departmentId }) => ({
+    createProgram: builder.mutation<any, { name: string; departmentId: string; id?: string }>({
+      query: ({ name, departmentId, id }) => ({
         url: "/admin/programs",
         method: "POST",
-        body: { name, department_id: departmentId },
+        body: { name, department_id: departmentId, ...(id ? { id } : {}) },
       }),
       invalidatesTags: ["Programs", "Stats"],
     }),
@@ -100,6 +100,8 @@ export const adminApi = createApi({
 
     createCourse: builder.mutation<any, {
       name: string;
+      code?: string;
+      entryCode?: string;
       teacherId: string;
       programId: string;
       academicYear: string;
@@ -110,6 +112,8 @@ export const adminApi = createApi({
         method: "POST",
         body: {
           name: data.name,
+          ...(data.code ? { code: data.code } : {}),
+          ...(data.entryCode ? { entry_code: data.entryCode } : {}),
           teacher_id: data.teacherId,
           program_id: data.programId,
           academic_year: data.academicYear,

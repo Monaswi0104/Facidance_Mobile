@@ -115,7 +115,7 @@ export default function CoursesManagement() {
     }
     setIsSubmitting(true);
     try {
-      await createCourseMut({ name, teacherId, programId, academicYear, semesterNumber }).unwrap();
+      await createCourseMut({ name, code, entryCode, teacherId, programId, academicYear, semesterNumber }).unwrap();
       Haptics.success();
       Alert.alert("Success", "Course added successfully!");
       setShowAddForm(false);

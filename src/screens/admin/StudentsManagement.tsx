@@ -22,7 +22,7 @@ const { width, height } = Dimensions.get("window");
 
 export default function StudentsManagement() {
   const { colors, isDark } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
   // ── RTK Query ──
   const { data: rawData, isLoading, isFetching, refetch } = useGetStudentsQuery(undefined, {
@@ -479,7 +479,7 @@ export default function StudentsManagement() {
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors, isDark) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
@@ -540,10 +540,10 @@ const createStyles = (colors) => StyleSheet.create({
   dropdownItemTextActive: { color: colors.success, fontWeight: "600" },
 
   // Filters
-  filterRow: { flexDirection: "row", marginBottom: 16 },
-  filterPill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 16, backgroundColor: colors.muted, marginRight: 8, borderWidth: 1, borderColor: colors.border },
-  filterPillActive: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
-  filterText: { fontSize: 12, fontWeight: "600", color: colors.mutedForeground },
+  filterRow: { flexDirection: "row", marginBottom: 16, backgroundColor: colors.muted, borderRadius: 12, padding: 4, borderWidth: isDark ? 1.5 : 1, borderColor: isDark ? colors.mutedForeground + "60" : colors.border },
+  filterPill: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  filterPillActive: { backgroundColor: colors.primaryDark, shadowColor: colors.primaryDark, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
+  filterText: { fontSize: 13, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
   filterTextActive: { color: colors.primaryForeground },
 
   // List

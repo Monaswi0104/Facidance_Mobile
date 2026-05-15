@@ -105,6 +105,7 @@ export default function ProgramsManagement() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newId, setNewId] = useState("");
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState(null);
@@ -124,9 +125,10 @@ export default function ProgramsManagement() {
     if (!selectedDeptId) { Alert.alert("Error", "Select a department."); return; }
     try {
       setIsCreating(true);
-      await createProgramMut({ name: newName.trim(), departmentId: selectedDeptId }).unwrap();
+      await createProgramMut({ name: newName.trim(), departmentId: selectedDeptId, id: newId.trim() || undefined }).unwrap();
       Haptics.success();
       setNewName("");
+      setNewId("");
       setShowAddForm(false);
       Alert.alert("Success", "Program created.");
     } catch (e: any) {
@@ -223,13 +225,23 @@ export default function ProgramsManagement() {
                 </View>
                 <View style={styles.addFormFields}>
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.addFormLabel}>PROGRAM NAME</Text>
+                    <Text style={styles.addFormLabel}>PROGRAM NAME *</Text>
                     <TextInput
                       style={styles.addFormInput}
                       placeholder="e.g. Bachelor of Computer Science"
                       placeholderTextColor={colors.mutedForeground}
                       value={newName}
                       onChangeText={setNewName}
+                    />
+                  </View>
+                  <View style={{ flex: 1, marginTop: 10, marginRight: 8 }}>
+                    <Text style={styles.addFormLabel}>PROGRAM ID (OPTIONAL)</Text>
+                    <TextInput
+                      style={styles.addFormInput}
+                      placeholder="e.g. prog_btech_cs"
+                      placeholderTextColor={colors.mutedForeground}
+                      value={newId}
+                      onChangeText={setNewId}
                     />
                   </View>
                 </View>
@@ -276,7 +288,7 @@ export default function ProgramsManagement() {
                         <Building2 size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.progMeta}>{p.dept}</Text>
                         <View style={styles.progIdBadge}>
-                          <Text style={styles.progIdText}>PROG_ID</Text>
+                          <Text style={styles.progIdText}>{p.id}</Text>
                         </View>
                       </View>
                     </View>

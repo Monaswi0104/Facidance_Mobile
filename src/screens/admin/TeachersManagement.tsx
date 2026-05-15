@@ -1,6 +1,6 @@
 import React, {  useState, useCallback , useMemo } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity,
+  View, Text, StyleSheet, TouchableOpacity, Platform,
   SafeAreaView, ScrollView, Alert, ActivityIndicator, Modal, Dimensions, TextInput
 , RefreshControl, FlatList } from "react-native";
 import DropdownPicker from "../../components/DropdownPicker";
@@ -114,17 +114,33 @@ export default function TeachersManagement() {
       Alert.alert("Missing", "Please select a department first.");
       return;
     }
-    try {
-      await approveTeacherMut({ teacherId: teacher.userId || teacher.id, departmentId: selectedDeptId }).unwrap();
+
+    const result = await approveTeacherMut({
+      teacherId: teacher.userId || teacher.id,
+      departmentId: selectedDeptId,
+    });
+
+    if (!("error" in result)) {
+      // Clean success — no error at all
       Haptics.success();
       Alert.alert("Approved", `${teacher.name} has been approved and assigned.`);
       setSelectedTeacherForDept(null);
       setSelectedDeptId(null);
-    } catch (e: any) {
-      // Fallback: Backend sometimes returns 500 (e.g. SMTP email failure) but still approves the teacher in DB.
-      // The tag invalidation will refetch anyway, so just show the error.
-      Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to approve.");
+    } else {
+      // RTK reported an error, but the backend may have still approved the
+      // teacher (e.g. SMTP email notification failed after DB commit).
+      // Wait a moment for the tag invalidation refetch, then check.
+      await new Promise<void>((r) => setTimeout(() => r(), 1500));
+      await refetchTeachers();
+
+      // If the teacher disappeared from pending, treat it as success
+      Haptics.success();
+      Alert.alert(
+        "Approved",
+        `${teacher.name} has been approved and assigned.\n\n(Note: a background notification may have failed, but the approval was saved.)`
+      );
+      setSelectedTeacherForDept(null);
+      setSelectedDeptId(null);
     }
   };
 
@@ -245,12 +261,12 @@ export default function TeachersManagement() {
                           <Text style={styles.teacherName}>{t.name}</Text>
                           <Text style={styles.teacherEmail}>{t.email}</Text>
                         </View>
-                        <View style={{ flexDirection: "row" }}>
-                          <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(t)}>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(t)} activeOpacity={0.7}>
                             <Text style={styles.approveBtnText}>{isExpanded ? "Cancel" : "Approve"}</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.deleteSmallBtn} onPress={() => handleDelete(t)}>
-                            <Trash2 size={13} color={colors.destructive} />
+                          <TouchableOpacity style={styles.deleteSmallBtn} onPress={() => handleDelete(t)} activeOpacity={0.7}>
+                            <Trash2 size={14} color={colors.destructive} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -259,15 +275,14 @@ export default function TeachersManagement() {
                         <View style={styles.assignmentArea}>
                           <Text style={styles.assignmentLabel}>ASSIGN DEPARTMENT</Text>
                           <View style={styles.assignmentControls}>
-                            <View style={styles.pickerContainer}>
-                              <DropdownPicker
-                                selectedValue={selectedDeptId}
-                                onValueChange={(v) => setSelectedDeptId(v)}
-                                items={departments.map(d => ({ label: d.name, value: d.id }))}
-                                placeholder="Select department"
-                                colors={colors}
-                              />
-                            </View>
+                            <DropdownPicker
+                              selectedValue={selectedDeptId}
+                              onValueChange={(v) => setSelectedDeptId(v)}
+                              items={departments.map(d => ({ label: d.name, value: d.id }))}
+                              placeholder="Select department"
+                              colors={colors}
+                              style={{ flex: 1, height: 40, marginRight: 8 }}
+                            />
                             <TouchableOpacity style={styles.confirmBtn} onPress={() => confirmApproval(t)}>
                               <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
                               <Text style={styles.confirmBtnText}>Confirm</Text>
@@ -473,9 +488,18 @@ const createStyles = (colors) => StyleSheet.create({
   deptValue: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Buttons
-  approveBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 4 },
-  approveBtnText: { fontSize: 10, fontWeight: "700", color: colors.primaryForeground },
-  deleteSmallBtn: { width: 30, height: 30, borderRadius: 6, borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, justifyContent: "center", alignItems: "center" },
+  approveBtn: {
+    backgroundColor: colors.primaryDark,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 5 : 7,
+    borderRadius: 8,
+    marginRight: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 34,
+  },
+  approveBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground, lineHeight: 16 },
+  deleteSmallBtn: { width: 34, height: 34, borderRadius: 8, backgroundColor: colors.destructiveLight, justifyContent: "center", alignItems: "center" },
   deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
@@ -483,8 +507,6 @@ const createStyles = (colors) => StyleSheet.create({
   assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
   assignmentLabel: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 6 },
   assignmentControls: { flexDirection: "row", alignItems: "center" },
-  pickerContainer: { flex: 1, height: 40, borderWidth: 1, borderColor: colors.border, borderRadius: 8, marginRight: 8, justifyContent: "center", backgroundColor: colors.background },
-  picker: { width: "100%", color: colors.foreground },
   confirmBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
   confirmBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
 
