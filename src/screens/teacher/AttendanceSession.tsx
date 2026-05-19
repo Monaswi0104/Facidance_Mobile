@@ -62,13 +62,12 @@ export default function AttendanceSession({ route, navigation }) {
 
   const cameraRef = useRef(null);
 
-  // Zoom state (0 = no zoom, 1 = max zoom)
-  const [zoomLevel, setZoomLevel] = useState(0);
+  // Zoom state (1.0 = no zoom, higher = zoomed in)
+  const [zoomLevel, setZoomLevel] = useState(1.0);
   const [showZoomIndicator, setShowZoomIndicator] = useState(false);
   const zoomIndicatorOpacity = useRef(new Animated.Value(0)).current;
-  const pinchBaseDistance = useRef<number | null>(null);
-  const pinchBaseZoom = useRef(0);
   const zoomIndicatorTimer = useRef<any>(null);
+  const MAX_ZOOM = 10.0;
 
   // Show zoom indicator and auto-hide after 1.5s
   function flashZoomIndicator() {
@@ -81,45 +80,23 @@ export default function AttendanceSession({ route, navigation }) {
   }
 
   function handleZoomIn() {
-    setZoomLevel(prev => { const next = Math.min(1, prev + 0.1); flashZoomIndicator(); return next; });
+    setZoomLevel(prev => { const next = Math.min(MAX_ZOOM, prev + 1.0); flashZoomIndicator(); return next; });
   }
 
   function handleZoomOut() {
-    setZoomLevel(prev => { const next = Math.max(0, prev - 0.1); flashZoomIndicator(); return next; });
+    setZoomLevel(prev => { const next = Math.max(1.0, prev - 1.0); flashZoomIndicator(); return next; });
   }
 
   function handleZoomReset() {
-    setZoomLevel(0);
+    setZoomLevel(1.0);
     flashZoomIndicator();
   }
 
-  // Pinch-to-zoom via basic touch events
-  function getDistance(touches: any[]): number {
-    const dx = touches[0].pageX - touches[1].pageX;
-    const dy = touches[0].pageY - touches[1].pageY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  function onTouchStart(e: any) {
-    if (e.nativeEvent.touches.length === 2) {
-      pinchBaseDistance.current = getDistance(e.nativeEvent.touches);
-      pinchBaseZoom.current = zoomLevel;
-    }
-  }
-
-  function onTouchMove(e: any) {
-    if (e.nativeEvent.touches.length === 2 && pinchBaseDistance.current !== null) {
-      const currentDist = getDistance(e.nativeEvent.touches);
-      const scale = currentDist / pinchBaseDistance.current;
-      const newZoom = Math.max(0, Math.min(1, pinchBaseZoom.current + (scale - 1) * 0.5));
-      setZoomLevel(newZoom);
+  function onZoomChange(e: any) {
+    const newZoom = e.nativeEvent.zoom;
+    if (typeof newZoom === 'number' && newZoom >= 1.0) {
+      setZoomLevel(Math.min(MAX_ZOOM, newZoom));
       flashZoomIndicator();
-    }
-  }
-
-  function onTouchEnd(e: any) {
-    if (e.nativeEvent.touches.length < 2) {
-      pinchBaseDistance.current = null;
     }
   }
 
@@ -598,12 +575,7 @@ export default function AttendanceSession({ route, navigation }) {
             </View>
           </View>
 
-          <View
-            style={s.cameraContainer}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
+          <View style={s.cameraContainer}>
             {sessionActive && (
               useCctv ? (
                 <Image
@@ -617,7 +589,10 @@ export default function AttendanceSession({ route, navigation }) {
                   style={s.camera}
                   cameraType={CameraType.Back}
                   flashMode="off"
+                  zoomMode="on"
                   zoom={zoomLevel}
+                  maxZoom={MAX_ZOOM}
+                  onZoom={onZoomChange}
                 />
               )
             )}
@@ -625,7 +600,7 @@ export default function AttendanceSession({ route, navigation }) {
             {/* Zoom indicator overlay */}
             {showZoomIndicator && sessionActive && !useCctv && (
               <Animated.View style={[s.zoomIndicator, { opacity: zoomIndicatorOpacity }]}>
-                <Text style={s.zoomIndicatorText}>{(1 + zoomLevel * 9).toFixed(1)}x</Text>
+                <Text style={s.zoomIndicatorText}>{zoomLevel.toFixed(1)}x</Text>
               </Animated.View>
             )}
 
