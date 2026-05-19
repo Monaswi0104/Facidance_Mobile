@@ -14,7 +14,7 @@ import React, {  useState, useRef, useEffect , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Dimensions, Alert, Image, TextInput,
-  Platform, PermissionsAndroid
+  Platform, PermissionsAndroid, Animated
 } from "react-native";
 import { Camera, CameraType } from "react-native-camera-kit";
 import { useFocusEffect } from "@react-navigation/native";
@@ -25,7 +25,8 @@ import {
 } from "../../api/teacherApi";
 import {
   Users, ScanFace, Play, Pause, Square, Send,
-  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap, ChevronLeft
+  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap, ChevronLeft,
+  ZoomIn, ZoomOut, RotateCcw, Globe, RefreshCw
 } from "lucide-react-native";
 import { TableSkeleton } from "../../components/SkeletonLoader";
 import RNFS from "react-native-fs";
@@ -61,10 +62,75 @@ export default function AttendanceSession({ route, navigation }) {
 
   const cameraRef = useRef(null);
 
+  // Zoom state (0 = no zoom, 1 = max zoom)
+  const [zoomLevel, setZoomLevel] = useState(0);
+  const [showZoomIndicator, setShowZoomIndicator] = useState(false);
+  const zoomIndicatorOpacity = useRef(new Animated.Value(0)).current;
+  const pinchBaseDistance = useRef<number | null>(null);
+  const pinchBaseZoom = useRef(0);
+  const zoomIndicatorTimer = useRef<any>(null);
+
+  // Show zoom indicator and auto-hide after 1.5s
+  function flashZoomIndicator() {
+    setShowZoomIndicator(true);
+    Animated.timing(zoomIndicatorOpacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+    if (zoomIndicatorTimer.current) clearTimeout(zoomIndicatorTimer.current);
+    zoomIndicatorTimer.current = setTimeout(() => {
+      Animated.timing(zoomIndicatorOpacity, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => setShowZoomIndicator(false));
+    }, 1500);
+  }
+
+  function handleZoomIn() {
+    setZoomLevel(prev => { const next = Math.min(1, prev + 0.1); flashZoomIndicator(); return next; });
+  }
+
+  function handleZoomOut() {
+    setZoomLevel(prev => { const next = Math.max(0, prev - 0.1); flashZoomIndicator(); return next; });
+  }
+
+  function handleZoomReset() {
+    setZoomLevel(0);
+    flashZoomIndicator();
+  }
+
+  // Pinch-to-zoom via basic touch events
+  function getDistance(touches: any[]): number {
+    const dx = touches[0].pageX - touches[1].pageX;
+    const dy = touches[0].pageY - touches[1].pageY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function onTouchStart(e: any) {
+    if (e.nativeEvent.touches.length === 2) {
+      pinchBaseDistance.current = getDistance(e.nativeEvent.touches);
+      pinchBaseZoom.current = zoomLevel;
+    }
+  }
+
+  function onTouchMove(e: any) {
+    if (e.nativeEvent.touches.length === 2 && pinchBaseDistance.current !== null) {
+      const currentDist = getDistance(e.nativeEvent.touches);
+      const scale = currentDist / pinchBaseDistance.current;
+      const newZoom = Math.max(0, Math.min(1, pinchBaseZoom.current + (scale - 1) * 0.5));
+      setZoomLevel(newZoom);
+      flashZoomIndicator();
+    }
+  }
+
+  function onTouchEnd(e: any) {
+    if (e.nativeEvent.touches.length < 2) {
+      pinchBaseDistance.current = null;
+    }
+  }
+
   // History
   const [showHistory, setShowHistory] = useState(false);
   const [attendanceHistory, setAttendanceHistory] = useState({});
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Today's session sync (detects attendance submitted from website)
+  const [todaySession, setTodaySession] = useState<{ present: number; absent: number; total: number; students: string[]; rate: string } | null>(null);
+  const syncIntervalRef = useRef<any>(null);
 
   // Refs
   const captureIntervalRef = useRef(null);
@@ -105,6 +171,36 @@ export default function AttendanceSession({ route, navigation }) {
     })();
   }, [course.id]);
 
+  // Poll for today's session every 30s (detect website-submitted attendance)
+  useEffect(() => {
+    checkTodaySession();
+    syncIntervalRef.current = setInterval(() => checkTodaySession(), 30000);
+    return () => { if (syncIntervalRef.current) clearInterval(syncIntervalRef.current); };
+  }, [course.id, students]);
+
+  function checkTodaySession() {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayRecords = attendanceHistory[todayKey] || [];
+    if (todayRecords.length > 0 && !sessionActive) {
+      const presentCount = todayRecords.filter((r: any) => r.status === "PRESENT" || r.status === true).length;
+      const presentNames = todayRecords
+        .filter((r: any) => r.status === "PRESENT" || r.status === true)
+        .map((r: any) => r.studentName || "Student");
+      setTodaySession({
+        present: presentCount,
+        absent: todayRecords.length - presentCount,
+        total: todayRecords.length,
+        students: presentNames,
+        rate: todayRecords.length > 0 ? ((presentCount / todayRecords.length) * 100).toFixed(1) : "0.0",
+      });
+    } else {
+      setTodaySession(null);
+    }
+  }
+
+  // Re-check when history updates
+  useEffect(() => { checkTodaySession(); }, [attendanceHistory, sessionActive]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => cleanup();
@@ -127,6 +223,7 @@ export default function AttendanceSession({ route, navigation }) {
     if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
     if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
   }
 
   function formatTime(ms) {
@@ -452,6 +549,46 @@ export default function AttendanceSession({ route, navigation }) {
           </View>
         )}
 
+        {/* Today's Session Banner (detected from website/other device) */}
+        {todaySession && !sessionActive && (
+          <View style={s.todayBanner}>
+            <View style={s.todayBannerHeader}>
+              <View style={s.todayBannerIconRow}>
+                <Globe size={16} color={colors.accent} />
+                <Text style={s.todayBannerTitle}>Attendance Already Recorded Today</Text>
+              </View>
+              <TouchableOpacity onPress={() => { fetchAttendanceHistory(course.id); }} activeOpacity={0.7}>
+                <RefreshCw size={14} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
+            <Text style={s.todayBannerSubtitle}>
+              Submitted via website or another device
+            </Text>
+            <View style={s.todayBannerStats}>
+              <View style={s.todayBannerStat}>
+                <Text style={[s.todayBannerStatNum, { color: colors.success }]}>{todaySession.present}</Text>
+                <Text style={s.todayBannerStatLabel}>Present</Text>
+              </View>
+              <View style={s.todayBannerStat}>
+                <Text style={[s.todayBannerStatNum, { color: colors.destructive }]}>{todaySession.absent}</Text>
+                <Text style={s.todayBannerStatLabel}>Absent</Text>
+              </View>
+              <View style={s.todayBannerStat}>
+                <Text style={[s.todayBannerStatNum, { color: colors.accent }]}>{todaySession.rate}%</Text>
+                <Text style={s.todayBannerStatLabel}>Rate</Text>
+              </View>
+            </View>
+            {todaySession.students.length > 0 && (
+              <View style={s.todayBannerNames}>
+                <Text style={s.todayBannerNamesLabel}>Present students:</Text>
+                <Text style={s.todayBannerNamesList} numberOfLines={3}>
+                  {todaySession.students.join(", ")}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Live Camera Feed */}
         <View style={s.cameraCard}>
           <View style={s.cameraTitleRow}>
@@ -461,7 +598,12 @@ export default function AttendanceSession({ route, navigation }) {
             </View>
           </View>
 
-          <View style={s.cameraContainer}>
+          <View
+            style={s.cameraContainer}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             {sessionActive && (
               useCctv ? (
                 <Image
@@ -475,8 +617,32 @@ export default function AttendanceSession({ route, navigation }) {
                   style={s.camera}
                   cameraType={CameraType.Back}
                   flashMode="off"
+                  zoom={zoomLevel}
                 />
               )
+            )}
+
+            {/* Zoom indicator overlay */}
+            {showZoomIndicator && sessionActive && !useCctv && (
+              <Animated.View style={[s.zoomIndicator, { opacity: zoomIndicatorOpacity }]}>
+                <Text style={s.zoomIndicatorText}>{(1 + zoomLevel * 9).toFixed(1)}x</Text>
+              </Animated.View>
+            )}
+
+            {/* Zoom controls */}
+            {sessionActive && !useCctv && (
+              <View style={s.zoomControls}>
+                <TouchableOpacity style={s.zoomBtn} onPress={handleZoomOut} activeOpacity={0.7}>
+                  <ZoomOut size={16} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={s.zoomBtnCenter} onPress={handleZoomReset} activeOpacity={0.7}>
+                  <RotateCcw size={12} color="#fff" />
+                  <Text style={s.zoomBtnLabel}>1x</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.zoomBtn} onPress={handleZoomIn} activeOpacity={0.7}>
+                  <ZoomIn size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
             )}
 
             {/* Overlays */}
@@ -735,8 +901,16 @@ const createStyles = (colors) => StyleSheet.create({
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.background, marginRight: 6 },
   liveText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700" },
 
-  cameraContainer: { width: "100%", height: 280, borderRadius: 12, overflow: "hidden", backgroundColor: "#000", marginBottom: 16, position: "relative" },
+  cameraContainer: { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", backgroundColor: "#000", marginBottom: 16, position: "relative" },
   camera: { width: "100%", height: "100%" },
+
+  // Zoom controls
+  zoomControls: { position: "absolute", bottom: 12, left: 0, right: 0, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, zIndex: 15 },
+  zoomBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
+  zoomBtnCenter: { flexDirection: "row", height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", paddingHorizontal: 10, gap: 4, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
+  zoomBtnLabel: { color: "#fff", fontSize: 11, fontWeight: "700" },
+  zoomIndicator: { position: "absolute", top: 12, left: 12, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, zIndex: 15 },
+  zoomIndicatorText: { color: "#fff", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
 
   cameraOverlayTopRight: { position: "absolute", top: 12, right: 12, zIndex: 10 },
   capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15,164,175,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
@@ -812,4 +986,18 @@ const createStyles = (colors) => StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 30 },
   permTitle: { fontSize: 18, fontWeight: "700", color: colors.foreground, marginTop: 16 },
   permSubtitle: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", marginTop: 6 },
+
+  // Today's session banner
+  todayBanner: { backgroundColor: colors.background, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1.5, borderColor: colors.accent + "40", shadowColor: colors.accent, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  todayBannerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+  todayBannerIconRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  todayBannerTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  todayBannerSubtitle: { fontSize: 11, color: colors.mutedForeground, marginBottom: 12, marginLeft: 24 },
+  todayBannerStats: { flexDirection: "row", justifyContent: "space-around", marginBottom: 12 },
+  todayBannerStat: { alignItems: "center" },
+  todayBannerStatNum: { fontSize: 22, fontWeight: "900" },
+  todayBannerStatLabel: { fontSize: 9, fontWeight: "600", color: colors.mutedForeground, letterSpacing: 0.3, marginTop: 2 },
+  todayBannerNames: { backgroundColor: colors.muted, borderRadius: 8, padding: 10 },
+  todayBannerNamesLabel: { fontSize: 10, fontWeight: "700", color: colors.mutedForeground, marginBottom: 4 },
+  todayBannerNamesList: { fontSize: 12, color: colors.textBody, lineHeight: 18 },
 });

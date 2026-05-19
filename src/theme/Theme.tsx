@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useColorScheme, ColorSchemeName } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ const darkColors = {
 };
 
 export type ThemeColors = typeof lightColors;
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = 'light' | 'dark';
 
 // ---------------------------------------------------------------------------
 // Static theme (non-color values)
@@ -189,29 +189,26 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps): React.JSX.Element {
-  const systemScheme: ColorSchemeName = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>('system');
+  const [mode, setMode] = useState<ThemeMode>('light');
 
   // Load saved preference
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
-      .then(saved => { if (saved) setMode(saved as ThemeMode); })
+      .then(saved => {
+        if (saved && (saved === 'light' || saved === 'dark')) {
+          setMode(saved as ThemeMode);
+        }
+      })
       .catch(() => {});
   }, []);
 
-  const isDark: boolean =
-    mode === 'dark' ||
-    (mode === 'system' && systemScheme === 'dark');
+  const isDark: boolean = mode === 'dark';
 
   const colors: ThemeColors = isDark ? darkColors : lightColors;
   const shadows: ThemeShadows = buildShadows(colors);
 
   const toggleTheme = async (): Promise<void> => {
-    const next: ThemeMode = mode === 'system'
-      ? 'dark'
-      : mode === 'dark'
-        ? 'light'
-        : 'system';
+    const next: ThemeMode = mode === 'light' ? 'dark' : 'light';
     setMode(next);
     await AsyncStorage.setItem(STORAGE_KEY, next);
   };
