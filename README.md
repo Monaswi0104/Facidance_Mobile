@@ -26,8 +26,6 @@ The app features a premium, dark-mode-ready design with smooth animated transiti
 
 ---
 
----
-
 ## 🎯 Features
 
 ### 🎓 Student Portal
@@ -39,6 +37,8 @@ The app features a premium, dark-mode-ready design with smooth animated transiti
 
 ### 👨‍🏫 Teacher Portal
 - **Live Attendance Camera** — Start 45-minute sessions with automatic frame capture every 2 minutes
+- **Advanced Camera Controls** — Pinch-to-zoom and precise zoom controls to capture back rows
+- **Cross-Device Sync** — Live detection if attendance was already submitted from the website
 - **AI Face Recognition** — Trained models recognize students in real-time via the backend
 - **Student Enrollment** — Manage students per course with bulk CSV/Excel import
 - **Attendance Reports** — Date-range filtered analytics with charts and email notifications
@@ -61,6 +61,7 @@ The app features a premium, dark-mode-ready design with smooth animated transiti
 | Category | Technology |
 |---|---|
 | **Framework** | React Native 0.84.1 (New Architecture / Fabric) |
+| **Language**  | TypeScript |
 | **Navigation** | React Navigation 7.x (Native Stack + Bottom Tabs) |
 | **State** | Redux Toolkit + React Redux |
 | **Icons** | Lucide React Native |
@@ -81,27 +82,27 @@ The app features a premium, dark-mode-ready design with smooth animated transiti
 Facidance_Mobile/
 ├── src/
 │   ├── api/                    # API client, endpoints & auth storage
-│   │   ├── adminApi.js         # Admin endpoints (stats, CRUD, analytics)
-│   │   ├── teacherApi.js       # Teacher endpoints (courses, attendance, reports)
-│   │   ├── studentApi.js       # Student endpoints (history, profile, courses)
-│   │   ├── authStorage.js      # AsyncStorage token management
-│   │   └── config.js           # Base URL configuration
+│   │   ├── adminApi.ts         # Admin endpoints (stats, CRUD, analytics)
+│   │   ├── teacherApi.ts       # Teacher endpoints (courses, attendance, reports)
+│   │   ├── studentApi.ts       # Student endpoints (history, profile, courses)
+│   │   ├── authStorage.ts      # AsyncStorage token management
+│   │   └── config.ts           # Base URL configuration
 │   │
 │   ├── assets/                 # Logo, images, static resources
 │   │
 │   ├── components/             # Reusable UI components
-│   │   ├── BrandedRefresh.js   # Themed pull-to-refresh with brand color cycle
-│   │   ├── CachedImage.js      # Disk-cached image loader with placeholders
-│   │   ├── EmptyState.js       # Animated empty states (5 variants)
-│   │   ├── ErrorBoundary.js    # Global error boundary with recovery UI
-│   │   └── SkeletonLoader.js   # Content-aware skeleton loading screens
+│   │   ├── BrandedRefresh.tsx  # Themed pull-to-refresh with brand color cycle
+│   │   ├── CachedImage.tsx     # Disk-cached image loader with placeholders
+│   │   ├── EmptyState.tsx      # Animated empty states (5 variants)
+│   │   ├── ErrorBoundary.tsx   # Global error boundary with recovery UI
+│   │   └── SkeletonLoader.tsx  # Content-aware skeleton loading screens
 │   │
 │   ├── navigation/             # Navigation structure
-│   │   ├── RootNavigator.js    # Auth check → role-based routing
-│   │   ├── AuthNavigator.js    # Login / Register stack
-│   │   ├── AdminTabs.js        # Admin bottom tabs with custom header
-│   │   ├── TeacherTabs.js      # Teacher bottom tabs + nested stacks
-│   │   └── StudentTabs.js      # Student bottom tabs + nested stacks
+│   │   ├── RootNavigator.tsx   # Auth check → role-based routing
+│   │   ├── AuthNavigator.tsx   # Login / Register stack
+│   │   ├── AdminTabs.tsx       # Admin bottom tabs with custom header
+│   │   ├── TeacherTabs.tsx     # Teacher bottom tabs + nested stacks
+│   │   └── StudentTabs.tsx     # Student bottom tabs + nested stacks
 │   │
 │   ├── screens/
 │   │   ├── auth/               # LoginScreen, RegisterScreen
@@ -114,11 +115,11 @@ Facidance_Mobile/
 │   │                           # AttendanceHistory, ProfileUpload
 │   │
 │   ├── theme/
-│   │   └── Theme.js            # Light/Dark/System theme with full color palette
+│   │   └── Theme.tsx           # Light/Dark/System theme with full color palette
 │   │
 │   └── utils/
-│       ├── haptics.js          # Haptic feedback utility (light, medium, warning)
-│       └── imageCompressor.js  # Image resize/compress before upload
+│       ├── haptics.ts          # Haptic feedback utility (light, medium, warning)
+│       └── imageCompressor.ts  # Image resize/compress before upload
 │
 ├── android/                    # Android native project
 ├── ios/                        # iOS native project (Xcode workspace)
@@ -181,7 +182,7 @@ npm run ios
 
 ## 🎨 Design System
 
-The app uses a comprehensive design token system supporting **Light**, **Dark**, and **System** themes:
+The app uses a comprehensive design token system supporting **Light** and **Dark** themes:
 
 | Token | Light | Dark |
 |---|---|---|
