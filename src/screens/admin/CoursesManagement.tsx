@@ -77,7 +77,7 @@ export default function CoursesManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState({
     departmentId: null, teacherId: null, programId: null,
-    academicYear: "", semesterNumber: null, name: "", code: "", entryCode: ""
+    academicYear: "", semesterNumber: null, name: ""
   });
 
   const onRefresh = useCallback(async () => {
@@ -108,18 +108,18 @@ export default function CoursesManagement() {
   };
 
   const handleAddCourse = async () => {
-    const { teacherId, programId, academicYear, semesterNumber, name, code, entryCode } = form;
-    if (!teacherId || !programId || !academicYear || !semesterNumber || !name || !code) {
+    const { teacherId, programId, academicYear, semesterNumber, name } = form;
+    if (!teacherId || !programId || !academicYear || !semesterNumber || !name) {
       Alert.alert("Missing Fields", "Please fill out all required fields.");
       return;
     }
     setIsSubmitting(true);
     try {
-      await createCourseMut({ name, code, entryCode, teacherId, programId, academicYear, semesterNumber }).unwrap();
+      await createCourseMut({ name, teacherId, programId, academicYear, semesterNumber }).unwrap();
       Haptics.success();
       Alert.alert("Success", "Course added successfully!");
       setShowAddForm(false);
-      setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "", code: "", entryCode: "" });
+      setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
     } catch (e: any) {
       Haptics.error();
       Alert.alert("Error", e.data?.detail || e.message || "Failed to create course.");
@@ -241,7 +241,10 @@ export default function CoursesManagement() {
                     <DropdownPicker
                       selectedValue={form.programId}
                       onValueChange={(v) => setForm({ ...form, programId: v })}
-                      items={filteredPrograms.map(p => ({ label: p.name, value: p.id }))}
+                      items={[
+                        { label: "All Programs (Common Course)", value: "ALL" },
+                        ...filteredPrograms.map(p => ({ label: p.name, value: p.id }))
+                      ]}
                       placeholder="Select Program"
                       colors={colors}
                     />
@@ -273,23 +276,12 @@ export default function CoursesManagement() {
                   </View>
                 </View>
 
-                <View style={styles.formRow}>
-                  <View style={styles.formField}>
-                    <Text style={styles.formLabel}>COURSE CODE *</Text>
-                    <TextInput style={styles.formInput} placeholder="e.g. CS101" placeholderTextColor={colors.mutedForeground} value={form.code} onChangeText={(t) => setForm({ ...form, code: t })} />
-                  </View>
-                  <View style={styles.formField}>
-                    <Text style={styles.formLabel}>ENTRY CODE (OPTIONAL)</Text>
-                    <TextInput style={styles.formInput} placeholder="e.g. FALL2024" placeholderTextColor={colors.mutedForeground} value={form.entryCode} onChangeText={(t) => setForm({ ...form, entryCode: t })} />
-                  </View>
-                </View>
-
                 {/* Buttons */}
                 <View style={styles.formActions}>
                   <TouchableOpacity style={styles.formCancelBtn} onPress={() => setShowAddForm(false)}>
                     <Text style={styles.formCancelText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.formSubmitBtn, (!form.name || !form.code || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId) && styles.submitBtnDisabled]} disabled={!form.name || !form.code || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId || isSubmitting} onPress={handleAddCourse}>
+                  <TouchableOpacity style={[styles.formSubmitBtn, (!form.name || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId) && styles.submitBtnDisabled]} disabled={!form.name || !form.academicYear || !form.semesterNumber || !form.programId || !form.teacherId || isSubmitting} onPress={handleAddCourse}>
                     {isSubmitting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.formSubmitText}>Add Course</Text>}
                   </TouchableOpacity>
                 </View>

@@ -25,6 +25,27 @@ export async function getCourseStudents(courseId: string): Promise<Student[]> {
   return await res.json();
 }
 
+// Search existing students
+export async function searchStudents(query: string, courseId?: string): Promise<any> {
+  const qs = new URLSearchParams({ q: query });
+  if (courseId) qs.set("course_id", courseId);
+  const res = await apiFetch(`/teacher/students/search?${qs.toString()}`, {}, TEACHER_URL);
+  return await res.json();
+}
+
+// Enroll an existing student in a course
+export async function enrollExisting(courseId: string, studentId: string): Promise<any> {
+  const res = await apiFetch(`/teacher/courses/${courseId}/enroll-existing`, {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId }),
+  }, TEACHER_URL);
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Failed to enroll student");
+  }
+  return json;
+}
+
 // Full course details — fetches students for a specific course
 export async function getCourseDetails(courseId: string): Promise<any> {
   const res = await apiFetch(`/teacher/courses/${courseId}/students`, {}, TEACHER_URL);

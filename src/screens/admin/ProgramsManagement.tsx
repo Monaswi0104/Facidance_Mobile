@@ -288,7 +288,7 @@ export default function ProgramsManagement() {
                         <Building2 size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                         <Text style={styles.progMeta}>{p.dept}</Text>
                         <View style={styles.progIdBadge}>
-                          <Text style={styles.progIdText}>{p.id}</Text>
+                          <Text style={styles.progIdText}>{p.id ? String(p.id).slice(0, 8).toUpperCase() : "—"}</Text>
                         </View>
                       </View>
                     </View>
@@ -328,7 +328,7 @@ export default function ProgramsManagement() {
                 <Key size={16} color={colors.mutedForeground} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailInfoLabel}>Program ID</Text>
-                  <Text style={[styles.detailInfoValue, { fontSize: 11, letterSpacing: 0.3 }]}>{selectedProgram?.id}</Text>
+                  <Text style={[styles.detailInfoValue, { fontSize: 11, letterSpacing: 0.3 }]}>{selectedProgram?.id ? String(selectedProgram.id).slice(0, 8).toUpperCase() : "—"}</Text>
                 </View>
               </View>
 

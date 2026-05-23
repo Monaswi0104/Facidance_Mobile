@@ -1,9 +1,9 @@
-import React, {  useState, useCallback , useMemo } from "react";
+import React, {  useState, useCallback , useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
   ScrollView, Modal, TextInput, ActivityIndicator, Dimensions
 , RefreshControl } from "react-native";
-import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms } from "../../api/teacherApi";
+import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms, searchStudents, enrollExisting } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, ScanFace, UserX, Upload, Search, ChevronDown, FileUp, User, CheckCircle, XCircle } from "lucide-react-native";
@@ -42,6 +42,76 @@ export default function StudentEnrollment() {
   const [showProgramInfo, setShowProgramInfo] = useState(false);
   const [showCourseInfo, setShowCourseInfo] = useState(false);
   const [showFilterInfo, setShowFilterInfo] = useState(false);
+
+  // Enroll Existing states
+  const [activeTab, setActiveTab] = useState("import"); // 'import' | 'enroll'
+  const [enrollCourse, setEnrollCourse] = useState(null);
+  const [showEnrollCourseInfo, setShowEnrollCourseInfo] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [enrollingStudentId, setEnrollingStudentId] = useState(null);
+
+  useEffect(() => {
+    if (activeTab !== "enroll") return;
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await searchStudents(searchQuery, enrollCourse?.id);
+        setSearchResults(res.students || []);
+      } catch (err: any) {
+        Alert.alert("Search Error", err.message);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, enrollCourse, activeTab]);
+
+  const handleEnrollExisting = async (studentId: string) => {
+    if (!enrollCourse) {
+      Alert.alert("Required", "Please select a course first.");
+      return;
+    }
+    setEnrollingStudentId(studentId);
+    try {
+      await enrollExisting(enrollCourse.id, studentId);
+      
+      const enrolledStudent = searchResults.find((s: any) => s.id === studentId);
+      if (enrolledStudent) {
+        setStudents(prev => {
+          const existing = prev.find((x: any) => x.id === studentId);
+          if (existing) {
+            if (!existing.courseIds.includes(enrollCourse.id)) {
+              return prev.map((x: any) => x.id === studentId ? { ...x, courseIds: [...x.courseIds, enrollCourse.id], coursesCount: x.coursesCount + 1 } : x);
+            }
+            return prev;
+          } else {
+            return [...prev, {
+              id: studentId,
+              name: enrolledStudent.name || "Student",
+              email: enrolledStudent.email || "—",
+              program: enrolledStudent.program?.name || "—",
+              department: enrolledStudent.program?.department?.name || "—",
+              status: "active",
+              joinedAt: new Date().toISOString(),
+              coursesCount: (enrolledStudent._count?.courses || 0) + 1,
+              attendance: enrolledStudent._count?.attendance || 0,
+              faceRegistered: !!enrolledStudent.faceEmbedding,
+              courseIds: [enrollCourse.id]
+            }];
+          }
+        });
+      }
+
+      Alert.alert("Success", "Student successfully added to the course.");
+      setSearchResults(prev => prev.filter((s: any) => s.id !== studentId));
+    } catch (err: any) {
+      Alert.alert("Enrollment Failed", err.message);
+    } finally {
+      setEnrollingStudentId(null);
+    }
+  };
 
   const loadData = async () => {
       try {
@@ -126,7 +196,7 @@ export default function StudentEnrollment() {
 
   // Normalize DOB to YYYY-MM-DD format for consistent password hashing
   const normalizeDob = (raw) => {
-    if (!raw || raw === "2000-01-01") return "2000-01-01";
+    if (!raw) return "";
     const s = String(raw).trim();
 
     // If it's a pure number (Excel serial date), convert it
@@ -176,8 +246,8 @@ export default function StudentEnrollment() {
       const emailIdx = header.findIndex(h => h.includes("email"));
       const dobIdx = header.findIndex(h => h.includes("dob") || h.includes("date") || h.includes("birth"));
 
-      if (nameIdx === -1 || emailIdx === -1) {
-        Alert.alert("Error", "Could not find 'Name' and 'Email' columns in the file. Please check the header row.");
+      if (nameIdx === -1) {
+        Alert.alert("Error", "Could not find 'Name' column in the file. Please check the header row.");
         setIsImporting(false);
         return;
       }
@@ -187,18 +257,24 @@ export default function StudentEnrollment() {
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(",").map(c => c.trim());
         const name = cols[nameIdx] || "";
-        const email = cols[emailIdx] || "";
+        let email = emailIdx !== -1 ? (cols[emailIdx] || "") : "";
         const rawDob = dobIdx !== -1 ? (cols[dobIdx] || "") : "";
+        
+        if (!name) continue;
+
+        if (!email) {
+          email = `${name.toLowerCase().replace(/\s+/g, ".")}@student.com`;
+        }
+
         const dob = normalizeDob(rawDob);
         console.log(`Row ${i}: name="${name}", email="${email}", rawDob="${rawDob}", normalizedDob="${dob}"`);
-        if (name && email) {
-          studentRows.push({
-            name,
-            email,
-            dob,
-            programId: selectedProgram.id,
-          });
-        }
+        
+        studentRows.push({
+          name,
+          email,
+          dob,
+          programId: selectedProgram.id,
+        });
       }
 
       if (studentRows.length === 0) {
@@ -312,60 +388,121 @@ export default function StudentEnrollment() {
           </View>
         )}
 
-        {/* Import Section */}
+        {/* Import & Enroll Section */}
         <View style={styles.sectionCard}>
-          <View style={styles.importHeader}>
-            <View style={styles.importIconBadge}>
-              <Upload size={18} color={colors.primaryForeground} />
-            </View>
-            <View style={{ flex: 1, flexShrink: 1 }}>
-              <Text style={styles.importTitle}>Import Students</Text>
-              <Text style={styles.importDesc}>Upload an Excel file to create accounts and enroll students into a course.</Text>
-            </View>
-          </View>
-
-          <Text style={styles.labelText}>EXCEL FILE (.XLSX) — COLUMNS: NAME, DOB (DD/MM/YYYY), EMAIL (OPTIONAL)</Text>
-          
-          <View style={styles.fileRow}>
-            <TouchableOpacity style={styles.chooseFileBtn} onPress={pickFile}>
-              <Text style={styles.chooseFileText}>Choose file</Text>
+          <View style={styles.tabRow}>
+            <TouchableOpacity style={[styles.tabBtn, activeTab === "import" && styles.tabBtnActive]} onPress={() => setActiveTab("import")}>
+              <Text style={[styles.tabBtnText, activeTab === "import" && styles.tabBtnTextActive]}>Import New Students</Text>
             </TouchableOpacity>
-            <Text style={styles.fileNameText} numberOfLines={1}>{file ? file.name : "No file chosen"}</Text>
+            <TouchableOpacity style={[styles.tabBtn, activeTab === "enroll" && styles.tabBtnActive]} onPress={() => setActiveTab("enroll")}>
+              <Text style={[styles.tabBtnText, activeTab === "enroll" && styles.tabBtnTextActive]}>Enroll Existing Students</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.dropdownsRow}>
-            <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={styles.labelText}>PROGRAM *</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => setShowProgramInfo(true)}>
-                <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
-                  {selectedProgram ? selectedProgram.name : "Select program..."}
+          {activeTab === "import" ? (
+            <>
+              <View style={styles.importHeader}>
+                <View style={styles.importIconBadge}>
+                  <Upload size={18} color={colors.primaryForeground} />
+                </View>
+                <View style={{ flex: 1, flexShrink: 1 }}>
+                  <Text style={styles.importTitle}>Import Students</Text>
+                  <Text style={styles.importDesc}>Upload an Excel file to create accounts and enroll students into a course.</Text>
+                </View>
+              </View>
+
+              <Text style={styles.labelText}>EXCEL FILE (.XLSX) — COLUMNS: NAME, DOB (DD/MM/YYYY), EMAIL (OPTIONAL)</Text>
+              
+              <View style={styles.fileRow}>
+                <TouchableOpacity style={styles.chooseFileBtn} onPress={pickFile}>
+                  <Text style={styles.chooseFileText}>Choose file</Text>
+                </TouchableOpacity>
+                <Text style={styles.fileNameText} numberOfLines={1}>{file ? file.name : "No file chosen"}</Text>
+              </View>
+
+              <View style={styles.dropdownsRow}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <Text style={styles.labelText}>PROGRAM *</Text>
+                  <TouchableOpacity style={styles.dropdown} onPress={() => setShowProgramInfo(true)}>
+                    <Text style={selectedProgram ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                      {selectedProgram ? selectedProgram.name : "Select program..."}
+                    </Text>
+                    <ChevronDown size={16} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.labelText}>COURSE *</Text>
+                  <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)}>
+                    <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                      {selectedCourse ? selectedCourse.name : "Select course..."}
+                    </Text>
+                    <ChevronDown size={16} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.importFooter}>
+                <Text style={styles.importInfoText}>Newly imported students will receive login credentials via email.</Text>
+                <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
+                  disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
+                  {isImporting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <FileUp size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+                      <Text style={styles.submitBtnText}>Import Students</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View style={{ paddingTop: 8 }}>
+              <Text style={styles.labelText}>1. TARGET COURSE *</Text>
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowEnrollCourseInfo(true)}>
+                <Text style={enrollCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
+                  {enrollCourse ? (enrollCourse as any).name : "Select course..."}
                 </Text>
                 <ChevronDown size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.labelText}>COURSE *</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => setShowCourseInfo(true)}>
-                <Text style={selectedCourse ? styles.dropdownText : styles.dropdownPlaceholder} numberOfLines={1}>
-                  {selectedCourse ? selectedCourse.name : "Select course..."}
-                </Text>
-                <ChevronDown size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          <View style={styles.importFooter}>
-            <Text style={styles.importInfoText}>Newly imported students will receive login credentials via email.</Text>
-            <TouchableOpacity style={[styles.submitBtn, (!file || !selectedCourse || !selectedProgram) && styles.submitBtnDisabled]}
-              disabled={!file || !selectedCourse || !selectedProgram || isImporting} onPress={importStudents}>
-              {isImporting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <FileUp size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
-                  <Text style={styles.submitBtnText}>Import Students</Text>
+              <Text style={[styles.labelText, { marginTop: 16 }]}>2. SEARCH EXISTING STUDENTS</Text>
+              <View style={[styles.searchBar, { marginRight: 0, marginBottom: 0 }]}>
+                <Search size={14} color={colors.mutedForeground} style={{ marginRight: 8 }} />
+                <TextInput style={styles.searchInput} placeholder="Search by name or email..."
+                  placeholderTextColor={colors.mutedForeground} value={searchQuery} onChangeText={setSearchQuery} />
+                {isSearching && <ActivityIndicator size="small" color={colors.accent} style={{ marginLeft: 8 }} />}
+              </View>
+
+              {searchResults.length > 0 && (
+                <View style={styles.searchResultsContainer}>
+                  {searchResults.map((s: any, idx) => (
+                    <View key={s.id} style={[styles.searchResultItem, idx < searchResults.length - 1 && styles.tableBorder]}>
+                      <View style={{ flex: 1, paddingRight: 10 }}>
+                        <Text style={styles.studentName} numberOfLines={1}>{s.name}</Text>
+                        <Text style={styles.studentEmail} numberOfLines={1}>{s.email} • {s.program?.name || "No Program"}</Text>
+                      </View>
+                      <TouchableOpacity 
+                        style={[styles.enrollBtn, enrollingStudentId === s.id && styles.enrollBtnDisabled]}
+                        onPress={() => handleEnrollExisting(s.id)}
+                        disabled={enrollingStudentId === s.id}
+                      >
+                        {enrollingStudentId === s.id ? (
+                          <ActivityIndicator size="small" color={colors.accent} />
+                        ) : (
+                          <>
+                            <User size={12} color={colors.accent} style={{ marginRight: 4 }} />
+                            <Text style={styles.enrollBtnText}>Enroll</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
                 </View>
               )}
-            </TouchableOpacity>
-          </View>
+              {searchResults.length === 0 && !isSearching && searchQuery.length > 0 && (
+                <Text style={styles.emptyText}>No un-enrolled students found matching "{searchQuery}"</Text>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Search & Filter */}
@@ -474,13 +611,32 @@ export default function StudentEnrollment() {
                  <Text style={styles.modalItemText}>All Courses</Text>
               </TouchableOpacity>
               <ScrollView style={{ maxHeight: 400 }}>
-                {courses.map(c => (
+                {courses.map((c: any) => (
                   <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setFilterCourse(c); setShowFilterInfo(false); }}>
                     <Text style={styles.modalItemText}>{c.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
              <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowFilterInfo(false)}>
+               <Text style={styles.modalCloseText}>Cancel</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Enroll Course Modal */}
+      <Modal visible={showEnrollCourseInfo} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+             <Text style={styles.modalTitle}>Select Target Course</Text>
+             <ScrollView style={{ maxHeight: 400 }}>
+               {courses.map((c: any) => (
+                 <TouchableOpacity key={c.id} style={styles.modalItem} onPress={() => { setEnrollCourse(c); setShowEnrollCourseInfo(false); }}>
+                   <Text style={styles.modalItemText}>{c.name}</Text>
+                 </TouchableOpacity>
+               ))}
+             </ScrollView>
+             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowEnrollCourseInfo(false)}>
                <Text style={styles.modalCloseText}>Cancel</Text>
              </TouchableOpacity>
           </View>
@@ -671,4 +827,17 @@ const createStyles = (colors) => StyleSheet.create({
   modalDetailValue: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 0.6, textAlign: "right" },
   modalDetailCloseBtn: { backgroundColor: colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
   modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: colors.textBody },
+  
+  // Tabs and Enroll UI
+  tabRow: { flexDirection: "row", marginBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+  tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
+  tabBtnActive: { borderBottomColor: colors.accent },
+  tabBtnText: { fontSize: 13, fontWeight: "600", color: colors.mutedForeground },
+  tabBtnTextActive: { color: colors.accent, fontWeight: "700" },
+  
+  searchResultsContainer: { marginTop: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 10, overflow: "hidden" },
+  searchResultItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 12, backgroundColor: colors.background },
+  enrollBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.accentLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.accent },
+  enrollBtnDisabled: { opacity: 0.5 },
+  enrollBtnText: { fontSize: 11, fontWeight: "700", color: colors.accent },
 });
