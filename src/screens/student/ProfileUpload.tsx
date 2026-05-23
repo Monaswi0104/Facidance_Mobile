@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Ale
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import { uploadFacePhotos, getStudentMe } from "../../api/studentApi";
 import { useTheme } from "../../theme/Theme";
-import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield } from "lucide-react-native";
+import { User, Mail, GraduationCap, Building2, Calendar, ScanFace, Camera, Upload, X, CheckCircle, Shield, Award, BookOpen } from "lucide-react-native";
 import CachedImage from "../../components/CachedImage";
 import { ProfileSkeleton } from "../../components/SkeletonLoader";
 import haptic from "../../utils/haptics";
@@ -127,6 +127,8 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
   const program = studentInfo?.student?.program_name || studentInfo?.student?.program?.name || "Program Name";
   const department = studentInfo?.student?.department_name || studentInfo?.student?.program?.department?.name || "Department";
   const joinedDate = joinDateRaw ? new Date(joinDateRaw).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "Unknown";
+  const studentStatus = studentInfo?.student?.status || (studentInfo as any)?.status || "active";
+  const isGrad = studentStatus === "graduated";
   const faceRegistered = studentInfo?.student?.face_embedding || studentInfo?.student?.hasFaceEmbedding || isUploaded;
   const uploadedCount = Object.values(images).filter(Boolean).length;
   const initial = name.charAt(0).toUpperCase();
@@ -156,9 +158,15 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
               <Text style={styles.profileName}>{name}</Text>
               <Text style={styles.profileEmail}>{email}</Text>
               <View style={styles.profileBadges}>
-                <View style={styles.studentBadge}>
-                  <Text style={styles.studentBadgeText}>Student</Text>
-                </View>
+                {isGrad ? (
+                  <View style={[styles.studentBadge, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}>
+                    <Text style={[styles.studentBadgeText, { color: colors.warning }]}>Alumni</Text>
+                  </View>
+                ) : (
+                  <View style={styles.studentBadge}>
+                    <Text style={styles.studentBadgeText}>Student</Text>
+                  </View>
+                )}
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Calendar size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
                   <Text style={styles.joinText}>Joined {joinedDate}</Text>
@@ -211,118 +219,157 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
           </View>
         </View>
 
-        {/* Face Recognition Setup */}
-        <View style={styles.faceCard}>
-          <View style={styles.faceCardHeader}>
-            <View style={styles.faceCardIconBg}>
-              <Camera size={16} color={colors.primaryForeground} />
+        {/* Graduated Alumni Card — shown instead of upload for graduated students */}
+        {isGrad ? (
+          <View style={styles.alumniCard}>
+            <View style={styles.alumniCardHeader}>
+              <View style={[styles.faceCardIconBg, { backgroundColor: colors.success }]}>
+                <Award size={16} color={colors.primaryForeground} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.faceCardTitle}>Graduated 🎓</Text>
+                <Text style={styles.faceCardSubtitle}>Your academic journey here is complete</Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.faceCardTitle}>Face Recognition Setup</Text>
-              <Text style={styles.faceCardSubtitle}>Upload photos for automatic AI attendance marking</Text>
+            <View style={styles.alumniInfoBox}>
+              <Text style={styles.alumniInfoText}>
+                Congratulations on graduating! Your profile and attendance records are permanently preserved. Face recognition uploads are no longer needed.
+              </Text>
+            </View>
+            <View style={styles.alumniStatsRow}>
+              <View style={styles.alumniStatItem}>
+                <BookOpen size={14} color={colors.success} />
+                <Text style={styles.alumniStatLabel}>Records</Text>
+                <Text style={styles.alumniStatValue}>Preserved</Text>
+              </View>
+              <View style={styles.alumniStatDivider} />
+              <View style={styles.alumniStatItem}>
+                <CheckCircle size={14} color={colors.success} />
+                <Text style={styles.alumniStatLabel}>Status</Text>
+                <Text style={[styles.alumniStatValue, { color: colors.success }]}>Alumni</Text>
+              </View>
+              <View style={styles.alumniStatDivider} />
+              <View style={styles.alumniStatItem}>
+                <ScanFace size={14} color={colors.mutedForeground} />
+                <Text style={styles.alumniStatLabel}>Face ID</Text>
+                <Text style={styles.alumniStatValue}>{faceRegistered ? "Registered" : "N/A"}</Text>
+              </View>
             </View>
           </View>
+        ) : (
+          /* Face Recognition Setup — only for active students */
+          <View style={styles.faceCard}>
+            <View style={styles.faceCardHeader}>
+              <View style={styles.faceCardIconBg}>
+                <Camera size={16} color={colors.primaryForeground} />
+              </View>
+              <View>
+                <Text style={styles.faceCardTitle}>Face Recognition Setup</Text>
+                <Text style={styles.faceCardSubtitle}>Upload photos for automatic AI attendance marking</Text>
+              </View>
+            </View>
 
-          {/* 3 Upload Columns */}
-          <View style={styles.uploadGrid}>
-            {uploadSteps.map(step => (
-              <View key={step.key} style={styles.uploadCol}>
-                <Text style={styles.colLabel}>{step.label}</Text>
-                <Text style={styles.colDesc}>{step.desc}</Text>
+            {/* 3 Upload Columns */}
+            <View style={styles.uploadGrid}>
+              {uploadSteps.map(step => (
+                <View key={step.key} style={styles.uploadCol}>
+                  <Text style={styles.colLabel}>{step.label}</Text>
+                  <Text style={styles.colDesc}>{step.desc}</Text>
 
-                {images[step.key] ? (
-                  <View style={styles.previewBox}>
-                    <CachedImage source={{ uri: images[step.key] }} style={styles.previewImg} />
-                    <TouchableOpacity style={styles.clearBtn} onPress={() => { haptic.light(); setImages(prev => ({ ...prev, [step.key]: null })); }}>
-                      <X size={12} color={colors.primaryForeground} />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={{ gap: 6 }}>
-                    <TouchableOpacity style={styles.cameraBtn} onPress={async () => {
-                      haptic.light();
-                      // Request camera permission on Android
-                      if (Platform.OS === 'android') {
-                        try {
-                          const granted = await PermissionsAndroid.request(
-                            PermissionsAndroid.PERMISSIONS.CAMERA,
-                            {
-                              title: 'Camera Permission',
-                              message: 'Facidance needs access to your camera to take profile photos for face recognition.',
-                              buttonPositive: 'Allow',
-                              buttonNegative: 'Deny',
+                  {images[step.key] ? (
+                    <View style={styles.previewBox}>
+                      <CachedImage source={{ uri: images[step.key] }} style={styles.previewImg} />
+                      <TouchableOpacity style={styles.clearBtn} onPress={() => { haptic.light(); setImages(prev => ({ ...prev, [step.key]: null })); }}>
+                        <X size={12} color={colors.primaryForeground} />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={{ gap: 6 }}>
+                      <TouchableOpacity style={styles.cameraBtn} onPress={async () => {
+                        haptic.light();
+                        // Request camera permission on Android
+                        if (Platform.OS === 'android') {
+                          try {
+                            const granted = await PermissionsAndroid.request(
+                              PermissionsAndroid.PERMISSIONS.CAMERA,
+                              {
+                                title: 'Camera Permission',
+                                message: 'Facidance needs access to your camera to take profile photos for face recognition.',
+                                buttonPositive: 'Allow',
+                                buttonNegative: 'Deny',
+                              }
+                            );
+                            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                              Alert.alert('Permission Denied', 'Camera permission is required to take photos. Please enable it in Settings.');
+                              return;
                             }
-                          );
-                          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                            Alert.alert('Permission Denied', 'Camera permission is required to take photos. Please enable it in Settings.');
+                          } catch (err) {
+                            console.warn('Camera permission error:', err);
                             return;
                           }
-                        } catch (err) {
-                          console.warn('Camera permission error:', err);
-                          return;
                         }
-                      }
-                      launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
-                        if (res.errorCode) {
-                          console.warn('Camera error:', res.errorCode, res.errorMessage);
-                          Alert.alert('Camera Error', res.errorMessage || 'Could not open camera.');
-                          return;
-                        }
-                        if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
-                      });
-                    }}>
-                      <Camera size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-                      <Text style={styles.cameraBtnText}>Use Camera</Text>
-                    </TouchableOpacity>
+                        launchCamera({ mediaType: "photo", cameraType: "front", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
+                          if (res.errorCode) {
+                            console.warn('Camera error:', res.errorCode, res.errorMessage);
+                            Alert.alert('Camera Error', res.errorMessage || 'Could not open camera.');
+                            return;
+                          }
+                          if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
+                        });
+                      }}>
+                        <Camera size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+                        <Text style={styles.cameraBtnText}>Use Camera</Text>
+                      </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.uploadBtn} onPress={() => {
-                      haptic.light();
-                      launchImageLibrary({ mediaType: "photo", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
-                        if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
-                      });
-                    }}>
-                      <Upload size={12} color={colors.textBody} style={{ marginRight: 4 }} />
-                      <Text style={styles.uploadBtnText}>Upload Image</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-
-          {/* Footer */}
-          <View style={styles.faceFooter}>
-            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-              <Shield size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
-              <Text style={styles.faceFooterText}>Photos are stored securely and used only for AI attendance verification.</Text>
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.submitBtn,
-                uploadedCount < 3 && styles.submitBtnDisabled,
-                isUploaded && styles.submitBtnSuccess,
-              ]}
-              onPress={() => { haptic.medium(); handleSubmitUpload(); }}
-              disabled={uploadedCount < 3 || isUploading || isUploaded}
-              activeOpacity={0.8}
-            >
-              {isUploading ? (
-                <ActivityIndicator color={colors.primaryForeground} size="small" />
-              ) : (
-                <>
-                  {isUploaded ? (
-                    <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-                  ) : (
-                    <Upload size={13} color={uploadedCount < 3 ? colors.mutedForeground : colors.primaryForeground} style={{ marginRight: 4 }} />
+                      <TouchableOpacity style={styles.uploadBtn} onPress={() => {
+                        haptic.light();
+                        launchImageLibrary({ mediaType: "photo", quality: 0.6, maxWidth: 800, maxHeight: 800 }, (res) => {
+                          if (res.assets) setImages((prev) => ({ ...prev, [step.key]: res.assets[0].uri }));
+                        });
+                      }}>
+                        <Upload size={12} color={colors.textBody} style={{ marginRight: 4 }} />
+                        <Text style={styles.uploadBtnText}>Upload Image</Text>
+                      </TouchableOpacity>
+                    </View>
                   )}
-                  <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: colors.mutedForeground }]}>
-                    {isUploaded ? "Photos Submitted" : "Submit Photos"}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            {/* Footer */}
+            <View style={styles.faceFooter}>
+              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                <Shield size={12} color={colors.mutedForeground} style={{ marginRight: 6 }} />
+                <Text style={styles.faceFooterText}>Photos are stored securely and used only for AI attendance verification.</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.submitBtn,
+                  uploadedCount < 3 && styles.submitBtnDisabled,
+                  isUploaded && styles.submitBtnSuccess,
+                ]}
+                onPress={() => { haptic.medium(); handleSubmitUpload(); }}
+                disabled={uploadedCount < 3 || isUploading || isUploaded}
+                activeOpacity={0.8}
+              >
+                {isUploading ? (
+                  <ActivityIndicator color={colors.primaryForeground} size="small" />
+                ) : (
+                  <>
+                    {isUploaded ? (
+                      <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+                    ) : (
+                      <Upload size={13} color={uploadedCount < 3 ? colors.mutedForeground : colors.primaryForeground} style={{ marginRight: 4 }} />
+                    )}
+                    <Text style={[styles.submitBtnText, uploadedCount < 3 && { color: colors.mutedForeground }]}>
+                      {isUploaded ? "Photos Submitted" : "Submit Photos"}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -427,4 +474,42 @@ const createStyles = (colors: any) => StyleSheet.create({
   submitBtnText: { fontSize: 12, fontWeight: "600", color: colors.primaryForeground },
   submitBtnDisabled: { backgroundColor: colors.muted },
   submitBtnSuccess: { backgroundColor: colors.success },
+
+  // Alumni Card
+  alumniCard: {
+    backgroundColor: colors.background,
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.success + '40',
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  alumniCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  alumniInfoBox: {
+    backgroundColor: colors.successLight,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.success + '30',
+  },
+  alumniInfoText: { fontSize: 13, color: colors.textBody, lineHeight: 20 },
+  alumniStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    backgroundColor: colors.secondary,
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  alumniStatItem: { alignItems: "center", gap: 4 },
+  alumniStatLabel: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
+  alumniStatValue: { fontSize: 12, fontWeight: "700", color: colors.foreground },
+  alumniStatDivider: { width: 1, height: 36, backgroundColor: colors.border },
 });

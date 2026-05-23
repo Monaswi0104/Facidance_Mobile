@@ -4,11 +4,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   SafeAreaView, Dimensions, BackHandler, Alert, RefreshControl
 } from "react-native";
-import { getStudentCourses, getStudentStats, getAttendanceHistory } from "../../api/studentApi";
+import { getStudentCourses, getStudentStats, getAttendanceHistory, getStudentMe } from "../../api/studentApi";
 import { getUser, clearAuth } from "../../api/authStorage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
-import { BookOpen, BarChart3, Clock, ArrowUpRight, CheckCircle, Lightbulb, AlertTriangle, User } from "lucide-react-native";
+import { BookOpen, BarChart3, Clock, ArrowUpRight, CheckCircle, Lightbulb, AlertTriangle, User, GraduationCap, Award } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import AttendanceTrendChart from "../../components/AttendanceTrendChart";
@@ -26,6 +26,7 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
 
   const [stats, setStats] = useState({ courses: 0, avgAttendance: "—", avgRaw: 0, attended: 0, totalSessions: 0 });
   const [userName, setUserName] = useState("Student");
+  const [isGraduated, setIsGraduated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
@@ -33,13 +34,17 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
   const loadData = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setIsLoading(true);
-      const [courses, user, statsRes, historyRes] = await Promise.all([
+      const [courses, user, statsRes, historyRes, meRes] = await Promise.all([
         getStudentCourses(),
         getUser(),
         getStudentStats(),
         getAttendanceHistory(),
+        getStudentMe(),
       ]);
       if (user?.name) setUserName(user.name);
+
+      const studentStatus = meRes?.student?.status || meRes?.status || "active";
+      setIsGraduated(studentStatus === "graduated");
 
       const courseList = Array.isArray(courses) ? courses : ((courses as any)?.courses || []);
       const rawPct = statsRes?.attendance_percentage ?? 0;
@@ -141,6 +146,64 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
       },
     ];
   }, [attendanceHistory, colors]);
+
+  if (!isLoading && isGraduated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.graduatedContainer} showsVerticalScrollIndicator={false}>
+          {/* Top Icon */}
+          <View style={styles.gradIconWrapper}>
+            <GraduationCap size={40} color="#fff" />
+          </View>
+
+          {/* Subtitle / Title */}
+          <Text style={styles.gradClassText}>CLASS OF {new Date().getFullYear()}</Text>
+          <Text style={styles.gradTitle}>Congratulations, {userName}! 🎓</Text>
+
+          {/* Description Card */}
+          <View style={styles.gradDescCard}>
+            <Text style={styles.gradDescText}>
+              You have successfully graduated. Your academic journey has been recorded and preserved. Access your complete attendance history and course records anytime.
+            </Text>
+          </View>
+
+          {/* 3 Stats Boxes */}
+          <View style={styles.gradStatsRow}>
+            <View style={styles.gradStatBox}>
+              <View style={[styles.gradStatIconBg, { backgroundColor: colors.primaryDark }]}>
+                <BookOpen size={16} color="#fff" />
+              </View>
+              <Text style={styles.gradStatNumber}>{stats.courses}</Text>
+              <Text style={styles.gradStatLabel}>COURSES COMPLETED</Text>
+            </View>
+
+            <View style={styles.gradStatBox}>
+              <View style={[styles.gradStatIconBg, { backgroundColor: colors.success }]}>
+                <CheckCircle size={16} color="#fff" />
+              </View>
+              <Text style={styles.gradStatNumber}>{stats.attended}</Text>
+              <Text style={styles.gradStatLabel}>CLASSES ATTENDED</Text>
+            </View>
+
+            <View style={styles.gradStatBox}>
+              <View style={[styles.gradStatIconBg, { backgroundColor: "#f59e0b" }]}>
+                <Award size={16} color="#fff" />
+              </View>
+              <Text style={styles.gradStatNumber}>{stats.avgAttendance}</Text>
+              <Text style={styles.gradStatLabel}>ATTENDANCE RATE</Text>
+            </View>
+          </View>
+
+          {/* Action Button */}
+          <TouchableOpacity style={styles.gradBtn} onPress={() => navigation.navigate("AttendanceHistory")}>
+            <BarChart3 size={14} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.gradBtnText}>View Past Records</Text>
+            <ArrowUpRight size={14} color="#fff" style={{ marginLeft: 4 }} />
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -407,4 +470,39 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 12, borderRadius: 10, marginTop: 14,
   },
   fullHistoryText: { fontSize: 13, fontWeight: "600", color: colors.textBody },
+
+  // Graduated UI Styles
+  graduatedContainer: { alignItems: "center", justifyContent: "center", padding: 24, paddingVertical: 40 },
+  gradIconWrapper: {
+    width: 76, height: 76, borderRadius: 38,
+    backgroundColor: "#f59e0b",
+    alignItems: "center", justifyContent: "center",
+    marginBottom: 20,
+    shadowColor: "#f59e0b", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10,
+  },
+  gradClassText: { fontSize: 12, fontWeight: "800", color: "#f59e0b", letterSpacing: 1.5, marginBottom: 8 },
+  gradTitle: { fontSize: 26, fontWeight: "900", color: colors.primaryDark, textAlign: "center", marginBottom: 24, lineHeight: 32 },
+  gradDescCard: {
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    marginBottom: 20,
+    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 3,
+  },
+  gradDescText: { fontSize: 14, color: colors.textBody, textAlign: "center", lineHeight: 22 },
+  gradStatsRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 32, gap: 10 },
+  gradStatBox: {
+    flex: 1, backgroundColor: colors.background, borderRadius: 16, padding: 16, alignItems: "center",
+    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 3,
+  },
+  gradStatIconBg: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginBottom: 12 },
+  gradStatNumber: { fontSize: 22, fontWeight: "900", color: colors.foreground, marginBottom: 4 },
+  gradStatLabel: { fontSize: 9, fontWeight: "800", color: colors.mutedForeground, textAlign: "center" },
+  gradBtn: {
+    flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark,
+    paddingVertical: 14, paddingHorizontal: 28, borderRadius: 12,
+    shadowColor: colors.primaryDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
+  },
+  gradBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
 });
