@@ -30,7 +30,7 @@ export default function MyCourses({ navigation }: MyCoursesProps) {
         id: c.id,
         name: c.name,
         code: c.entry_code || c.code || "—",
-        teacher: c.teacher_name || c.teacher?.user?.name || c.teacher?.name || "Teacher",
+        teacher: c.teacher_name || c.teacher?.user?.name || c.teacher?.name || "Unassigned",
         teacherEmail: c.teacher_email || c.teacher?.user?.email || c.teacher?.email || "",
         teacherDept: c.department_name || c.teacher?.department?.name || "Teacher Department",
         semester: c.semester_name || c.semester?.name || "—",

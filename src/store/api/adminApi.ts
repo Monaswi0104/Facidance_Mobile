@@ -131,6 +131,15 @@ export const adminApi = createApi({
       invalidatesTags: ["Courses", "Stats"],
     }),
 
+    updateCourseTeacher: builder.mutation<any, { courseId: string; teacherId: string }>({
+      query: ({ courseId, teacherId }) => ({
+        url: `/admin/courses/${courseId}`,
+        method: "PATCH",
+        body: { teacher_id: teacherId },
+      }),
+      invalidatesTags: ["Courses"],
+    }),
+
     // ─── Students ──────────────────────────────────────────────────
     getStudents: builder.query<any, void>({
       query: () => "/admin/students",
@@ -217,6 +226,7 @@ export const {
   useDeleteProgramMutation,
   useCreateCourseMutation,
   useDeleteCourseMutation,
+  useUpdateCourseTeacherMutation,
   useUpdateStudentMutation,
   useDeleteStudentMutation,
   useGraduateStudentMutation,

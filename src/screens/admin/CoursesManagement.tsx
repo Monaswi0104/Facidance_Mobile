@@ -5,7 +5,7 @@ import {
 , RefreshControl } from "react-native";
 import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
-import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown } from "lucide-react-native";
+import { BookOpen, GraduationCap, Users, Building2, Calendar, Key, User, Plus, X, Trash2, Search, ChevronDown, Edit2 } from "lucide-react-native";
 import { StatsRowSkeleton, SearchBarSkeleton, CourseListSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
@@ -17,6 +17,7 @@ import {
   useGetTeachersQuery,
   useCreateCourseMutation,
   useDeleteCourseMutation,
+  useUpdateCourseTeacherMutation,
 } from "../../store/api/adminApi";
 
 const { width } = Dimensions.get("window");
@@ -32,6 +33,7 @@ export default function CoursesManagement() {
   const { data: teachersData } = useGetTeachersQuery();
   const [createCourseMut] = useCreateCourseMutation();
   const [deleteCourseMut] = useDeleteCourseMutation();
+  const [updateCourseTeacherMut] = useUpdateCourseTeacherMutation();
 
   const isLoading = coursesLoading;
 
@@ -53,7 +55,8 @@ export default function CoursesManagement() {
       return {
         id: c.id, name: c.name, code: c.code || "—",
         entryCode: c.entry_code || c.entryCode || "—",
-        teacher: c.teacher_name || matchedTeacher?.name || "—",
+        teacher: c.teacher_name || matchedTeacher?.name || null,
+        teacherId: c.teacher_id || matchedTeacher?.id || null,
         teacherEmail: c.teacher_email || matchedTeacher?.email || "",
         teacherDept: matchedTeacher?.departmentName || matchedTeacher?.department_name || "—",
         semester: c.semester_name || "—",
@@ -75,6 +78,8 @@ export default function CoursesManagement() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isReassigning, setIsReassigning] = useState(false);
+  const [newTeacherId, setNewTeacherId] = useState(null);
   const [form, setForm] = useState({
     departmentId: null, teacherId: null, programId: null,
     academicYear: "", semesterNumber: null, name: ""
@@ -123,6 +128,25 @@ export default function CoursesManagement() {
     } catch (e: any) {
       Haptics.error();
       Alert.alert("Error", e.data?.detail || e.message || "Failed to create course.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAssignTeacher = async () => {
+    if (!newTeacherId || !selectedCourse) return;
+    setIsSubmitting(true);
+    try {
+      await updateCourseTeacherMut({ courseId: selectedCourse.id, teacherId: newTeacherId }).unwrap();
+      Haptics.success();
+      Alert.alert("Success", "Teacher reassigned successfully.");
+      setIsReassigning(false);
+      setNewTeacherId(null);
+      // Wait for refetch to visually update the list, but we update the modal manually or just close it
+      setSelectedCourse({ ...selectedCourse, teacher: teachers.find((t: any) => t.id === newTeacherId)?.name || "Teacher", teacherId: newTeacherId });
+    } catch (e: any) {
+      Haptics.error();
+      Alert.alert("Error", e.data?.detail || e.message || "Failed to reassign teacher.");
     } finally {
       setIsSubmitting(false);
     }
@@ -321,27 +345,47 @@ export default function CoursesManagement() {
         renderItem={({ item: c, index: i }) => (
           <View style={[styles.listCard, { paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
             <TouchableOpacity style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
-              <View style={styles.courseAvatar}>
-                <BookOpen size={14} color={colors.primaryDark} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.courseName}>{c.name}</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                  {c.code !== "—" && (
-                    <View style={styles.codeBadge}>
-                      <Text style={styles.codeText}>{c.code}</Text>
-                    </View>
-                  )}
-                  <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
-                  <Text style={styles.courseMeta}>{c.teacher}</Text>
-                  {c.year !== "—" && <Text style={styles.courseMeta}> · {c.year}</Text>}
-                  {c.semester !== "—" && <Text style={styles.courseMeta}> · {c.semester}</Text>}
+              <View style={{ flexDirection: "row", alignItems: "flex-start", width: "100%" }}>
+                <View style={styles.courseAvatar}>
+                  <BookOpen size={14} color={colors.primaryDark} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.courseName}>{c.name}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4, flexWrap: "wrap", rowGap: 4 }}>
+                    {c.code !== "—" && (
+                      <View style={styles.codeBadge}>
+                        <Text style={styles.codeText}>{c.code}</Text>
+                      </View>
+                    )}
+                    {c.teacher ? (
+                      <View style={{ flexDirection: "row", alignItems: "center", marginRight: 4 }}>
+                        <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
+                        <Text style={styles.courseMeta}>{c.teacher}</Text>
+                      </View>
+                    ) : (
+                      <View style={{ backgroundColor: "rgba(245,158,11,0.1)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4 }}>
+                        <Text style={{ fontSize: 9, fontWeight: "700", color: "#b45309" }}>Unassigned</Text>
+                      </View>
+                    )}
+                    <View style={{ width: "100%" }} />
+                    {(c.year !== "—" || c.semester !== "—") && (
+                      <Text style={styles.courseMeta}>
+                        · {c.year !== "—" ? c.year : ""} {c.semester !== "—" ? `· ${c.semester}` : ""}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
-              <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
-                <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
-                <Text style={styles.deleteBtnText}>Delete</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+                <TouchableOpacity style={styles.changeTeacherBtnOutline} onPress={() => { setSelectedCourse(c); setIsReassigning(true); setNewTeacherId(c.teacherId || null); }}>
+                  <Edit2 size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
+                  <Text style={styles.changeTeacherBtnText}>Change Teacher</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
+                  <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
+                  <Text style={styles.deleteBtnText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -364,7 +408,7 @@ export default function CoursesManagement() {
 
             <ScrollView style={{ maxHeight: Dimensions.get('window').height * 0.5 }} showsVerticalScrollIndicator={false}>
               {[
-                { icon: <User size={16} color={colors.mutedForeground} />, label: "Teacher", value: selectedCourse?.teacher, sub: selectedCourse?.teacherEmail },
+                { icon: <User size={16} color={colors.mutedForeground} />, label: "Teacher", value: selectedCourse?.teacher || "Unassigned", sub: selectedCourse?.teacherEmail },
                 { icon: <Building2 size={16} color={colors.mutedForeground} />, label: "Department", value: selectedCourse?.department },
                 { icon: <GraduationCap size={16} color={colors.mutedForeground} />, label: "Program", value: selectedCourse?.program },
                 { icon: <Calendar size={16} color={colors.mutedForeground} />, label: "Year & Semester", value: `${selectedCourse?.year || "—"} • ${selectedCourse?.semester || "—"}` },
@@ -381,9 +425,35 @@ export default function CoursesManagement() {
               ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={() => setSelectedCourse(null)}>
-              <Text style={styles.closeBtnText}>Close</Text>
-            </TouchableOpacity>
+            {isReassigning ? (
+              <View style={{ marginTop: 14 }}>
+                <Text style={styles.formLabel}>ASSIGN NEW TEACHER</Text>
+                <DropdownPicker
+                  selectedValue={newTeacherId}
+                  onValueChange={setNewTeacherId}
+                  items={teachers.map(t => ({ label: t.name + (t.departmentName ? ` (${t.departmentName})` : ""), value: t.id }))}
+                  placeholder="Select a teacher..."
+                  colors={colors}
+                />
+                <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
+                  <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]} onPress={() => setIsReassigning(false)}>
+                    <Text style={[styles.closeBtnText, { color: colors.foreground }]}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0 }]} disabled={!newTeacherId || isSubmitting} onPress={handleAssignTeacher}>
+                    {isSubmitting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.closeBtnText}>Save</Text>}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={{ flexDirection: "row", marginTop: 14, gap: 8 }}>
+                <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]} activeOpacity={0.7} onPress={() => { setIsReassigning(true); setNewTeacherId(selectedCourse?.teacherId || null); }}>
+                  <Text style={[styles.closeBtnText, { color: colors.foreground }]}>Change Teacher</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0 }]} activeOpacity={0.7} onPress={() => { setSelectedCourse(null); setIsReassigning(false); }}>
+                  <Text style={styles.closeBtnText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -474,13 +544,15 @@ const createStyles = (colors) => StyleSheet.create({
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Course Rows
-  courseRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
+  courseRow: { flexDirection: "column", paddingVertical: 14, paddingHorizontal: 2 },
   courseRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
   courseAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
   courseName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
   courseMeta: { fontSize: 10, color: colors.mutedForeground },
   codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3, marginRight: 6 },
   codeText: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
+  changeTeacherBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: "transparent", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  changeTeacherBtnText: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground },
   deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
