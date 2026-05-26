@@ -15,7 +15,7 @@ import Share from "react-native-share";
 const { width } = Dimensions.get("window");
 
 export default function CourseDetails({ route, navigation }) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { course } = route.params;
   const [students, setStudents] = useState([]);

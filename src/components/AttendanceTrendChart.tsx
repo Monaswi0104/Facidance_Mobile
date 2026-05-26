@@ -23,7 +23,7 @@ export default function AttendanceTrendChart({
   title = "Attendance Trend",
   subtitle = "Your attendance over the last 7 sessions",
 }: AttendanceTrendChartProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
 
   const chartConfig = {
     backgroundColor: colors.background,
@@ -38,7 +38,7 @@ export default function AttendanceTrendChart({
     propsForDots: {
       r: "4",
       strokeWidth: "2",
-      stroke: isDark ? '#8B5CF6' : '#7C3AED',
+      stroke: '#7C3AED',
     },
     propsForBackgroundLines: {
       strokeDasharray: "",
@@ -46,7 +46,7 @@ export default function AttendanceTrendChart({
     },
   };
 
-  const lineColor = () => isDark ? '#8B5CF6' : '#7C3AED';
+  const lineColor = () => '#7C3AED';
 
   const chartData = {
     labels: data.labels,
@@ -86,7 +86,7 @@ export default function AttendanceTrendChart({
 
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: isDark ? '#8B5CF6' : '#7C3AED' }]} />
+          <View style={[styles.legendDot, { backgroundColor: '#7C3AED' }]} />
           <Text style={[styles.legendText, { color: colors.mutedForeground }]}>Attendance %</Text>
         </View>
       </View>

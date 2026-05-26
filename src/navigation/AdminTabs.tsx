@@ -67,7 +67,7 @@ export default function AdminTabs({ navigation: rootNav }) {
 
   // Custom header that includes logo + logout + nav pills
   function CustomHeader({ navigation, state }) {
-    const { colors, isDark, toggleTheme, mode } = useTheme();
+    const { colors} = useTheme();
     const activeIndex = state.index;
     const scrollViewRef = useRef(null);
     const tabLayouts = useRef({});
@@ -93,7 +93,7 @@ export default function AdminTabs({ navigation: rootNav }) {
 
     return (
       <View style={[s.headerWrapper, { backgroundColor: colors.headerBg, borderBottomColor: colors.headerBorder }]}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.headerBg} />
+        <StatusBar barStyle={"dark-content"} backgroundColor={colors.headerBg} />
         {/* Top row: Logo + Logout */}
         <View style={s.headerTopRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -101,9 +101,7 @@ export default function AdminTabs({ navigation: rootNav }) {
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.primary, letterSpacing: -0.5 }}>Facidance</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity onPress={() => { haptic.light(); toggleTheme(); }} style={[s.logoutBtn, { backgroundColor: colors.navPillBg, borderColor: colors.navPillBorder, marginRight: 10 }]} activeOpacity={0.7}>
-              {mode === 'dark' ? <Moon size={20} color={colors.foreground} /> : mode === 'light' ? <Sun size={20} color={colors.foreground} /> : <Monitor size={20} color={colors.foreground} />}
-            </TouchableOpacity>
+
             <TouchableOpacity onPress={confirmLogout} style={[s.logoutBtn, { backgroundColor: colors.logoutBg, borderColor: colors.logoutBorder }]} activeOpacity={0.7}>
               <LogOut size={20} color={colors.logoutIcon} style={{ marginLeft: 2 }} />
             </TouchableOpacity>

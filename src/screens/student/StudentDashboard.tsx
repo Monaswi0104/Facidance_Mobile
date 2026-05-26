@@ -21,7 +21,7 @@ type StudentDashboardProps = StudentTabScreenProps<"StudentDashboard">;
 const { width } = Dimensions.get('window');
 
 export default function StudentDashboard({ navigation }: StudentDashboardProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [stats, setStats] = useState({ courses: 0, avgAttendance: "—", avgRaw: 0, attended: 0, totalSessions: 0 });

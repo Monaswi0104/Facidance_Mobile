@@ -45,7 +45,7 @@ const uploadSteps = [
 ];
 
 export default function ProfileUpload({ navigation }: ProfileUploadProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [images, setImages] = useState<ImagesState>({ front: null, left: null, right: null });

@@ -37,7 +37,7 @@ const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
 const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
 
 export default function AttendanceSession({ route, navigation }) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const s = useMemo(() => createStyles(colors), [colors]);
   const { course, studentCount, trainedCount, notTrainedCount } = route.params;
 

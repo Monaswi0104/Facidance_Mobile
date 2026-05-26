@@ -16,7 +16,7 @@ interface BrandedRefreshProps extends Omit<RefreshControlProps, 'colors' | 'prog
  */
 const BrandedRefresh = forwardRef<RefreshControl, BrandedRefreshProps>(
   ({ refreshing, onRefresh, title, ...props }, ref) => {
-    const { colors, isDark } = useTheme();
+    const { colors} = useTheme();
 
     // Brand color cycle: primary → accent → teal → success
     const brandColors: string[] = [
@@ -32,7 +32,7 @@ const BrandedRefresh = forwardRef<RefreshControl, BrandedRefreshProps>(
         refreshing={refreshing}
         onRefresh={onRefresh}
         colors={brandColors}
-        progressBackgroundColor={isDark ? colors.card : colors.background}
+        progressBackgroundColor={colors.background}
         tintColor={colors.accent}
         title={refreshing ? (title || "Refreshing…") : "Pull to refresh"}
         titleColor={colors.mutedForeground}

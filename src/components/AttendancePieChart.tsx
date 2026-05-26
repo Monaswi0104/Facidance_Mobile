@@ -22,7 +22,7 @@ export default function AttendancePieChart({
   title = "Attendance Distribution",
   subtitle = "Your overall attendance breakdown",
 }: AttendancePieChartProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
 
   const chartConfig = {
     color: () => colors.foreground,

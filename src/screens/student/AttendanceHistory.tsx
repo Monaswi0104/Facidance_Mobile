@@ -34,7 +34,7 @@ interface CourseSummary {
 }
 
 export default function AttendanceHistory({ route, navigation }: AttendanceHistoryProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [activeTab, setActiveTab] = useState<string>(route?.params?.initialTab || 'Overview');

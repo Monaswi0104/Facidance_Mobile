@@ -86,26 +86,28 @@ export default function DropdownPicker({
 
             <ScrollView style={{ maxHeight: Dimensions.get("window").height * 0.5 }}>
               {/* Placeholder / reset option */}
-              <TouchableOpacity
-                style={[
-                  modalStyles.item,
-                  { borderBottomColor: colors.muted },
-                  selectedValue == null && { backgroundColor: colors.accentLight },
-                ]}
-                onPress={() => {
-                  onValueChange(null);
-                  setVisible(false);
-                }}
-              >
-                <Text
+              {!items.some((i) => i.value == null) && (
+                <TouchableOpacity
                   style={[
-                    modalStyles.itemText,
-                    { color: colors.mutedForeground },
+                    modalStyles.item,
+                    { borderBottomColor: colors.muted },
+                    selectedValue == null && { backgroundColor: colors.accentLight },
                   ]}
+                  onPress={() => {
+                    onValueChange(null);
+                    setVisible(false);
+                  }}
                 >
-                  {placeholder}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      modalStyles.itemText,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    {placeholder}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {items.map((item) => (
                 <TouchableOpacity

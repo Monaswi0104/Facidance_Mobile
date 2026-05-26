@@ -15,7 +15,7 @@ import type { StudentCoursesStackScreenProps } from "../../types/navigation";
 type MyCoursesProps = StudentCoursesStackScreenProps<"StudentCourses">;
 
 export default function MyCourses({ navigation }: MyCoursesProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

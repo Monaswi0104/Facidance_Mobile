@@ -27,7 +27,7 @@ import type { AdminTabScreenProps } from "../../types/navigation";
 type AdminDashboardProps = AdminTabScreenProps<"AdminDashboard">;
 
 export default function AdminDashboard({ navigation }: AdminDashboardProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [userName, setUserName] = useState("Admin");
   const [isRefreshing, setIsRefreshing] = useState(false);

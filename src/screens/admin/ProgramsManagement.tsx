@@ -19,10 +19,11 @@ import {
   useGetProgramDistributionQuery,
   useCreateProgramMutation,
   useDeleteProgramMutation,
+  useUpdateProgramDepartmentMutation,
 } from "../../store/api/adminApi";
 
 export default function ProgramsManagement() {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // ── RTK Query ──
@@ -34,6 +35,7 @@ export default function ProgramsManagement() {
   const { data: distData } = useGetProgramDistributionQuery();
   const [createProgramMut] = useCreateProgramMutation();
   const [deleteProgramMut] = useDeleteProgramMutation();
+  const [updateProgramDepartmentMut] = useUpdateProgramDepartmentMutation();
 
   const isLoading = progsLoading;
 
@@ -109,6 +111,16 @@ export default function ProgramsManagement() {
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState(null);
+  const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
+  
+  const [reassigningProgramId, setReassigningProgramId] = useState<string | null>(null);
+  const [reassignDeptId, setReassignDeptId] = useState<string | null>(null);
+  const [isReassigningLoading, setIsReassigningLoading] = useState(false);
+
+  const filteredPrograms = useMemo(() => {
+    if (!filterDeptId) return programs;
+    return programs.filter(p => p.departmentId === filterDeptId);
+  }, [programs, filterDeptId]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -160,6 +172,25 @@ export default function ProgramsManagement() {
         }
       },
     ]);
+  };
+
+  const handleReassign = async (programId: string) => {
+    if (!reassignDeptId) return;
+    try {
+      setIsReassigningLoading(true);
+      await updateProgramDepartmentMut({ programId, departmentId: reassignDeptId }).unwrap();
+      Haptics.success();
+      setReassigningProgramId(null);
+      setReassignDeptId(null);
+      Alert.alert("Success", "Program reassigned successfully.");
+    } catch (e: any) {
+      Haptics.error();
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to reassign program.");
+      Alert.alert("Error", msg);
+    } finally {
+      setIsReassigningLoading(false);
+    }
   };
 
   return (
@@ -269,41 +300,90 @@ export default function ProgramsManagement() {
             )}
 
             {/* All Programs Card */}
-            <View style={styles.listCard}>
-              <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><BookOpen size={12} color={colors.primaryForeground} /></View>
-                <Text style={styles.listTitle}>All Programs</Text>
-                <View style={styles.listCountBadge}>
-                  <Text style={styles.listCountText}>{programs.length} total</Text>
-                </View>
+            {/* All Programs Section */}
+            <View style={styles.listHeaderContainer}>
+              <View style={styles.listHeaderIcon}><BookOpen size={14} color={colors.primaryForeground} /></View>
+              <Text style={styles.listTitle}>All Programs</Text>
+              <View style={styles.listCountBadge}>
+                <Text style={styles.listCountText}>{filteredPrograms.length} total</Text>
               </View>
-
-              {programs.length === 0 ? (
-                <EmptyStateCompact icon={BookOpen} title="No programs yet" subtitle="Create your first program" />
-              ) : (
-                programs.map((p, i) => (
-                  <TouchableOpacity key={p.id} style={[styles.progRow, i < programs.length - 1 && styles.progRowBorder]} activeOpacity={0.7} onPress={() => setSelectedProgram(p)}>
-                    <View style={styles.progAvatar}>
-                      <BookOpen size={14} color={colors.primaryDark} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.progName}>{p.name}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2, flexWrap: "wrap" }}>
-                        <Building2 size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                        <Text style={styles.progMeta}>{p.dept}</Text>
-                        <View style={styles.progIdBadge}>
-                          <Text style={styles.progIdText}>{p.id ? String(p.id).slice(0, 8).toUpperCase() : "—"}</Text>
-                        </View>
-                      </View>
-                    </View>
-                    <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(p)}>
-                      <Trash2 size={11} color={colors.danger} style={{ marginRight: 3 }} />
-                      <Text style={styles.deleteBtnText}>Delete</Text>
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
-              )}
             </View>
+
+            <View style={{ marginBottom: 14 }}>
+              <DropdownPicker
+                selectedValue={filterDeptId}
+                onValueChange={setFilterDeptId}
+                items={[
+                  { label: "All Departments", value: null },
+                  ...departments.map(d => ({ label: d.name, value: d.id }))
+                ]}
+                placeholder="Filter by Department"
+                colors={colors}
+                style={{ height: 42 }}
+              />
+            </View>
+
+            {filteredPrograms.length === 0 ? (
+              <EmptyStateCompact icon={BookOpen} title="No programs found" subtitle="Try changing the department filter" />
+            ) : (
+              filteredPrograms.map((p, i) => {
+                const isReassigningThis = reassigningProgramId === p.id;
+                return (
+                <TouchableOpacity key={p.id} style={styles.progCard} activeOpacity={0.7} onPress={() => setSelectedProgram(p)}>
+                  <View style={styles.progCardHeader}>
+                    <View style={styles.progAvatar}>
+                      <BookOpen size={16} color={colors.primaryDark} />
+                    </View>
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <Text style={styles.progName}>{p.name}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      {isReassigningThis ? (
+                        <TouchableOpacity style={[styles.reassignBtnOutline, { backgroundColor: colors.border }]} onPress={(e) => { e.stopPropagation(); setReassigningProgramId(null); }}>
+                          <X size={11} color={colors.foreground} style={{ marginRight: 3 }} />
+                          <Text style={[styles.reassignBtnText, { color: colors.foreground }]}>Cancel</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity style={styles.reassignBtnOutline} onPress={(e) => { e.stopPropagation(); setReassigningProgramId(p.id); setReassignDeptId(p.departmentId || null); }}>
+                          <Building2 size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
+                          <Text style={styles.reassignBtnText}>Reassign</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity style={styles.deleteBtnOutline} onPress={(e) => { e.stopPropagation(); handleDelete(p); }}>
+                        <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
+                        <Text style={styles.deleteBtnText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={styles.progCardFooter}>
+                    <View style={styles.progStatPill}>
+                      <Building2 size={12} color={colors.primaryDark} style={{ marginRight: 4 }} />
+                      <Text style={styles.progMeta}>{p.dept}</Text>
+                    </View>
+                    <View style={styles.progIdBadge}>
+                      <Text style={styles.progIdText}>{p.id ? String(p.id).slice(0, 8).toUpperCase() : "—"}</Text>
+                    </View>
+                  </View>
+
+                  {isReassigningThis && (
+                    <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+                      <Text style={styles.formLabel}>ASSIGN NEW DEPARTMENT</Text>
+                      <DropdownPicker
+                        selectedValue={reassignDeptId}
+                        onValueChange={setReassignDeptId}
+                        items={departments.map(d => ({ label: d.name, value: d.id }))}
+                        placeholder="Select a department..."
+                        colors={colors}
+                      />
+                      <TouchableOpacity style={[styles.formSubmitBtn, { marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center' }]} disabled={!reassignDeptId || isReassigningLoading} onPress={(e) => { e.stopPropagation(); handleReassign(p.id); }}>
+                        {isReassigningLoading ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.formSubmitText}>Assign Department</Text>}
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                )
+              })
+            )}
           </>
         )}
       </ScrollView>
@@ -344,6 +424,10 @@ export default function ProgramsManagement() {
                 <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: colors.border }]}>
                   <Text style={styles.detailStatNumber}>{selectedProgram?.teachers?.length || 0}</Text>
                   <Text style={styles.detailStatLabel}>Faculty</Text>
+                </View>
+                <View style={[styles.detailStatBox, { borderLeftWidth: 1, borderLeftColor: colors.border }]}>
+                  <Text style={styles.detailStatNumber}>{selectedProgram?.students || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Students</Text>
                 </View>
               </View>
 
@@ -439,28 +523,45 @@ const createStyles = (colors) => StyleSheet.create({
   addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, paddingHorizontal: 14, height: 54, borderRadius: 8, justifyContent: "center", marginLeft: 8 },
   addFormBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
 
-  // List Card
-  listCard: {
-    backgroundColor: colors.background, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: colors.border,
-    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
-  },
-  listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accentLight },
+  // Program Cards
+  listHeaderContainer: { flexDirection: "row", alignItems: "center", marginBottom: 14, paddingHorizontal: 4 },
+  listHeaderIcon: { width: 26, height: 26, borderRadius: 7, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  listTitle: { fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
-  // Program Rows
-  progRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  progRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  progAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  progName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
-  progMeta: { fontSize: 10, color: colors.mutedForeground, marginRight: 6 },
-  progIdBadge: { backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
-  progIdText: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.dangerLight, backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  progCard: {
+    backgroundColor: colors.background,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  progCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  progAvatar: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  progName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+
+  progCardFooter: { flexDirection: "row", alignItems: "center", paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border, gap: 8 },
+  progStatPill: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15, 164, 175, 0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  progMeta: { fontSize: 10, fontWeight: "600", color: colors.primaryDark },
+  progIdBadge: { backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6 },
+  progIdText: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
+
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
+
+  reassignBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.secondary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  reassignBtnText: { fontSize: 11, fontWeight: "600", color: colors.mutedForeground },
+
+  formLabel: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3, marginBottom: 4 },
+  formSubmitBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  formSubmitText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
 
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 

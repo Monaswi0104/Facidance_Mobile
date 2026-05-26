@@ -15,10 +15,12 @@ import {
   useGetTeachersQuery,
   useCreateDepartmentMutation,
   useDeleteDepartmentMutation,
+  useUpdateProgramDepartmentMutation,
 } from "../../store/api/adminApi";
+import DropdownPicker from "../../components/DropdownPicker";
 
 export default function DepartmentsManagement() {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // ── RTK Query ──
@@ -27,6 +29,7 @@ export default function DepartmentsManagement() {
   const { data: teachersData } = useGetTeachersQuery();
   const [createDepartmentMut] = useCreateDepartmentMutation();
   const [deleteDepartmentMut] = useDeleteDepartmentMutation();
+  const [updateProgramDepartmentMut] = useUpdateProgramDepartmentMutation();
 
   const isLoading = deptsLoading;
 
@@ -65,6 +68,10 @@ export default function DepartmentsManagement() {
   const [selectedDept, setSelectedDept] = useState(null);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [deptToReassign, setDeptToReassign] = useState<any>(null);
+  const [reassignToDeptId, setReassignToDeptId] = useState<string | null>(null);
+  const [isReassigning, setIsReassigning] = useState(false);
+  
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     Haptics.light();
@@ -95,6 +102,10 @@ export default function DepartmentsManagement() {
 
   const handleDelete = (dept) => {
     Haptics.selection();
+    if (dept.programs > 0) {
+      setDeptToReassign(dept);
+      return;
+    }
     Alert.alert("Delete Department", `Remove "${dept.name}"?`, [
       { text: "Cancel", style: "cancel" },
       {
@@ -113,6 +124,28 @@ export default function DepartmentsManagement() {
         }
       },
     ]);
+  };
+
+  const handleReassignAndDelete = async () => {
+    if (!deptToReassign || !reassignToDeptId) return;
+    try {
+      setIsReassigning(true);
+      for (const prog of deptToReassign.programsList) {
+        await updateProgramDepartmentMut({ programId: prog.id, departmentId: reassignToDeptId }).unwrap();
+      }
+      await deleteDepartmentMut(deptToReassign.id).unwrap();
+      Haptics.success();
+      Alert.alert("Success", "Programs reassigned and department deleted.");
+      setDeptToReassign(null);
+      setReassignToDeptId(null);
+    } catch (e: any) {
+      Haptics.error();
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to reassign and delete.");
+      Alert.alert("Error", msg);
+    } finally {
+      setIsReassigning(false);
+    }
   };
 
   return (
@@ -197,42 +230,45 @@ export default function DepartmentsManagement() {
               </View>
             )}
 
-            {/* All Departments Card */}
-            <View style={styles.listCard}>
-              <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><Building2 size={12} color={colors.primaryForeground} /></View>
-                <Text style={styles.listTitle}>All Departments</Text>
-                <View style={styles.listCountBadge}>
-                  <Text style={styles.listCountText}>{departments.length} total</Text>
-                </View>
+            {/* All Departments Section */}
+            <View style={styles.listHeaderContainer}>
+              <View style={styles.listHeaderIcon}><Building2 size={12} color={colors.primaryForeground} /></View>
+              <Text style={styles.listTitle}>All Departments</Text>
+              <View style={styles.listCountBadge}>
+                <Text style={styles.listCountText}>{departments.length} total</Text>
               </View>
+            </View>
 
-              {departments.length === 0 ? (
-                <EmptyStateCompact icon={Building2} title="No departments yet" subtitle="Create your first department" />
-              ) : (
-                departments.map((d, i) => (
-                  <TouchableOpacity key={d.id} style={[styles.deptRow, i < departments.length - 1 && styles.deptRowBorder]} onPress={() => setSelectedDept(d)} activeOpacity={0.7}>
+            {departments.length === 0 ? (
+              <EmptyStateCompact icon={Building2} title="No departments yet" subtitle="Create your first department" />
+            ) : (
+              departments.map((d, i) => (
+                <TouchableOpacity key={d.id} style={styles.deptCard} onPress={() => setSelectedDept(d)} activeOpacity={0.7}>
+                  <View style={styles.deptCardHeader}>
                     <View style={styles.deptAvatar}>
-                      <Building2 size={14} color={colors.primaryDark} />
+                      <Building2 size={16} color={colors.primaryDark} />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.deptName}>{d.name}</Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <GraduationCap size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                        <Text style={styles.deptMeta}>{d.programs} programs</Text>
-                        <Text style={[styles.deptMeta, { marginHorizontal: 6 }]}>·</Text>
-                        <Users size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                        <Text style={styles.deptMeta}>{d.teachers} teachers</Text>
-                      </View>
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <Text style={styles.deptName}>{String(d.name || "")}</Text>
                     </View>
                     <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(d)}>
-                      <Trash2 size={11} color={colors.danger} style={{ marginRight: 3 }} />
+                      <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                       <Text style={styles.deleteBtnText}>Delete</Text>
                     </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
-              )}
-            </View>
+                  </View>
+                  <View style={styles.deptCardFooter}>
+                    <View style={styles.deptStatPill}>
+                      <GraduationCap size={12} color={colors.primaryDark} style={{ marginRight: 4 }} />
+                      <Text style={styles.deptMeta}>{d.programs} programs</Text>
+                    </View>
+                    <View style={styles.deptStatPill}>
+                      <Users size={12} color={colors.primaryDark} style={{ marginRight: 4 }} />
+                      <Text style={styles.deptMeta}>{d.teachers} teachers</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}    
           </>
         )}
 
@@ -292,6 +328,50 @@ export default function DepartmentsManagement() {
           </View>
         </View>
       </Modal>
+
+      {/* Reassign & Delete Modal */}
+      <Modal visible={!!deptToReassign} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { padding: 24, maxHeight: undefined }]}>
+            <View style={[styles.detailHeader, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+              <View style={styles.detailHeaderIcon}><Building2 size={20} color={colors.primaryForeground} /></View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.detailTitle}>Reassign Programs</Text>
+                <Text style={styles.detailSubtitle}>"{deptToReassign?.name}" has {deptToReassign?.programs} program(s) assigned.</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDeptToReassign(null)}>
+                <X size={20} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ marginVertical: 16 }}>
+              <Text style={{ fontSize: 13, color: colors.foreground, marginBottom: 12 }}>
+                You must move these programs to another department before deleting this one.
+              </Text>
+              <Text style={styles.addFormLabel}>SELECT NEW DEPARTMENT</Text>
+              <DropdownPicker
+                selectedValue={reassignToDeptId}
+                onValueChange={setReassignToDeptId}
+                items={departments.filter((d: any) => d.id !== deptToReassign?.id).map((d: any) => ({ label: d.name, value: d.id }))}
+                placeholder="Select department..."
+                colors={colors}
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.formSubmitBtn, { opacity: (!reassignToDeptId || isReassigning) ? 0.6 : 1 }]} 
+              disabled={!reassignToDeptId || isReassigning} 
+              onPress={handleReassignAndDelete}
+            >
+              {isReassigning ? (
+                <ActivityIndicator color={colors.primaryForeground} size="small" />
+              ) : (
+                <Text style={[styles.formSubmitText, { textAlign: "center" }]}>Reassign & Delete</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -334,25 +414,35 @@ const createStyles = (colors) => StyleSheet.create({
   addFormBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
   addFormBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
 
-  // List Card
-  listCard: {
-    backgroundColor: colors.background, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: colors.border,
-    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
-  },
-  listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accentLight },
+  // Department Cards
+  listHeaderContainer: { flexDirection: "row", alignItems: "center", marginBottom: 14, paddingHorizontal: 4 },
+  listHeaderIcon: { width: 26, height: 26, borderRadius: 7, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  listTitle: { fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
-  // Department Rows
-  deptRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
-  deptRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  deptAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  deptName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
-  deptMeta: { fontSize: 10, color: colors.mutedForeground },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.dangerLight, backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deptCard: {
+    backgroundColor: colors.background,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  deptCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  deptAvatar: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  deptName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  
+  deptCardFooter: { flexDirection: "row", alignItems: "center", paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border, gap: 8 },
+  deptStatPill: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15, 164, 175, 0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  deptMeta: { fontSize: 10, fontWeight: "600", color: colors.primaryDark },
+
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
 
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
@@ -365,12 +455,15 @@ const createStyles = (colors) => StyleSheet.create({
   detailTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
   detailSubtitle: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
   sectionLabel: { fontSize: 11, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 10 },
-  subItem: { flexDirection: "row", alignItems: "center", backgroundColor: colors.secondary, padding: 12, borderRadius: 10, marginBottom: 6, borderWidth: 1, borderColor: colors.border },
+  subItem: { flexDirection: "row", alignItems: "center", backgroundColor: colors.secondary, padding: 12, borderRadius: 10, marginBottom: 8 },
   subItemText: { fontSize: 13, fontWeight: "700", color: colors.foreground },
-  subItemSub: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
-  emptySubText: { fontSize: 12, color: colors.mutedForeground, marginBottom: 8 },
-  teacherAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  teacherAvatarText: { fontSize: 12, fontWeight: "800", color: colors.primaryDark },
-  closeBtn: { marginTop: 14, backgroundColor: colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  subItemSub: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
+  teacherAvatar: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 12 },
+  teacherAvatarText: { fontSize: 14, fontWeight: "700", color: colors.primaryForeground },
+  emptySubText: { fontSize: 12, color: colors.mutedForeground, fontStyle: "italic", marginBottom: 10 },
+  closeBtn: { marginTop: 16, backgroundColor: colors.primaryDark, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   closeBtnText: { fontSize: 13, fontWeight: "700", color: colors.primaryForeground },
+  
+  formSubmitBtn: { backgroundColor: colors.primaryDark, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 10, alignItems: "center" },
+  formSubmitText: { fontSize: 14, fontWeight: "700", color: colors.primaryForeground },
 });

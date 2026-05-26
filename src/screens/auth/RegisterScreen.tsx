@@ -19,8 +19,8 @@ const universityImg = require("../../assets/university.jpg");
 const logoImg = require("../../assets/logo.png");
 
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
-  const { colors, isDark, mode, toggleTheme } = useTheme();
-  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+  const { colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const topPadding = Platform.OS === 'android'
     ? Math.max(insets.top, StatusBar.currentHeight || 0)
@@ -79,11 +79,10 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     }
   };
 
-  const ThemeIcon = mode === 'dark' ? Moon : mode === 'light' ? Sun : Monitor;
-
+  
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle={isDark ? "light-content" : "light-content"} backgroundColor={colors.primary} />
+      <StatusBar barStyle={"light-content"} backgroundColor={colors.primary} />
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: colors.primary }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -99,7 +98,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         {/* Hero */}
         <View style={[styles.hero, { paddingTop: topPadding }]}>
           <Image source={universityImg} style={styles.heroImage} resizeMode="cover" />
-          <View style={[styles.heroOverlay, { backgroundColor: isDark ? 'rgba(18,18,18,0.65)' : 'rgba(0,49,53,0.65)' }]} />
+          <View style={[styles.heroOverlay, { backgroundColor: 'rgba(0,49,53,0.65)' }]} />
 
           <View style={styles.heroInner}>
             {/* Brand + Theme Toggle Row */}
@@ -111,13 +110,11 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
                   <Text style={styles.brandSub}>Department of Information Technology</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.themeToggle} onPress={() => { haptic.light(); toggleTheme(); }} activeOpacity={0.7}>
-                <ThemeIcon size={25} color={colors.primaryForeground} />
-              </TouchableOpacity>
+              
             </View>
 
             {/* AI Badge */}
-            <View style={[styles.aiBadge, { backgroundColor: isDark ? 'rgba(52,211,153,0.15)' : 'rgba(16,185,129,0.15)' }]}>
+            <View style={[styles.aiBadge, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
               <Sparkles size={13} color={colors.success} style={{ marginRight: 5 }} />
               <Text style={styles.aiBadgeText}>AI-Powered Smart Attendance</Text>
             </View>
@@ -268,7 +265,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   );
 }
 
-const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   screenWrapper: { flex: 1, backgroundColor: colors.primary },
   scrollContent: { flexGrow: 1 },
 
@@ -410,10 +407,10 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 36,
-    borderTopWidth: isDark ? 1.5 : 0,
-    borderLeftWidth: isDark ? 1.5 : 0,
-    borderRightWidth: isDark ? 1.5 : 0,
-    borderColor: isDark ? colors.border : 'transparent',
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: 'transparent',
   },
   formTitle: {
     fontSize: 24,

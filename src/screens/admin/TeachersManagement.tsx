@@ -20,7 +20,7 @@ import {
 } from "../../store/api/adminApi";
 
 export default function TeachersManagement() {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // ── RTK Query ──

@@ -13,8 +13,8 @@ import { EmptyStateCompact } from "../../components/EmptyState";
 const { width } = Dimensions.get("window");
 
 export default function AttendanceCamera({ navigation }) {
-  const { colors, isDark } = useTheme();
-  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+  const { colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [students, setStudents] = useState([]);
@@ -338,7 +338,7 @@ export default function AttendanceCamera({ navigation }) {
   );
 }
 
-const createStyles = (colors, isDark) => StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.secondary },
   container: { padding: 20, paddingBottom: 40 },
 
@@ -380,12 +380,12 @@ const createStyles = (colors, isDark) => StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: isDark ? colors.card : "rgba(13,148,136,0.04)",
+    backgroundColor: "rgba(13,148,136,0.04)",
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: isDark ? colors.border : "rgba(13,148,136,0.15)",
+    borderColor: "rgba(13,148,136,0.15)",
     borderLeftWidth: 3,
     borderLeftColor: colors.accent,
   },

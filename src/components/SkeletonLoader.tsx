@@ -3,7 +3,7 @@ import { View, StyleSheet, Animated, Easing } from "react-native";
 import { useTheme } from "../theme/Theme";
 
 // Animated shimmer effect
-function ShimmerView({ style, colors, isDark }) {
+function ShimmerView({ style, colors}) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -32,7 +32,7 @@ function ShimmerView({ style, colors, isDark }) {
           styles.shimmer,
           {
             transform: [{ translateX }],
-            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+            backgroundColor: 'rgba(0,0,0,0.05)',
           },
         ]}
       />
@@ -41,8 +41,8 @@ function ShimmerView({ style, colors, isDark }) {
 }
 
 export default function SkeletonLoader({ style }) {
-  const { colors, isDark } = useTheme();
-  return <ShimmerView style={style} colors={colors} isDark={isDark} />;
+  const { colors} = useTheme();
+  return <ShimmerView style={style} colors={colors} />;
 }
 
 // ═══════════════════════════════════════════

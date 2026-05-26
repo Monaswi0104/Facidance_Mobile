@@ -1,11 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
 // Color palettes
 // ---------------------------------------------------------------------------
-const lightColors = {
+export const lightColors = {
   background: '#ffffff',
   foreground: '#0f172a',
   primary: '#003135',
@@ -60,63 +58,7 @@ const lightColors = {
   modalOverlay: 'rgba(0,0,0,0.5)',
 };
 
-const darkColors = {
-  background: '#1e1e1e',
-  foreground: '#f1f5f9',
-  primary: '#0FA4AF',
-  primaryDark: '#0FA4AF',
-  accent: '#22d3ee',
-  accentLight: 'rgba(34,211,238,0.15)',
-  primaryForeground: '#ffffff',
-  secondary: '#2c2c2c',
-  secondaryForeground: '#f1f5f9',
-  muted: '#2c2c2c',
-  mutedForeground: '#94a3b8',
-  destructive: '#f87171',
-  destructiveForeground: '#f8fafc',
-  border: '#3a3a3a',
-  borderFocus: 'rgba(34,211,238,0.35)',
-  input: '#3a3a3a',
-  ring: '#22d3ee',
-  cardBg: '#2c2c2c',
-  textSoft: '#cbd5e1',
-  textBody: '#94a3b8',
-  // Dashboard-specific tokens
-  card: '#2c2c2c',
-  cardBorder: '#3a3a3a',
-  shadowColor: '#000000',
-  headerBg: '#1e1e1e',
-  headerBorder: '#2c2c2c',
-  navPillBg: '#2c2c2c',
-  navPillBorder: '#3a3a3a',
-  navPillText: '#94a3b8',
-  statusBarStyle: 'light-content' as 'light-content' | 'dark-content',
-  // Functional
-  success: '#34D399',
-  successLight: 'rgba(52,211,153,0.15)',
-  warning: '#FBBF24',
-  warningLight: 'rgba(251,191,36,0.15)',
-  danger: '#f87171',
-  dangerLight: 'rgba(248,113,113,0.15)',
-  destructiveLight: 'rgba(248,113,113,0.15)',
-  info: '#60A5FA',
-  infoLight: 'rgba(96,165,250,0.15)',
-  // Logout button
-  logoutBg: 'rgba(239,68,68,0.15)',
-  logoutBorder: 'rgba(239,68,68,0.3)',
-  logoutIcon: '#f87171',
-  // Stat card
-  statLabel: '#94A3B8',
-  // Input
-  inputBg: '#3a3a3a',
-  inputText: '#f1f5f9',
-  inputPlaceholder: '#64748b',
-  // Modal
-  modalOverlay: 'rgba(0,0,0,0.75)',
-};
-
 export type ThemeColors = typeof lightColors;
-export type ThemeMode = 'light' | 'dark';
 
 // ---------------------------------------------------------------------------
 // Static theme (non-color values)
@@ -156,31 +98,23 @@ type ThemeShadows = ReturnType<typeof buildShadows>;
 // ---------------------------------------------------------------------------
 export const Theme = {
   colors: lightColors,
-  darkColors,
   ...statics,
   shadows: buildShadows(lightColors),
 };
 
 // ---------------------------------------------------------------------------
-// React Context for dark mode
+// React Context for theme
 // ---------------------------------------------------------------------------
-const STORAGE_KEY = '@facidance_theme';
-
 interface ThemeContextType {
-  isDark: boolean;
   colors: ThemeColors;
   shadows: ThemeShadows;
-  mode?: ThemeMode;
-  toggleTheme: () => void;
   radius: typeof statics.radius;
   fonts: typeof statics.fonts;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  isDark: false,
   colors: lightColors,
   shadows: buildShadows(lightColors),
-  toggleTheme: () => {},
   ...statics,
 });
 
@@ -189,32 +123,11 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps): React.JSX.Element {
-  const [mode, setMode] = useState<ThemeMode>('light');
-
-  // Load saved preference
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then(saved => {
-        if (saved && (saved === 'light' || saved === 'dark')) {
-          setMode(saved as ThemeMode);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const isDark: boolean = mode === 'dark';
-
-  const colors: ThemeColors = isDark ? darkColors : lightColors;
+  const colors: ThemeColors = lightColors;
   const shadows: ThemeShadows = buildShadows(colors);
 
-  const toggleTheme = async (): Promise<void> => {
-    const next: ThemeMode = mode === 'light' ? 'dark' : 'light';
-    setMode(next);
-    await AsyncStorage.setItem(STORAGE_KEY, next);
-  };
-
   return (
-    <ThemeContext.Provider value={{ isDark, colors, shadows, mode, toggleTheme, ...statics }}>
+    <ThemeContext.Provider value={{ colors, shadows, ...statics }}>
       {children}
     </ThemeContext.Provider>
   );

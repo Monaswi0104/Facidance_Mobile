@@ -21,14 +21,14 @@ export default function CourseAttendanceBarChart({
   title = "Attendance by Course",
   subtitle = "Your attendance rate across enrolled courses",
 }: CourseAttendanceBarChartProps) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
 
   const chartConfig = {
     backgroundColor: colors.background,
     backgroundGradientFrom: colors.background,
     backgroundGradientTo: colors.background,
     decimalPlaces: 0,
-    color: () => isDark ? '#10B981' : '#059669', // Green for bar chart
+    color: () => '#059669', // Green for bar chart
     labelColor: () => colors.mutedForeground,
     style: {
       borderRadius: 16,

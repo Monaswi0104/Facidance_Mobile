@@ -17,7 +17,7 @@ import XLSX from "xlsx";
 const { width } = Dimensions.get("window");
 
 export default function StudentEnrollment() {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [courses, setCourses] = useState([]);
   const [programs, setPrograms] = useState([]);

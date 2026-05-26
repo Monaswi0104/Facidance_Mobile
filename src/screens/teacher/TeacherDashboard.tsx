@@ -20,7 +20,7 @@ import AttendancePieChart from "../../components/AttendancePieChart";
 const { width } = Dimensions.get("window");
 
 export default function TeacherDashboard({ navigation }) {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [stats, setStats] = useState({ courses: 0, students: 0, semesters: 0, attendance: 0 });
   const [userName, setUserName] = useState("Teacher");

@@ -23,7 +23,7 @@ import {
 const { width } = Dimensions.get("window");
 
 export default function CoursesManagement() {
-  const { colors, isDark } = useTheme();
+  const { colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // ── RTK Query ──
@@ -75,10 +75,10 @@ export default function CoursesManagement() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  const [isReassigning, setIsReassigning] = useState(false);
+  const [reassigningCourseId, setReassigningCourseId] = useState<string | null>(null);
   const [filterSemester, setFilterSemester] = useState(null);
   const [newTeacherId, setNewTeacherId] = useState(null);
   const [form, setForm] = useState({
@@ -89,8 +89,11 @@ export default function CoursesManagement() {
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     Haptics.light();
-    await refetchCourses();
-    setIsRefreshing(false);
+    try {
+      await refetchCourses();
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [refetchCourses]);
 
   const handleDelete = (course) => {
@@ -138,17 +141,18 @@ export default function CoursesManagement() {
     }
   };
 
-  const handleAssignTeacher = async () => {
-    if (!newTeacherId || !selectedCourse) return;
+  const handleAssignTeacher = async (courseId: string) => {
+    if (!newTeacherId || !courseId) return;
     setIsSubmitting(true);
     try {
-      await updateCourseTeacherMut({ courseId: selectedCourse.id, teacherId: newTeacherId }).unwrap();
+      await updateCourseTeacherMut({ courseId, teacherId: newTeacherId }).unwrap();
       Haptics.success();
       Alert.alert("Success", "Teacher reassigned successfully.");
-      setIsReassigning(false);
+      setReassigningCourseId(null);
       setNewTeacherId(null);
-      // Wait for refetch to visually update the list, but we update the modal manually or just close it
-      setSelectedCourse({ ...selectedCourse, teacher: teachers.find((t: any) => t.id === newTeacherId)?.name || "Teacher", teacherId: newTeacherId });
+      if (selectedCourse?.id === courseId) {
+        setSelectedCourse({ ...selectedCourse, teacher: teachers.find((t: any) => t.id === newTeacherId)?.name || "Teacher", teacherId: newTeacherId });
+      }
     } catch (e: any) {
       Haptics.error();
       const detail = e.data?.detail;
@@ -337,87 +341,115 @@ export default function CoursesManagement() {
               />
             </View>
 
-            {/* All Courses Card */}
-            <View style={[styles.listCard, { paddingBottom: 0, borderBottomWidth: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0 }]}>
-              <View style={styles.listHeader}>
-                <View style={styles.listHeaderIcon}><BookOpen size={12} color={colors.primaryForeground} /></View>
-                <Text style={styles.listTitle}>All Courses</Text>
-                <View style={styles.listCountBadge}>
-                  <Text style={styles.listCountText}>{filteredCourses.length} total</Text>
-                </View>
+            {/* All Courses Section */}
+            <View style={styles.listHeaderContainer}>
+              <View style={styles.listHeaderIcon}><BookOpen size={14} color={colors.primaryForeground} /></View>
+              <Text style={styles.listTitle}>All Courses</Text>
+              <View style={styles.listCountBadge}>
+                <Text style={styles.listCountText}>{filteredCourses.length} total</Text>
               </View>
-
-              <View style={{ marginBottom: 14 }}>
-                <DropdownPicker
-                  selectedValue={filterSemester}
-                  onValueChange={setFilterSemester}
-                  items={[
-                    { label: "All Semesters", value: null },
-                    ...uniqueSemesters.map(s => ({ label: String(s), value: s }))
-                  ]}
-                  placeholder="Filter by Semester"
-                  colors={colors}
-                  style={{ height: 42 }}
-                />
-              </View>
-
-              {filteredCourses.length === 0 && (
-                <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle={filterSemester ? "No courses for this semester" : "Try a different search or add a course"} />
-              )}
             </View>
+
+            <View style={{ marginBottom: 14 }}>
+              <DropdownPicker
+                selectedValue={filterSemester}
+                onValueChange={setFilterSemester}
+                items={[
+                  { label: "All Semesters", value: null },
+                  ...uniqueSemesters.map(s => ({ label: String(s), value: s }))
+                ]}
+                placeholder="Filter by Semester"
+                colors={colors}
+                style={{ height: 42 }}
+              />
+            </View>
+
+            {filteredCourses.length === 0 && (
+              <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle={filterSemester ? "No courses for this semester" : "Try a different search or add a course"} />
+            )}
           </>
         )}
           </>
         }
-        renderItem={({ item: c, index: i }) => (
-          <View style={[styles.listCard, { paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
-            <TouchableOpacity style={[styles.courseRow, i < filteredCourses.length - 1 && styles.courseRowBorder]} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
-              <View style={{ flexDirection: "row", alignItems: "flex-start", width: "100%" }}>
-                <View style={styles.courseAvatar}>
-                  <BookOpen size={14} color={colors.primaryDark} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.courseName}>{c.name}</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4, flexWrap: "wrap", rowGap: 4 }}>
-                    {c.code !== "—" && (
-                      <View style={styles.codeBadge}>
-                        <Text style={styles.codeText}>{c.code}</Text>
-                      </View>
-                    )}
-                    {c.teacher ? (
-                      <View style={{ flexDirection: "row", alignItems: "center", marginRight: 4 }}>
-                        <User size={10} color={colors.mutedForeground} style={{ marginRight: 2 }} />
-                        <Text style={styles.courseMeta}>{c.teacher}</Text>
-                      </View>
-                    ) : (
-                      <View style={{ backgroundColor: "rgba(245,158,11,0.1)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 4 }}>
-                        <Text style={{ fontSize: 9, fontWeight: "700", color: "#b45309" }}>Unassigned</Text>
-                      </View>
-                    )}
-                    <View style={{ width: "100%" }} />
-                    {(c.year !== "—" || c.semester !== "—") && (
-                      <Text style={styles.courseMeta}>
-                        · {c.year !== "—" ? c.year : ""} {c.semester !== "—" ? `· ${c.semester}` : ""}
-                      </Text>
-                    )}
-                  </View>
-                </View>
+        renderItem={({ item: c }) => {
+          const isReassigningThis = reassigningCourseId === c.id;
+          return (
+          <TouchableOpacity style={styles.courseCard} activeOpacity={0.7} onPress={() => setSelectedCourse(c)}>
+            <View style={styles.courseCardHeader}>
+              <View style={styles.courseAvatar}>
+                <BookOpen size={16} color={colors.primaryDark} />
               </View>
-              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-                <TouchableOpacity style={styles.changeTeacherBtnOutline} onPress={() => { setSelectedCourse(c); setIsReassigning(true); setNewTeacherId(c.teacherId || null); }}>
-                  <Edit2 size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                  <Text style={styles.changeTeacherBtnText}>Change Teacher</Text>
-                </TouchableOpacity>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={styles.courseName}>{c.name}</Text>
+                {c.code !== "—" && (
+                  <View style={[styles.codeBadge, { alignSelf: 'flex-start', marginTop: 4 }]}>
+                    <Text style={styles.codeText}>{c.code}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                {isReassigningThis ? (
+                  <TouchableOpacity style={[styles.changeTeacherBtnOutline, { backgroundColor: colors.border }]} onPress={(e) => { e.stopPropagation(); setReassigningCourseId(null); }}>
+                    <X size={11} color={colors.foreground} style={{ marginRight: 3 }} />
+                    <Text style={[styles.changeTeacherBtnText, { color: colors.foreground }]}>Cancel</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.changeTeacherBtnOutline} onPress={(e) => { e.stopPropagation(); setReassigningCourseId(c.id); setNewTeacherId(c.teacherId || null); }}>
+                    <Edit2 size={11} color={colors.mutedForeground} style={{ marginRight: 3 }} />
+                    <Text style={styles.changeTeacherBtnText}>Change</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(c)}>
                   <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
                   <Text style={styles.deleteBtnText}>Delete</Text>
                 </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </View>
-        )}
+            </View>
+            <View style={styles.courseCardFooter}>
+              {c.teacher ? (
+                <View style={styles.courseStatPill}>
+                  <User size={12} color={colors.primaryDark} style={{ marginRight: 4 }} />
+                  <Text style={styles.courseMeta}>{c.teacher}</Text>
+                </View>
+              ) : (
+                <View style={[styles.courseStatPill, { backgroundColor: "rgba(245,158,11,0.1)" }]}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#b45309" }}>Unassigned</Text>
+                </View>
+              )}
+              
+              {(c.year !== "—" || c.semester !== "—") && (
+                <View style={styles.courseStatPill}>
+                  <Calendar size={12} color={colors.primaryDark} style={{ marginRight: 4 }} />
+                  <Text style={styles.courseMeta}>{c.year !== "—" ? c.year : ""} {c.semester !== "—" ? `· ${c.semester}` : ""}</Text>
+                </View>
+              )}
+            </View>
+            
+            {isReassigningThis && (
+              <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <Text style={styles.formLabel}>ASSIGN NEW TEACHER</Text>
+                <DropdownPicker
+                  selectedValue={newTeacherId}
+                  onValueChange={setNewTeacherId}
+                  items={teachers.map(t => {
+                    const isCurrent = t.id === c.teacherId;
+                    return { 
+                      label: t.name + (isCurrent ? " (current)" : "") + (t.departmentName ? ` - ${t.departmentName}` : ""), 
+                      value: t.id 
+                    };
+                  })}
+                  placeholder="Select a teacher..."
+                  colors={colors}
+                />
+                <TouchableOpacity style={[styles.formSubmitBtn, { marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center' }]} disabled={!newTeacherId || isSubmitting} onPress={(e) => { e.stopPropagation(); handleAssignTeacher(c.id); }}>
+                  {isSubmitting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.formSubmitText}>Assign Teacher</Text>}
+                </TouchableOpacity>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}}
         ListFooterComponent={
-          isLoading ? null : <View style={[styles.listCard, { paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
+          isLoading ? null : <View style={{ height: 20 }} />
         }
       />
 
@@ -452,41 +484,9 @@ export default function CoursesManagement() {
               ))}
             </ScrollView>
 
-            {isReassigning ? (
-              <View style={{ marginTop: 14 }}>
-                <Text style={styles.formLabel}>ASSIGN NEW TEACHER</Text>
-                <DropdownPicker
-                  selectedValue={newTeacherId}
-                  onValueChange={setNewTeacherId}
-                  items={teachers.map(t => {
-                    const isCurrent = t.id === selectedCourse?.teacherId;
-                    return { 
-                      label: t.name + (isCurrent ? " (current)" : "") + (t.departmentName ? ` - ${t.departmentName}` : ""), 
-                      value: t.id 
-                    };
-                  })}
-                  placeholder="Select a teacher..."
-                  colors={colors}
-                />
-                <View style={{ flexDirection: "row", marginTop: 10, gap: 8 }}>
-                  <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]} onPress={() => setIsReassigning(false)}>
-                    <Text style={[styles.closeBtnText, { color: colors.foreground }]}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0 }]} disabled={!newTeacherId || isSubmitting} onPress={handleAssignTeacher}>
-                    {isSubmitting ? <ActivityIndicator color={colors.primaryForeground} size="small" /> : <Text style={styles.closeBtnText}>Save</Text>}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={{ flexDirection: "row", marginTop: 14, gap: 8 }}>
-                <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }]} activeOpacity={0.7} onPress={() => { setIsReassigning(true); setNewTeacherId(selectedCourse?.teacherId || null); }}>
-                  <Text style={[styles.closeBtnText, { color: colors.foreground }]}>Change Teacher</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.closeBtn, { flex: 1, marginTop: 0 }]} activeOpacity={0.7} onPress={() => { setSelectedCourse(null); setIsReassigning(false); }}>
-                  <Text style={styles.closeBtnText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={() => setSelectedCourse(null)}>
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -564,29 +564,40 @@ const createStyles = (colors) => StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 13, color: colors.foreground, padding: 0 },
 
-  // List Card
-  listCard: {
-    backgroundColor: colors.background, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: colors.border,
-    shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
-  },
-  listHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  listHeaderIcon: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  listTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 1 },
-  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.accent },
+  // Course Cards
+  listHeaderContainer: { flexDirection: "row", alignItems: "center", marginBottom: 14, paddingHorizontal: 4 },
+  listHeaderIcon: { width: 26, height: 26, borderRadius: 7, backgroundColor: colors.primaryDark, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  listTitle: { fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 },
+  listCountBadge: { backgroundColor: colors.accentLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
   listCountText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
-  // Course Rows
-  courseRow: { flexDirection: "column", paddingVertical: 14, paddingHorizontal: 2 },
-  courseRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.muted },
-  courseAvatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
-  courseName: { fontSize: 13, fontWeight: "700", color: colors.foreground },
-  courseMeta: { fontSize: 10, color: colors.mutedForeground },
-  codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3, marginRight: 6 },
-  codeText: { fontSize: 8, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
-  changeTeacherBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: "transparent", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
-  changeTeacherBtnText: { fontSize: 10, fontWeight: "600", color: colors.mutedForeground },
-  deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  courseCard: {
+    backgroundColor: colors.background,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 2,
+    marginHorizontal: 1,
+  },
+  courseCardHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
+  courseAvatar: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 10 },
+  courseName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  
+  courseCardFooter: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border, gap: 8 },
+  courseStatPill: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15, 164, 175, 0.08)", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  courseMeta: { fontSize: 10, fontWeight: "600", color: colors.primaryDark },
+
+  codeBadge: { backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6 },
+  codeText: { fontSize: 9, fontWeight: "700", color: colors.mutedForeground, letterSpacing: 0.3 },
+  changeTeacherBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.secondary, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
+  changeTeacherBtnText: { fontSize: 11, fontWeight: "600", color: colors.mutedForeground },
+  deleteBtnOutline: { flexDirection: "row", alignItems: "center", backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
   emptyText: { fontSize: 12, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
 
