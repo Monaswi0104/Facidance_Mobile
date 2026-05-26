@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
   ScrollView, Modal, TextInput, ActivityIndicator, Dimensions
 , RefreshControl } from "react-native";
-import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms, searchStudents, enrollExisting } from "../../api/teacherApi";
+import { getTeacherCourses, getCourseStudents, importStudentsCsv, getAllPrograms, searchStudents, enrollExisting, removeStudent } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, ScanFace, UserX, Upload, Search, ChevronDown, FileUp, User, CheckCircle, XCircle } from "lucide-react-native";
@@ -111,6 +111,43 @@ export default function StudentEnrollment() {
     } finally {
       setEnrollingStudentId(null);
     }
+  };
+
+  const handleRemoveStudent = (studentId: string, courseId: string) => {
+    Alert.alert(
+      "Remove Student",
+      "Are you sure you want to remove this student from the course?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              await removeStudent(courseId, studentId);
+              
+              setStudents(prev => {
+                return prev.map((s: any) => {
+                  if (s.id === studentId) {
+                    const newCourseIds = s.courseIds.filter((id: string) => id !== courseId);
+                    return { ...s, courseIds: newCourseIds, coursesCount: Math.max(0, s.coursesCount - 1) };
+                  }
+                  return s;
+                }).filter((s: any) => s.courseIds.length > 0);
+              });
+              
+              setSelectedStudent(null);
+              Alert.alert("Success", "Student removed successfully.");
+            } catch (err: any) {
+              Alert.alert("Removal Failed", err.message);
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const loadData = async () => {
@@ -521,7 +558,7 @@ export default function StudentEnrollment() {
         {/* Directory Table */}
         <View style={styles.tableCard}>
           <Text style={styles.tableTitle}>Student Directory</Text>
-          <Text style={styles.tableSubtitle}>{students.length} student{students.length !== 1 ? "s" : ""}</Text>
+          <Text style={styles.tableSubtitle}>{students.length} student{students.length !== 1 ? "s" : ""} · Tap a student to manage</Text>
 
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableHeaderText, { flex: 2 }]}>STUDENT</Text>
@@ -703,6 +740,17 @@ export default function StudentEnrollment() {
                     <Text style={styles.modalDetailValue}>{selectedStudent.attendance} Total</Text>
                   </View>
 
+                  {selectedStudent.courseIds?.map((cid: string) => {
+                    const c = courses.find((x: any) => x.id === cid);
+                    if (!c) return null;
+                    return (
+                      <TouchableOpacity key={cid} style={[styles.modalDetailRemoveBtn, { marginTop: 8 }]} onPress={() => { setSelectedStudent(null); handleRemoveStudent(selectedStudent.id, cid); }}>
+                        <UserX size={14} color={colors.destructive} style={{ marginRight: 6 }} />
+                        <Text style={styles.modalDetailRemoveBtnText}>Remove from {c.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+
                   <TouchableOpacity style={styles.modalDetailCloseBtn} onPress={() => setSelectedStudent(null)}>
                     <Text style={styles.modalDetailCloseBtnText}>Close</Text>
                   </TouchableOpacity>
@@ -805,6 +853,7 @@ const createStyles = (colors) => StyleSheet.create({
   faceNo: { backgroundColor: colors.secondary, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
   faceText: { fontSize: 9, fontWeight: "700" },
   emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 20 },
+  rowDeleteBtn: { position: "absolute", top: 6, right: -4, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.destructiveLight, borderWidth: 1, borderColor: colors.destructive, alignItems: "center", justifyContent: "center", zIndex: 5 },
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
@@ -827,6 +876,8 @@ const createStyles = (colors) => StyleSheet.create({
   modalDetailValue: { fontSize: 14, fontWeight: "700", color: colors.foreground, flex: 0.6, textAlign: "right" },
   modalDetailCloseBtn: { backgroundColor: colors.muted, paddingVertical: 14, borderRadius: 12, alignItems: "center", marginTop: 10 },
   modalDetailCloseBtnText: { fontSize: 15, fontWeight: "700", color: colors.textBody },
+  modalDetailRemoveBtn: { flexDirection: "row", justifyContent: "center", backgroundColor: colors.destructiveLight, paddingVertical: 12, borderRadius: 12, alignItems: "center", borderWidth: 1, borderColor: colors.destructive },
+  modalDetailRemoveBtnText: { fontSize: 13, fontWeight: "700", color: colors.destructive },
   
   // Tabs and Enroll UI
   tabRow: { flexDirection: "row", marginBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border },

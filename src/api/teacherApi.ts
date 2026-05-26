@@ -25,6 +25,19 @@ export async function getCourseStudents(courseId: string): Promise<Student[]> {
   return await res.json();
 }
 
+// Remove a student from a course
+export async function removeStudent(courseId: string, studentId: string): Promise<any> {
+  const res = await apiFetch(`/teacher/courses/${courseId}/students`, {
+    method: "DELETE",
+    body: JSON.stringify({ student_id: studentId }),
+  }, TEACHER_URL);
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error || json.detail || "Failed to remove student");
+  }
+  return json;
+}
+
 // Search existing students
 export async function searchStudents(query: string, courseId?: string): Promise<any> {
   const qs = new URLSearchParams({ q: query });
