@@ -42,7 +42,7 @@ export default function DepartmentsManagement() {
 
       return {
         id: d.id,
-        name: d.name,
+        name: String(d.name || ""),
         programs: dPrograms.length,
         teachers: dTeachers.filter((t: any) => !t.isPending).length,
         programsList: dPrograms,
@@ -86,7 +86,9 @@ export default function DepartmentsManagement() {
       Alert.alert("Success", "Department created.");
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to create department.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to create department.");
+      Alert.alert("Error", msg);
     }
     finally { setIsCreating(false); }
   };
@@ -104,7 +106,9 @@ export default function DepartmentsManagement() {
           }
           catch (e: any) {
             Haptics.error();
-            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
+            const detail = e.data?.detail;
+            const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to delete.");
+            Alert.alert("Error", msg);
           }
         }
       },
@@ -253,7 +257,7 @@ export default function DepartmentsManagement() {
                 selectedDept.programsList.map((p, idx) => (
                   <View key={p.id || idx} style={styles.subItem}>
                     <GraduationCap size={14} color={colors.textBody} style={{ marginRight: 10 }} />
-                    <Text style={styles.subItemText}>{p.name}</Text>
+                    <Text style={styles.subItemText}>{String(p.name || "")}</Text>
                   </View>
                 ))
               ) : (
@@ -263,8 +267,8 @@ export default function DepartmentsManagement() {
               <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Teachers</Text>
               {selectedDept?.teachersList?.length > 0 ? (
                 selectedDept.teachersList.map((t, idx) => {
-                  const tName = t.name || t.user?.name || "Unknown";
-                  const tEmail = t.email || t.user?.email || "";
+                  const tName = String(t.name || t.user?.name || "Unknown");
+                  const tEmail = String(t.email || t.user?.email || "");
                   return (
                     <View key={t.id || idx} style={styles.subItem}>
                       <View style={styles.teacherAvatar}>

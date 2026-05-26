@@ -79,6 +79,7 @@ export default function CoursesManagement() {
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [isReassigning, setIsReassigning] = useState(false);
+  const [filterSemester, setFilterSemester] = useState(null);
   const [newTeacherId, setNewTeacherId] = useState(null);
   const [form, setForm] = useState({
     departmentId: null, teacherId: null, programId: null,
@@ -105,7 +106,9 @@ export default function CoursesManagement() {
           }
           catch (e: any) {
             Haptics.error();
-            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
+            const detail = e.data?.detail;
+            const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to delete.");
+            Alert.alert("Error", msg);
           }
         }
       },
@@ -127,7 +130,9 @@ export default function CoursesManagement() {
       setForm({ departmentId: null, teacherId: null, programId: null, academicYear: "", semesterNumber: null, name: "" });
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to create course.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to create course.");
+      Alert.alert("Error", msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -146,7 +151,9 @@ export default function CoursesManagement() {
       setSelectedCourse({ ...selectedCourse, teacher: teachers.find((t: any) => t.id === newTeacherId)?.name || "Teacher", teacherId: newTeacherId });
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to reassign teacher.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to reassign teacher.");
+      Alert.alert("Error", msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +161,13 @@ export default function CoursesManagement() {
 
   const filteredPrograms = form.departmentId ? programs.filter(p => p.departmentId === form.departmentId || p.department_id === form.departmentId) : programs;
 
+  const uniqueSemesters = useMemo(() => {
+    const sems = new Set(courses.map(c => c.semester).filter(s => s && s !== "—"));
+    return Array.from(sems).sort();
+  }, [courses]);
+
   const filteredCourses = courses.filter(c => {
+    if (filterSemester && c.semester !== filterSemester) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return c.name?.toLowerCase().includes(q) || 
@@ -334,8 +347,22 @@ export default function CoursesManagement() {
                 </View>
               </View>
 
+              <View style={{ marginBottom: 14 }}>
+                <DropdownPicker
+                  selectedValue={filterSemester}
+                  onValueChange={setFilterSemester}
+                  items={[
+                    { label: "All Semesters", value: null },
+                    ...uniqueSemesters.map(s => ({ label: String(s), value: s }))
+                  ]}
+                  placeholder="Filter by Semester"
+                  colors={colors}
+                  style={{ height: 42 }}
+                />
+              </View>
+
               {filteredCourses.length === 0 && (
-                <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle="Try a different search or add a course" />
+                <EmptyStateCompact icon={BookOpen} title="No courses found" subtitle={filterSemester ? "No courses for this semester" : "Try a different search or add a course"} />
               )}
             </View>
           </>
@@ -431,7 +458,13 @@ export default function CoursesManagement() {
                 <DropdownPicker
                   selectedValue={newTeacherId}
                   onValueChange={setNewTeacherId}
-                  items={teachers.map(t => ({ label: t.name + (t.departmentName ? ` (${t.departmentName})` : ""), value: t.id }))}
+                  items={teachers.map(t => {
+                    const isCurrent = t.id === selectedCourse?.teacherId;
+                    return { 
+                      label: t.name + (isCurrent ? " (current)" : "") + (t.departmentName ? ` - ${t.departmentName}` : ""), 
+                      value: t.id 
+                    };
+                  })}
                   placeholder="Select a teacher..."
                   colors={colors}
                 />

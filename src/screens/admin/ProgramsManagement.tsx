@@ -133,7 +133,9 @@ export default function ProgramsManagement() {
       Alert.alert("Success", "Program created.");
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to create program.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to create program.");
+      Alert.alert("Error", msg);
     }
     finally { setIsCreating(false); }
   };
@@ -151,7 +153,9 @@ export default function ProgramsManagement() {
           }
           catch (e: any) {
             Haptics.error();
-            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
+            const detail = e.data?.detail;
+            const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to delete.");
+            Alert.alert("Error", msg);
           }
         }
       },

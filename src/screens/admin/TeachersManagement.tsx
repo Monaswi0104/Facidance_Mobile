@@ -7,7 +7,7 @@ import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
-import EmptyState from "../../components/EmptyState";
+import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
 import { Haptics } from "../../utils/haptics";
 import {
@@ -97,6 +97,7 @@ export default function TeachersManagement() {
   const [selectedTeacherForDept, setSelectedTeacherForDept] = useState(null);
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterDept, setFilterDept] = useState(null);
 
   const handleApprove = (teacher) => {
     Haptics.selection();
@@ -156,7 +157,9 @@ export default function TeachersManagement() {
             Alert.alert("Done", `${teacher.name} removed.`);
           } catch (e: any) {
             Haptics.error();
-            Alert.alert("Error", e.data?.detail || e.message || "Failed to delete.");
+            const detail = e.data?.detail;
+            const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to delete.");
+            Alert.alert("Error", msg);
           }
         }
       },
@@ -173,7 +176,7 @@ export default function TeachersManagement() {
     );
   };
 
-  const filteredApproved = filterTeachers(approved);
+  const filteredApproved = filterTeachers(approved).filter(t => filterDept ? t.dept === filterDept : true);
   const filteredPending = filterTeachers(pending);
 
   return (
@@ -247,7 +250,7 @@ export default function TeachersManagement() {
               </View>
 
               {filteredPending.length === 0 ? (
-                <EmptyState title="No Pending Registrations" subtitle="There are no pending teachers to review." showImage={false} />
+                <EmptyStateCompact icon={Clock} title="No Pending Registrations" subtitle="There are no pending teachers to review." />
               ) : (
                 filteredPending.map((t) => {
                   const isExpanded = selectedTeacherForDept === t.id;
@@ -311,8 +314,22 @@ export default function TeachersManagement() {
                 </View>
               </View>
 
+              <View style={{ marginBottom: 14 }}>
+                <DropdownPicker
+                  selectedValue={filterDept}
+                  onValueChange={setFilterDept}
+                  items={[
+                    { label: "All Departments", value: null },
+                    ...departments.map(d => ({ label: d.name, value: d.name }))
+                  ]}
+                  placeholder="Filter by Department"
+                  colors={colors}
+                  style={{ height: 42 }}
+                />
+              </View>
+
               {filteredApproved.length === 0 && (
-                <EmptyState title="No Approved Teachers" subtitle="You haven't approved any teachers yet." showImage={false} />
+                <EmptyStateCompact icon={CheckCircle} title="No Approved Teachers" subtitle={filterDept ? "No teachers in this department." : "You haven't approved any teachers yet."} />
               )}
             </View>
           </View>

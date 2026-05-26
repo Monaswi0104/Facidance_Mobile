@@ -1,5 +1,5 @@
 import { EmptyStateWithSearch } from '../../components/EmptyState';
-import React, {  useState, useCallback , useMemo } from "react";
+import React, {  useState, useCallback , useMemo, useEffect } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, Dimensions, TextInput, Alert, Platform,
@@ -20,7 +20,7 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-export default function StudentsManagement() {
+export default function StudentsManagement({ route }: any) {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
@@ -62,8 +62,14 @@ export default function StudentsManagement() {
   const programs = useMemo(() => rawData?.programs || [], [rawData]);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [filter, setFilter] = useState("all"); 
+  const [filter, setFilter] = useState(route?.params?.filter || "all"); 
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (route?.params?.filter) {
+      setFilter(route.params.filter);
+    }
+  }, [route?.params?.filter]);
   const [selectedProgram, setSelectedProgram] = useState("all");
   const [showProgramDropdown, setShowProgramDropdown] = useState(false);
 
@@ -130,7 +136,9 @@ export default function StudentsManagement() {
       closeModal();
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to update student.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to update student.");
+      Alert.alert("Error", msg);
     } finally {
       setIsActionLoading(false);
     }
@@ -145,7 +153,9 @@ export default function StudentsManagement() {
       Alert.alert("Success", "Student has been graduated successfully.");
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to graduate student.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to graduate student.");
+      Alert.alert("Error", msg);
     } finally {
       setIsActionLoading(false);
     }
@@ -160,7 +170,9 @@ export default function StudentsManagement() {
       Alert.alert("Success", "Student has been reactivated successfully.");
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to activate student.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to activate student.");
+      Alert.alert("Error", msg);
     } finally {
       setIsActionLoading(false);
     }
@@ -175,7 +187,9 @@ export default function StudentsManagement() {
       Alert.alert("Success", "Student deleted.");
     } catch (e: any) {
       Haptics.error();
-      Alert.alert("Error", e.data?.detail || e.message || "Failed to delete student.");
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to delete student.");
+      Alert.alert("Error", msg);
     } finally {
       setIsActionLoading(false);
     }

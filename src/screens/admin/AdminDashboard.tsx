@@ -132,13 +132,13 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
     return () => bh.remove();
   }, []);
 
-  const statCards: { label: string, value: string | number, sub: string, subColor: string, icon: any, screen: any }[] = [
+  const statCards: { label: string, value: string | number, sub: string, subColor: string, icon: any, screen: any, params?: any }[] = [
     { label: "TOTAL TEACHERS", value: stats.teachers, sub: "approved", subColor: colors.success, icon: <Users size={16} color={colors.primaryForeground} />, screen: "TeachersManagement" },
     { label: "TOTAL STUDENTS", value: stats.students, sub: `${(stats as any).active_students ?? stats.students} active`, subColor: colors.success, icon: <GraduationCap size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
     { label: "DEPARTMENTS", value: stats.departments, sub: `${stats.programs} programs`, subColor: colors.mutedForeground, icon: <Building2 size={16} color={colors.primaryForeground} />, screen: "DepartmentsManagement" },
     { label: "TOTAL COURSES", value: stats.courses || 0, sub: "~ 2,450 records", subColor: colors.success, icon: <BookOpen size={16} color={colors.primaryForeground} />, screen: "CoursesManagement" },
     { label: "ATTENDANCE RATE", value: `${(stats.attendance_rate || 74.3).toFixed(1)}%`, sub: stats.attendance_rate >= 75 ? "On track" : "Needs attention", subColor: stats.attendance_rate >= 75 ? colors.success : colors.warning, icon: <TrendingUp size={16} color={colors.primaryForeground} />, screen: null },
-    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: colors.mutedForeground, icon: <UserX size={16} color={colors.primaryForeground} />, screen: "StudentsManagement" },
+    { label: "GRADUATED", value: stats.graduated || 0, sub: "alumni", subColor: colors.mutedForeground, icon: <UserX size={16} color={colors.primaryForeground} />, screen: "StudentsManagement", params: { filter: "graduated" } },
   ];
 
   const maxProgramStudents = Math.max(...programDist.map(p => p.students), 1);
@@ -218,7 +218,7 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
                 key={i}
                 style={styles.statCard}
                 activeOpacity={0.7}
-                onPress={() => s.screen && navigation.navigate(s.screen)}
+                onPress={() => s.screen && navigation.navigate(s.screen, s.params)}
                 disabled={!s.screen}
               >
                 <View style={styles.statTopRow}>
@@ -326,22 +326,21 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quick Navigation</Text>
           <Text style={[styles.sectionSubtitle, { marginBottom: 14 }]}>Manage your institution</Text>
-          {[
-            { title: "Teachers", desc: "Approve & manage", screen: "TeachersManagement", icon: <Users size={18} color={colors.primaryDark} /> },
-            { title: "Departments", desc: "Create & organize", screen: "DepartmentsManagement", icon: <Building2 size={18} color={colors.primaryDark} /> },
-            { title: "Programs", desc: "Academic structure", screen: "ProgramsManagement", icon: <BookOpen size={18} color={colors.primaryDark} /> },
-            { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={18} color={colors.primaryDark} /> },
-            { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={18} color={colors.primaryDark} /> },
-          ].map((action, i) => (
-            <TouchableOpacity key={i} style={styles.navRow} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen as any)}>
-              <View style={styles.navIconBg}>{action.icon}</View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.navTitle}>{action.title}</Text>
-                <Text style={styles.navDesc}>{action.desc}</Text>
-              </View>
-              <ChevronRight size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          ))}
+          <View style={styles.quickNavGrid}>
+            {[
+              { title: "Teachers", desc: "Approve & manage", screen: "TeachersManagement", icon: <Users size={20} color={colors.primaryDark} /> },
+              { title: "Departments", desc: "Create & organize", screen: "DepartmentsManagement", icon: <Building2 size={20} color={colors.primaryDark} /> },
+              { title: "Programs", desc: "Academic structure", screen: "ProgramsManagement", icon: <BookOpen size={20} color={colors.primaryDark} /> },
+              { title: "Courses", desc: "Course management", screen: "CoursesManagement", icon: <BookOpen size={20} color={colors.primaryDark} /> },
+              { title: "Students", desc: "Student directory", screen: "StudentsManagement", icon: <GraduationCap size={20} color={colors.primaryDark} /> },
+            ].map((action, i) => (
+              <TouchableOpacity key={i} style={styles.navHorizontalCard} activeOpacity={0.7} onPress={() => navigation.navigate(action.screen as any)}>
+                <View style={styles.navHorizontalIconBg}>{action.icon}</View>
+                <Text style={styles.navHorizontalTitle} numberOfLines={1}>{action.title}</Text>
+                <Text style={styles.navHorizontalDesc} numberOfLines={2}>{action.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
       </ScrollView>
@@ -463,10 +462,33 @@ const createStyles = (colors) => StyleSheet.create({
   programBarFill: { height: "100%", borderRadius: 3, backgroundColor: colors.primaryDark },
 
   // Quick Nav
-  navRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.muted },
-  navIconBg: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accentLight, justifyContent: "center", alignItems: "center", marginRight: 12 },
-  navTitle: { fontSize: 14, fontWeight: "600", color: colors.foreground },
-  navDesc: { fontSize: 11, color: colors.mutedForeground },
+  quickNavGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+  navHorizontalCard: {
+    width: "48%",
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    alignItems: "flex-start",
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  navHorizontalIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.accentLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  navHorizontalTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 4 },
+  navHorizontalDesc: { fontSize: 11, color: colors.mutedForeground, lineHeight: 14 },
 
   emptyText: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", paddingVertical: 16 },
 });
