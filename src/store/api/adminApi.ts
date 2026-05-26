@@ -46,6 +46,15 @@ export const adminApi = createApi({
       invalidatesTags: ["Teachers", "Stats"],
     }),
 
+    updateTeacherDepartment: builder.mutation<any, { userId: string; departmentId: string }>({
+      query: ({ userId, departmentId }) => ({
+        url: `/admin/teachers/${userId}`,
+        method: "PATCH",
+        body: { department_id: departmentId },
+      }),
+      invalidatesTags: ["Teachers", "Stats"],
+    }),
+
     // ─── Departments ───────────────────────────────────────────────
     getDepartments: builder.query<any, void>({
       query: () => "/admin/departments",
@@ -229,6 +238,7 @@ export const {
   // Mutations
   useApproveTeacherMutation,
   useDeleteTeacherMutation,
+  useUpdateTeacherDepartmentMutation,
   useCreateDepartmentMutation,
   useDeleteDepartmentMutation,
   useCreateProgramMutation,

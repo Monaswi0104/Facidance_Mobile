@@ -5,7 +5,7 @@ import {
 , RefreshControl, FlatList } from "react-native";
 import DropdownPicker from "../../components/DropdownPicker";
 import { Theme, useTheme } from "../../theme/Theme";
-import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search } from "lucide-react-native";
+import { Users, Clock, CheckCircle, Mail, Building2, BookOpen, User, Trash2, Star, Search, Pencil } from "lucide-react-native";
 import { SearchBarSkeleton, TeacherSectionsSkeleton } from "../../components/SkeletonLoader";
 import { EmptyStateCompact } from "../../components/EmptyState";
 import BrandedRefresh from "../../components/BrandedRefresh";
@@ -17,6 +17,7 @@ import {
   useGetStudentsQuery,
   useApproveTeacherMutation,
   useDeleteTeacherMutation,
+  useUpdateTeacherDepartmentMutation,
 } from "../../store/api/adminApi";
 
 export default function TeachersManagement() {
@@ -30,6 +31,7 @@ export default function TeachersManagement() {
   const { data: studentsData } = useGetStudentsQuery();
   const [approveTeacherMut] = useApproveTeacherMutation();
   const [deleteTeacherMut] = useDeleteTeacherMutation();
+  const [updateTeacherDeptMut] = useUpdateTeacherDepartmentMutation();
 
   const isLoading = teachersLoading;
 
@@ -67,6 +69,7 @@ export default function TeachersManagement() {
         id: t.id, userId: t.userId, name: t.name || t.user?.name,
         email: t.email || t.user?.email || "—",
         dept: t.departmentName || t.department?.name || "Unassigned",
+        departmentId: t.departmentId || t.department_id || t.department?.id || "",
         courses: mappedCourses,
         createdAt: t.createdAt,
       };
@@ -98,6 +101,35 @@ export default function TeachersManagement() {
   const [selectedDeptId, setSelectedDeptId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDept, setFilterDept] = useState(null);
+
+  // States for editing approved teacher department
+  const [editingTeacherId, setEditingTeacherId] = useState(null);
+  const [editingDeptId, setEditingDeptId] = useState(null);
+
+  const confirmUpdateDept = async (teacher) => {
+    if (!editingDeptId) {
+      Alert.alert("Missing", "Please select a department first.");
+      return;
+    }
+
+    Haptics.selection();
+    try {
+      await updateTeacherDeptMut({
+        userId: teacher.userId || teacher.id,
+        departmentId: editingDeptId,
+      }).unwrap();
+
+      Haptics.success();
+      Alert.alert("Success", "Teacher department updated successfully.");
+      setEditingTeacherId(null);
+      setEditingDeptId(null);
+    } catch (e: any) {
+      Haptics.error();
+      const detail = e.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.message || String(d)).join(', ') : String(detail || e.message || "Failed to update department.");
+      Alert.alert("Error", msg);
+    }
+  };
 
   const handleApprove = (teacher) => {
     Haptics.selection();
@@ -337,32 +369,97 @@ export default function TeachersManagement() {
       )}
           </>
         }
-        renderItem={({ item: t }) => (
-          <View style={[styles.sectionCard, { marginLeft: 6, paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
-            <TouchableOpacity key={t.id} style={styles.teacherRow} activeOpacity={0.7} onPress={() => setSelectedTeacher(t)}>
-              <View style={styles.teacherMainRow}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{t.name?.charAt(0) || "T"}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.teacherName}>{t.name}</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 1 }}>
-                    <Mail size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
-                    <Text style={styles.teacherEmail} numberOfLines={1}>{t.email}</Text>
+        renderItem={({ item: t }) => {
+          const isEditing = editingTeacherId === t.id;
+          return (
+            <View style={[styles.sectionCard, { marginLeft: 6, paddingTop: 0, paddingBottom: 0, borderRadius: 0, borderTopWidth: 0, borderBottomWidth: 0, marginBottom: 0 }]}>
+              <TouchableOpacity
+                key={t.id}
+                style={[styles.teacherRow, isEditing && styles.teacherRowExpanded]}
+                activeOpacity={isEditing ? 1.0 : 0.7}
+                onPress={isEditing ? undefined : () => setSelectedTeacher(t)}
+              >
+                <View style={styles.teacherMainRow}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{t.name?.charAt(0) || "T"}</Text>
                   </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
-                    <Text style={styles.deptLabel}>Dept: </Text>
-                    <Text style={styles.deptValue}>{t.dept}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.teacherName}>{t.name}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 1 }}>
+                      <Mail size={10} color={colors.mutedForeground} style={{ marginRight: 3 }} />
+                      <Text style={styles.teacherEmail} numberOfLines={1}>{t.email}</Text>
+                    </View>
+                    {!isEditing && (
+                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+                        <Text style={styles.deptLabel}>Dept: </Text>
+                        <Text style={styles.deptValue}>{t.dept}</Text>
+                      </View>
+                    )}
                   </View>
+                  {!isEditing && (
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <TouchableOpacity
+                        style={[styles.editBtnOutline, { marginRight: 6 }]}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          Haptics.selection();
+                          setEditingTeacherId(t.id);
+                          setEditingDeptId(t.departmentId || "");
+                        }}
+                      >
+                        <Pencil size={11} color={colors.primaryDark} style={{ marginRight: 3 }} />
+                        <Text style={styles.editBtnText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteBtnOutline}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleDelete(t);
+                        }}
+                      >
+                        <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
+                        <Text style={styles.deleteBtnText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-                <TouchableOpacity style={styles.deleteBtnOutline} onPress={() => handleDelete(t)}>
-                  <Trash2 size={11} color={colors.destructive} style={{ marginRight: 3 }} />
-                  <Text style={styles.deleteBtnText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
+
+                {isEditing && (
+                  <View style={styles.assignmentArea}>
+                    <Text style={styles.assignmentLabel}>EDIT DEPARTMENT</Text>
+                    <View style={styles.assignmentControls}>
+                      <DropdownPicker
+                        selectedValue={editingDeptId}
+                        onValueChange={(v) => setEditingDeptId(v)}
+                        items={departments.map(d => ({ label: d.name, value: d.id }))}
+                        placeholder="Select department"
+                        colors={colors}
+                        style={{ flex: 1, height: 40, marginRight: 8 }}
+                      />
+                      <TouchableOpacity
+                        style={[styles.confirmBtn, { marginRight: 6 }]}
+                        onPress={() => confirmUpdateDept(t)}
+                      >
+                        <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+                        <Text style={styles.confirmBtnText}>Save</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.cancelBtn]}
+                        onPress={() => {
+                          Haptics.selection();
+                          setEditingTeacherId(null);
+                          setEditingDeptId(null);
+                        }}
+                      >
+                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          );
+        }}
         ListFooterComponent={
           isLoading ? null : <View style={[styles.sectionCard, { marginLeft: 6, paddingTop: 0, borderTopWidth: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]} />
         }
@@ -519,6 +616,8 @@ const createStyles = (colors) => StyleSheet.create({
   deleteSmallBtn: { width: 34, height: 34, borderRadius: 8, backgroundColor: colors.destructiveLight, justifyContent: "center", alignItems: "center" },
   deleteBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.destructiveLight, backgroundColor: colors.destructiveLight, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
   deleteBtnText: { fontSize: 10, fontWeight: "700", color: colors.destructive },
+  editBtnOutline: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.secondary, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6 },
+  editBtnText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
 
   // Assignment
   assignmentArea: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
@@ -526,6 +625,8 @@ const createStyles = (colors) => StyleSheet.create({
   assignmentControls: { flexDirection: "row", alignItems: "center" },
   confirmBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center" },
   confirmBtnText: { fontSize: 12, fontWeight: "700", color: colors.primaryForeground },
+  cancelBtn: { backgroundColor: colors.border, height: 40, paddingHorizontal: 14, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  cancelBtnText: { fontSize: 12, fontWeight: "700", color: colors.foreground },
 
   // Detail Modal
   detailOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
