@@ -13,28 +13,25 @@
 import React, {  useState, useRef, useEffect , useMemo } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, ActivityIndicator, Dimensions, Alert, Image, TextInput,
-  Platform, PermissionsAndroid, Animated
+  ScrollView, ActivityIndicator, Dimensions, Alert, Modal,
+  Platform, Animated
 } from "react-native";
-import { Camera, CameraType } from "react-native-camera-kit";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import {
   getAttendanceStudents, recognizeFaces,
-  submitSessionAttendance, getCourseAttendance
+  submitSessionAttendance, getCourseAttendance,
+  getActiveSession, updateManualMark
 } from "../../api/teacherApi";
 import {
   Users, ScanFace, Play, Pause, Square, Send,
-  Clock, CheckCircle, Camera as CameraIcon, Info, History, Zap, ChevronLeft,
-  ZoomIn, ZoomOut, RotateCcw, Globe, RefreshCw
+  Clock, CheckCircle, Info, History, Zap, ChevronLeft,
+  Globe, RefreshCw, UserPlus, XCircle
 } from "lucide-react-native";
 import { TableSkeleton } from "../../components/SkeletonLoader";
-import RNFS from "react-native-fs";
-import { compressFrames } from "../../utils/imageCompressor";
 import haptic from "../../utils/haptics";
 
 const SESSION_DURATION = 45 * 60 * 1000; // 45 min in ms (website uses ms)
-const CAPTURE_INTERVAL = 2 * 60 * 1000;  // 2 min in ms
 
 export default function AttendanceSession({ route, navigation }) {
   const { colors} = useTheme();
@@ -49,56 +46,17 @@ export default function AttendanceSession({ route, navigation }) {
   const [sessionPaused, setSessionPaused] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(SESSION_DURATION);
-  const [isCapturing, setIsCapturing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Recognition state (matches website exactly)
   const [allRecognizedStudents, setAllRecognizedStudents] = useState(new Set());
   const [sessionRecognitions, setSessionRecognitions] = useState([]);
   const [currentRecognition, setCurrentRecognition] = useState(null);
-  const [cctvUrl, setCctvUrl] = useState("https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280");
-  const [useCctv, setUseCctv] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
 
-  const cameraRef = useRef(null);
-
-  // Zoom state (1.0 = no zoom, higher = zoomed in)
-  const [zoomLevel, setZoomLevel] = useState(1.0);
-  const [showZoomIndicator, setShowZoomIndicator] = useState(false);
-  const zoomIndicatorOpacity = useRef(new Animated.Value(0)).current;
-  const zoomIndicatorTimer = useRef<any>(null);
-  const MAX_ZOOM = 10.0;
-
-  // Show zoom indicator and auto-hide after 1.5s
-  function flashZoomIndicator() {
-    setShowZoomIndicator(true);
-    Animated.timing(zoomIndicatorOpacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-    if (zoomIndicatorTimer.current) clearTimeout(zoomIndicatorTimer.current);
-    zoomIndicatorTimer.current = setTimeout(() => {
-      Animated.timing(zoomIndicatorOpacity, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => setShowZoomIndicator(false));
-    }, 1500);
-  }
-
-  function handleZoomIn() {
-    setZoomLevel(prev => { const next = Math.min(MAX_ZOOM, prev + 1.0); flashZoomIndicator(); return next; });
-  }
-
-  function handleZoomOut() {
-    setZoomLevel(prev => { const next = Math.max(1.0, prev - 1.0); flashZoomIndicator(); return next; });
-  }
-
-  function handleZoomReset() {
-    setZoomLevel(1.0);
-    flashZoomIndicator();
-  }
-
-  function onZoomChange(e: any) {
-    const newZoom = e.nativeEvent.zoom;
-    if (typeof newZoom === 'number' && newZoom >= 1.0) {
-      setZoomLevel(Math.min(MAX_ZOOM, newZoom));
-      flashZoomIndicator();
-    }
-  }
+  // Manual marking state
+  const [manuallyMarked, setManuallyMarked] = useState<Set<string>>(new Set());
+  const [showSessionSummary, setShowSessionSummary] = useState(false);
+  const [summarySubmitted, setSummarySubmitted] = useState(false);
 
   // History
   const [showHistory, setShowHistory] = useState(false);
@@ -109,28 +67,19 @@ export default function AttendanceSession({ route, navigation }) {
   const [todaySession, setTodaySession] = useState<{ present: number; absent: number; total: number; students: string[]; rate: string } | null>(null);
   const syncIntervalRef = useRef<any>(null);
 
+  // Live session polling ref
+  const livePollingRef = useRef<any>(null);
+
   // Refs
-  const captureIntervalRef = useRef(null);
   const sessionTimerRef = useRef(null);
   const countdownIntervalRef = useRef(null);
   const sessionPausedRef = useRef(false);
 
   useEffect(() => { sessionPausedRef.current = sessionPaused; }, [sessionPaused]);
 
-  // Request permission + load students on mount
+  // Load students on mount
   useEffect(() => {
     (async () => {
-      if (Platform.OS === "android") {
-        try {
-          const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
-          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-        } catch (err) {
-          console.warn(err);
-          setHasPermission(false);
-        }
-      } else {
-        setHasPermission(true);
-      }
 
       // Load students with face data status (like website's fetchStudents)
       try {
@@ -197,11 +146,76 @@ export default function AttendanceSession({ route, navigation }) {
   }, [sessionActive, sessionPaused, sessionStartTime]);
 
   function cleanup() {
-    if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
     if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+    if (livePollingRef.current) clearInterval(livePollingRef.current);
   }
+
+  // ─── Live session sync: poll backend every 3s ───
+  useEffect(() => {
+    async function pollActiveSession() {
+      try {
+        const data = await getActiveSession(course.id);
+        if (data && data.active !== false && data.status !== "ended") {
+          // Automatically start local session if website started it
+          const backendStartTime = data.start_time || Date.now();
+
+          if (!sessionActive) {
+            setSessionActive(true);
+            setSessionStartTime(backendStartTime);
+          } else if (sessionStartTime !== backendStartTime) {
+            // Re-sync timer if it differs at all, since backendStartTime is now an absolute timestamp
+            setSessionStartTime(backendStartTime);
+          }
+          // Merge AI recognitions from backend
+          if (data.ai_recognized && data.ai_recognized.length > 0) {
+            setAllRecognizedStudents((prev) => {
+              const next = new Set(prev);
+              data.ai_recognized.forEach((id: string) => next.add(id));
+              return next;
+            });
+          }
+          // Merge manual marks from backend (another device may have marked)
+          if (data.manually_marked) {
+            setManuallyMarked((prev) => {
+              const next = new Set(prev);
+              data.manually_marked.forEach((id: string) => next.add(id));
+              // Also remove any that were unmarked from the other device
+              prev.forEach((id) => {
+                if (!data.manually_marked.includes(id)) next.delete(id);
+              });
+              return next;
+            });
+          }
+        } else if (data && data.active === false && sessionActive) {
+          // Session was ended/submitted on the backend
+          cleanup();
+          setSessionActive(false);
+          setSessionPaused(false);
+          setSessionRecognitions([]);
+          setAllRecognizedStudents(new Set());
+          setManuallyMarked(new Set());
+          setCurrentRecognition(null);
+          setShowSessionSummary(false);
+          fetchAttendanceHistory(course.id);
+          Alert.alert("Session Ended", "The session was ended from the website.");
+        }
+      } catch (e) {
+        // Silent fail on polling errors
+      }
+    }
+    // Initial poll immediately
+    pollActiveSession();
+    // Then every 3 seconds
+    livePollingRef.current = setInterval(pollActiveSession, 3000);
+    return () => {
+      if (livePollingRef.current) {
+        clearInterval(livePollingRef.current);
+        livePollingRef.current = null;
+      }
+    };
+  }, [course.id, sessionActive]);
 
   function formatTime(ms) {
     const s = Math.floor(ms / 1000);
@@ -234,84 +248,7 @@ export default function AttendanceSession({ route, navigation }) {
     finally { setIsLoadingHistory(false); }
   }
 
-  // ─── Core: Capture 1 frame + recognize (matches website exactly) ───
-  async function captureAndRecognize() {
-    if (isCapturing) return;
 
-    try {
-      setIsCapturing(true);
-      const frames = [];
-
-      if (useCctv) {
-        // CCTV Mode
-        const imageUri = `${RNFS.CachesDirectoryPath}/cctv_frame_${Date.now()}.jpg`;
-        const downloadUrl = cctvUrl.trim() || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280";
-        
-        await RNFS.downloadFile({
-          fromUrl: downloadUrl,
-          toFile: imageUri,
-          background: false,
-        }).promise;
-
-        frames.push({
-          uri: `file://${imageUri}`,
-          type: "image/jpeg",
-          name: `frame_cctv.jpg`,
-        });
-      } else {
-        // Phone Camera Mode (1 frame to prevent UI freezing)
-        if (!cameraRef.current) return;
-        try {
-          const image = await cameraRef.current.capture();
-          if (image?.uri) {
-            const finalUri = image.uri.startsWith("file://") ? image.uri : `file://${image.uri}`;
-            frames.push({ uri: finalUri, type: "image/jpeg", name: `frame_0.jpg` });
-          }
-        } catch (e: any) { 
-          console.log(`Camera capture failed:`, e); 
-        }
-      }
-
-      if (frames.length === 0) {
-        console.log("No frames captured");
-        return;
-      }
-
-      // Compress frames before upload (720p, 75% JPEG quality)
-      const compressedFrames = await compressFrames(frames);
-
-      // Send compressed frames to backend
-      const result = await recognizeFaces(
-        course.id,
-        compressedFrames,
-        `batch_${Date.now()}`
-      );
-
-      // Normalize results (matches website's normalizeResult function)
-      const normalized = normalizeResult(result || {});
-      setCurrentRecognition(normalized);
-
-      // Add to session recognitions log
-      setSessionRecognitions((prev) => [...prev, {
-        timestamp: new Date().toISOString(),
-        recognizedStudents: normalized.recognizedStudents,
-        totalFaces: normalized.totalFaces,
-        averageConfidence: normalized.averageConfidence,
-      }]);
-
-      // Accumulate recognized student IDs (cumulative, like website)
-      setAllRecognizedStudents((prev) => {
-        const next = new Set(prev);
-        normalized.recognizedStudents.forEach((s) => next.add(s.id));
-        return next;
-      });
-
-    } catch (e: any) {
-      console.log("Capture/recognize error:", e);
-    } finally {
-      setIsCapturing(false);
-    }
-  }
 
   // Normalize recognition result (matches website's normalizeResult exactly)
   function normalizeResult(result) {
@@ -340,11 +277,6 @@ export default function AttendanceSession({ route, navigation }) {
   // ─── Session controls (matches website) ─────────────────
   async function startSession() {
     haptic.heavy();
-    const trainedStudents = students.filter((s) => s.hasFaceData);
-    if (trainedStudents.length === 0) {
-      Alert.alert("No Trained Students", "Please train the recognition model first.");
-      return;
-    }
 
     setSessionActive(true);
     setSessionPaused(false);
@@ -352,15 +284,8 @@ export default function AttendanceSession({ route, navigation }) {
     setTimeRemaining(SESSION_DURATION);
     setSessionRecognitions([]);
     setAllRecognizedStudents(new Set());
+    setManuallyMarked(new Set());
     setCurrentRecognition(null);
-
-    // First capture after 1s delay (camera init)
-    setTimeout(() => captureAndRecognize(), 1000);
-
-    // Auto-capture every 2 minutes
-    captureIntervalRef.current = setInterval(() => {
-      if (!sessionPausedRef.current) captureAndRecognize();
-    }, CAPTURE_INTERVAL);
 
     // Session timeout
     sessionTimerRef.current = setTimeout(() => endSession(), SESSION_DURATION);
@@ -369,13 +294,11 @@ export default function AttendanceSession({ route, navigation }) {
   function pauseSession() {
     haptic.medium();
     setSessionPaused(true);
-    if (captureIntervalRef.current) { clearInterval(captureIntervalRef.current); captureIntervalRef.current = null; }
   }
 
   function resumeSession() {
     haptic.medium();
     setSessionPaused(false);
-    captureIntervalRef.current = setInterval(() => captureAndRecognize(), CAPTURE_INTERVAL);
   }
 
   function endSession() {
@@ -383,26 +306,48 @@ export default function AttendanceSession({ route, navigation }) {
     cleanup();
     setSessionActive(false);
     setSessionPaused(false);
-    if (allRecognizedStudents.size > 0) {
-      Alert.alert("Session Ended", `${allRecognizedStudents.size} student(s) recognized. Submit to save.`);
+    const allPresentCount = allRecognizedStudents.size + manuallyMarked.size;
+    if (allPresentCount > 0) {
+      Alert.alert("Session Ended", `${allPresentCount} student(s) present. Review and submit.`);
+      setShowSessionSummary(true);
+      setSummarySubmitted(false);
     } else {
-      Alert.alert("Session Ended", "No students were recognized.");
+      Alert.alert("Session Ended", "No students were marked present.");
     }
+  }
+
+  function handleMarkPresent(studentId: string) {
+    setManuallyMarked((prev) => new Set(prev).add(studentId));
+    // Sync to backend so the website sees this mark
+    updateManualMark(course.id, studentId, true).catch(() => {});
+  }
+
+  function handleUnmarkPresent(studentId: string) {
+    setManuallyMarked((prev) => {
+      const next = new Set(prev);
+      next.delete(studentId);
+      return next;
+    });
+    // Sync to backend so the website sees this unmark
+    updateManualMark(course.id, studentId, false).catch(() => {});
   }
 
   // ─── Submit (matches website: sends recognizedStudents array) ───
   async function handleSubmit() {
-    if (allRecognizedStudents.size === 0) {
-      Alert.alert("Cannot Submit", "No students recognized.");
+    const allPresentIds = new Set(allRecognizedStudents);
+    manuallyMarked.forEach((id) => allPresentIds.add(id));
+
+    if (allPresentIds.size === 0) {
+      Alert.alert("Cannot Submit", "No students marked present.");
       return;
     }
 
     try {
       setIsSubmitting(true);
       // Build recognizedStudents array (matches website exactly)
-      const finalRec = Array.from(allRecognizedStudents)
+      const finalRec = Array.from(allPresentIds)
         .map((sid) => {
-          const s = students.find((st) => st.id === sid);
+          const s = students.find((st: any) => st.id === sid);
           return s ? { id: s.id, name: s.name, email: s.email } : null;
         })
         .filter(Boolean);
@@ -413,12 +358,14 @@ export default function AttendanceSession({ route, navigation }) {
       const stats = result?.statistics;
       const msg = stats
         ? `Present: ${stats.present}, Absent: ${stats.absent}, Rate: ${stats.attendanceRate}%`
-        : `${allRecognizedStudents.size} student(s) marked present.`;
+        : `${allPresentIds.size} student(s) marked present.`;
 
       Alert.alert("Submitted!", msg, [{ text: "OK", onPress: () => {
         setSessionRecognitions([]);
         setAllRecognizedStudents(new Set());
+        setManuallyMarked(new Set());
         setCurrentRecognition(null);
+        setSummarySubmitted(true);
         fetchAttendanceHistory(course.id);
       }}]);
     } catch (e: any) {
@@ -430,9 +377,12 @@ export default function AttendanceSession({ route, navigation }) {
   }
 
   // Computed values (matches website)
+  const allPresentSet = new Set(allRecognizedStudents);
+  manuallyMarked.forEach((id) => allPresentSet.add(id));
+  const recognizedCount = allPresentSet.size;
+
   const localTrainedCount = students.filter((s) => s.hasFaceData).length;
   const localUntrainedCount = students.length - localTrainedCount;
-  const recognizedCount = allRecognizedStudents.size;
   const attendanceRate = students.length > 0 ? ((recognizedCount / students.length) * 100).toFixed(1) : "0.0";
   const historyDates = Object.keys(attendanceHistory).sort().reverse();
 
@@ -566,122 +516,13 @@ export default function AttendanceSession({ route, navigation }) {
           </View>
         )}
 
-        {/* Live Camera Feed */}
+        {/* Session Controls */}
         <View style={s.cameraCard}>
           <View style={s.cameraTitleRow}>
             <View>
-              <Text style={s.cameraTitle}>Live Camera Feed</Text>
-              <Text style={s.cameraSubtitle}>Face recognition capture</Text>
+              <Text style={s.cameraTitle}>Manual Attendance Control</Text>
+              <Text style={s.cameraSubtitle}>Record attendance for this session</Text>
             </View>
-          </View>
-
-          <View style={s.cameraContainer}>
-            {sessionActive && (
-              useCctv ? (
-                <Image
-                  source={{ uri: cctvUrl.trim() || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1280" }}
-                  style={s.camera}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Camera
-                  ref={cameraRef}
-                  style={s.camera}
-                  cameraType={CameraType.Back}
-                  flashMode="off"
-                  zoomMode="on"
-                  zoom={zoomLevel}
-                  maxZoom={MAX_ZOOM}
-                  onZoom={onZoomChange}
-                />
-              )
-            )}
-
-            {/* Zoom indicator overlay */}
-            {showZoomIndicator && sessionActive && !useCctv && (
-              <Animated.View style={[s.zoomIndicator, { opacity: zoomIndicatorOpacity }]}>
-                <Text style={s.zoomIndicatorText}>{zoomLevel.toFixed(1)}x</Text>
-              </Animated.View>
-            )}
-
-            {/* Zoom controls */}
-            {sessionActive && !useCctv && (
-              <View style={s.zoomControls}>
-                <TouchableOpacity style={s.zoomBtn} onPress={handleZoomOut} activeOpacity={0.7}>
-                  <ZoomOut size={16} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={s.zoomBtnCenter} onPress={handleZoomReset} activeOpacity={0.7}>
-                  <RotateCcw size={12} color="#fff" />
-                  <Text style={s.zoomBtnLabel}>1x</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={s.zoomBtn} onPress={handleZoomIn} activeOpacity={0.7}>
-                  <ZoomIn size={16} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Overlays */}
-            {sessionActive && !isCapturing && (
-              <View style={s.cameraOverlayTopRight}>
-                <View style={s.liveBadge}>
-                  <View style={s.liveDot} />
-                  <Text style={s.liveText}>Live</Text>
-                </View>
-              </View>
-            )}
-
-            {isCapturing && (
-              <View style={s.cameraOverlayTopRight}>
-                <View style={s.capturingBadge}>
-                  <Zap size={12} color={colors.primaryForeground} />
-                  <Text style={s.capturingText}>Capturing…</Text>
-                </View>
-              </View>
-            )}
-
-            {currentRecognition && sessionActive && (
-              <View style={s.cameraOverlayBottom}>
-                <Text style={s.captureCountText}>
-                  Last scan: {currentRecognition.totalFaces} faces · {currentRecognition.recognizedStudents.length} recognized
-                </Text>
-              </View>
-            )}
-
-            {/* "Ready" overlay */}
-            {!sessionActive && allRecognizedStudents.size === 0 && (
-              <View style={s.startOverlay}>
-                <CameraIcon size={28} color={colors.primaryForeground} />
-                <Text style={s.startOverlayTitle}>Ready to capture attendance</Text>
-                <Text style={s.startOverlaySubtitle}>
-                  45-minute session · auto-capture every 2 min
-                </Text>
-                
-                {/* Toggle */}
-                <View style={s.toggleRow}>
-                  <TouchableOpacity style={[s.toggleBtn, !useCctv && s.toggleBtnActive]} onPress={() => { haptic.selection(); setUseCctv(false); }} activeOpacity={0.8}>
-                    <Text style={[s.toggleText, !useCctv && s.toggleTextActive]}>Device Camera</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[s.toggleBtn, useCctv && s.toggleBtnActive]} onPress={() => { haptic.selection(); setUseCctv(true); }} activeOpacity={0.8}>
-                    <Text style={[s.toggleText, useCctv && s.toggleTextActive]}>CCTV URL</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {useCctv && (
-                  <TextInput
-                    style={s.cctvInput}
-                    placeholder="CCTV Snapshot URL (optional)"
-                    placeholderTextColor={colors.mutedForeground}
-                    value={cctvUrl}
-                    onChangeText={setCctvUrl}
-                    autoCapitalize="none"
-                  />
-                )}
-
-                {localTrainedCount === 0 && (
-                  <Text style={s.warningText}>⚠️ No trained students. Train the model first.</Text>
-                )}
-              </View>
-            )}
           </View>
 
           {/* Controls */}
@@ -717,15 +558,6 @@ export default function AttendanceSession({ route, navigation }) {
                 <Square size={14} color={colors.danger} style={{ marginRight: 6 }} />
                 <Text style={s.stopBtnText}>End</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.manualCaptureBtn, isCapturing && { opacity: 0.6 }]}
-                onPress={captureAndRecognize}
-                disabled={isCapturing}
-                activeOpacity={0.8}
-              >
-                <Zap size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
-                <Text style={s.manualCaptureBtnText}>{isCapturing ? "Scanning..." : "Scan Now"}</Text>
-              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -735,11 +567,7 @@ export default function AttendanceSession({ route, navigation }) {
           <View style={s.resultsHeader}>
             <View>
               <Text style={s.resultsTitle}>Session Attendance</Text>
-              <Text style={s.resultsSubtitle}>
-                {currentRecognition
-                  ? `Recognized students · Last scan: ${currentRecognition.totalFaces} faces`
-                  : "Cumulative recognized students"}
-              </Text>
+              <Text style={s.resultsSubtitle}>Cumulative recognized & marked students</Text>
             </View>
             {recognizedCount > 0 && (
               <View style={{ flexDirection: "row", gap: 8 }}>
@@ -757,51 +585,66 @@ export default function AttendanceSession({ route, navigation }) {
 
           {recognizedCount === 0 ? (
             <View style={s.emptyResultsContainer}>
-              <ScanFace size={32} color={colors.mutedForeground} />
-              <Text style={s.emptyResultsTitle}>No recognitions yet</Text>
+              <Users size={32} color={colors.mutedForeground} />
+              <Text style={s.emptyResultsTitle}>No students marked yet</Text>
               <Text style={s.emptyResultsSubtitle}>Start a session to track attendance.</Text>
             </View>
           ) : (
             <>
-              {Array.from(allRecognizedStudents).map((sid) => {
+              {Array.from(allPresentSet).map((sid) => {
                 const student = students.find((st) => st.id === sid);
                 if (!student) return null;
+                const isManual = manuallyMarked.has(sid as string) && !allRecognizedStudents.has(sid as string);
                 return (
                   <View key={String(sid)} style={s.recognizedRow}>
-                    <View style={s.recognizedAvatar}>
-                      <CheckCircle size={16} color={colors.success} />
+                    <View style={[s.recognizedAvatar, isManual && { backgroundColor: "rgba(16,185,129,0.15)" }]}>
+                      <CheckCircle size={16} color={isManual ? "#059669" : colors.success} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.recognizedName}>{student.name}</Text>
                       <Text style={s.recognizedEmail}>{student.email}</Text>
                     </View>
+                    {isManual && (
+                      <View style={{ backgroundColor: "rgba(16,185,129,0.1)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+                         <Text style={{ fontSize: 10, fontWeight: "700", color: "#059669" }}>Marked</Text>
+                      </View>
+                    )}
                   </View>
                 );
               })}
             </>
           )}
 
-          {/* Submit hint + button */}
-          {recognizedCount > 0 && (
-            <View style={{ marginTop: 12 }}>
-              <Text style={s.submitHint}>💡 You can submit now or wait until the session ends</Text>
+          {/* Manual Marking Button & Submit */}
+          {(sessionActive || recognizedCount > 0 || manuallyMarked.size > 0 || allRecognizedStudents.size > 0) && (
+            <View style={{ marginTop: 16, gap: 12 }}>
               <TouchableOpacity
-                style={[s.submitBtn, isSubmitting && { opacity: 0.6 }]}
-                onPress={handleSubmit}
-                disabled={isSubmitting}
+                style={s.manualMarkBtn}
+                onPress={() => setShowSessionSummary(true)}
                 activeOpacity={0.8}
               >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color={colors.primaryForeground} />
-                ) : (
-                  <>
-                    <Send size={14} color={colors.primaryForeground} style={{ marginRight: 8 }} />
-                    <Text style={s.submitBtnText}>
-                      Submit Attendance · {recognizedCount}/{students.length} ({attendanceRate}%)
-                    </Text>
-                  </>
-                )}
+                <Text style={s.manualMarkBtnText}>Review & Mark Manually</Text>
               </TouchableOpacity>
+              
+              {recognizedCount > 0 && (
+                <TouchableOpacity
+                  style={[s.submitBtn, isSubmitting && { opacity: 0.6 }]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                  activeOpacity={0.8}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color={colors.primaryForeground} />
+                  ) : (
+                    <>
+                      <Send size={14} color={colors.primaryForeground} style={{ marginRight: 8 }} />
+                      <Text style={s.submitBtnText}>
+                        Submit Attendance ({recognizedCount})
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -810,23 +653,152 @@ export default function AttendanceSession({ route, navigation }) {
         <View style={s.infoCard}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
             <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
-            <Text style={s.infoTitle}>How cumulative attendance works</Text>
+            <Text style={s.infoTitle}>How manual attendance works</Text>
           </View>
           {[
-            'Click "Start" → camera activates automatically',
-            "First face capture runs immediately",
-            "Auto-captures every 2 minutes thereafter",
-            "Once recognized, students stay marked present",
+            'Click "Start" to begin the 45-min session timer',
+            "AI camera runs automatically on the website",
+            'Click "Review & Mark Manually" to mark absent students',
             "Submit at end to save the session record",
           ].map((step, i) => (
             <Text key={i} style={s.infoStep}>{i + 1}. {step}</Text>
           ))}
-          <View style={s.infoHighlight}>
-            <Text style={s.infoHighlightText}>✨ Students only need to be detected once — no need to stay in frame!</Text>
+        </View>
+      </ScrollView>
+
+      {/* Session Summary / Manual Marking Modal */}
+      <Modal visible={showSessionSummary} transparent animationType="slide">
+        <View style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            <View style={s.modalHeader}>
+              <View>
+                <Text style={s.modalTitle}>Session Summary</Text>
+                <Text style={s.modalSubtitle}>Review absent students and manually mark</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowSessionSummary(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <XCircle size={24} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={s.modalStatsRow}>
+              <View style={[s.modalStatCard, { backgroundColor: "rgba(16,185,129,0.08)", borderColor: "rgba(16,185,129,0.2)" }]}>
+                <Text style={[s.modalStatLabel, { color: "#059669" }]}>PRESENT</Text>
+                <Text style={[s.modalStatValue, { color: "#059669" }]}>{recognizedCount}</Text>
+              </View>
+              <View style={[s.modalStatCard, { backgroundColor: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.2)" }]}>
+                <Text style={[s.modalStatLabel, { color: "#dc2626" }]}>ABSENT</Text>
+                <Text style={[s.modalStatValue, { color: "#dc2626" }]}>{students.length - recognizedCount}</Text>
+              </View>
+              <View style={[s.modalStatCard, { backgroundColor: "rgba(15,164,175,0.06)", borderColor: "rgba(15,164,175,0.22)" }]}>
+                <Text style={[s.modalStatLabel, { color: colors.accent }]}>RATE</Text>
+                <Text style={[s.modalStatValue, { color: colors.accent }]}>{attendanceRate}%</Text>
+              </View>
+            </View>
+
+            <ScrollView style={s.modalScroll} showsVerticalScrollIndicator={false}>
+              {allRecognizedStudents.size > 0 && (
+                <View style={s.modalSection}>
+                  <Text style={s.modalSectionTitle}>🤖 AI RECOGNIZED ({allRecognizedStudents.size})</Text>
+                  {Array.from(allRecognizedStudents).map(sid => {
+                    const student = students.find(st => st.id === sid);
+                    if (!student) return null;
+                    return (
+                      <View key={String(sid)} style={s.modalRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.modalRowName}>{student.name}</Text>
+                          <Text style={s.modalRowEmail}>{student.email}</Text>
+                        </View>
+                        <View style={s.modalBadgeAi}>
+                          <Text style={s.modalBadgeAiText}>✔ Present</Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              {manuallyMarked.size > 0 && (
+                <View style={s.modalSection}>
+                  <Text style={[s.modalSectionTitle, { color: "#059669" }]}>✅ MANUALLY MARKED ({manuallyMarked.size})</Text>
+                  {Array.from(manuallyMarked).map(sid => {
+                    const student = students.find(st => st.id === sid);
+                    if (!student) return null;
+                    return (
+                      <View key={String(sid)} style={[s.modalRow, { backgroundColor: "rgba(16,185,129,0.06)", borderColor: "rgba(16,185,129,0.15)" }]}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.modalRowName}>{student.name}</Text>
+                          <Text style={s.modalRowEmail}>{student.email}</Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <View style={s.modalBadgeManual}>
+                            <Text style={s.modalBadgeManualText}>✔ Marked</Text>
+                          </View>
+                          {!summarySubmitted && (
+                            <TouchableOpacity style={s.modalUndoBtn} onPress={() => handleUnmarkPresent(sid as string)}>
+                              <Text style={s.modalUndoBtnText}>Undo</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              {(() => {
+                const absentList = students.filter(st => !allPresentSet.has(st.id));
+                if (absentList.length === 0) return (
+                  <View style={[s.emptyResultsContainer, { paddingVertical: 40 }]}>
+                     <CheckCircle size={40} color="#059669" />
+                     <Text style={[s.emptyResultsTitle, { color: "#059669" }]}>All students are present!</Text>
+                  </View>
+                );
+                return (
+                  <View style={s.modalSection}>
+                    <Text style={[s.modalSectionTitle, { color: "#dc2626" }]}>✗ ABSENT STUDENTS ({absentList.length})</Text>
+                    {absentList.map(student => (
+                      <View key={student.id} style={[s.modalRow, { backgroundColor: "rgba(239,68,68,0.04)", borderColor: "rgba(239,68,68,0.12)" }]}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.modalRowName}>{student.name}</Text>
+                          <Text style={s.modalRowEmail}>{student.email}</Text>
+                        </View>
+                        <TouchableOpacity style={s.modalMarkBtn} onPress={() => handleMarkPresent(student.id)}>
+                          <UserPlus size={12} color="#fff" style={{ marginRight: 4 }} />
+                          <Text style={s.modalMarkBtnText}>Mark Present</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })()}
+            </ScrollView>
+            <View style={s.modalFooter}>
+              {allPresentSet.size > 0 && (
+                <TouchableOpacity
+                  style={[s.submitBtn, { marginBottom: 12 }, isSubmitting && { opacity: 0.6 }]}
+                  onPress={handleSubmit}
+                  disabled={isSubmitting}
+                  activeOpacity={0.8}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Send size={14} color="#fff" style={{ marginRight: 8 }} />
+                      <Text style={s.submitBtnText}>
+                        Submit Attendance ({allPresentSet.size})
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={s.modalDoneBtn} onPress={() => setShowSessionSummary(false)}>
+                <Text style={s.modalDoneBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -872,39 +844,35 @@ const createStyles = (colors) => StyleSheet.create({
   cameraTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   cameraTitle: { fontSize: 16, fontWeight: "700", color: "#ffffff" },
   cameraSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 },
-  liveBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16,185,129,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.background, marginRight: 6 },
-  liveText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700" },
-
-  cameraContainer: { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", backgroundColor: "#000", marginBottom: 16, position: "relative" },
-  camera: { width: "100%", height: "100%" },
-
-  // Zoom controls
-  zoomControls: { position: "absolute", bottom: 12, left: 0, right: 0, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, zIndex: 15 },
-  zoomBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  zoomBtnCenter: { flexDirection: "row", height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", paddingHorizontal: 10, gap: 4, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  zoomBtnLabel: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  zoomIndicator: { position: "absolute", top: 12, left: 12, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, zIndex: 15 },
-  zoomIndicatorText: { color: "#fff", fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
-
-  cameraOverlayTopRight: { position: "absolute", top: 12, right: 12, zIndex: 10 },
-  capturingBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(15,164,175,0.9)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  capturingText: { color: colors.primaryForeground, fontSize: 11.5, fontWeight: "700", marginLeft: 6 },
-  cameraOverlayBottom: { position: "absolute", bottom: 10, left: 10, right: 10, alignItems: "center", zIndex: 10 },
-  captureCountText: { color: colors.primaryForeground, fontSize: 11, fontWeight: "600", backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14 },
-
-  startOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(15,23,42,0.75)", zIndex: 5 },
-  startOverlayTitle: { color: colors.primaryForeground, fontSize: 15, fontWeight: "700", marginTop: 10, textAlign: "center" },
-  startOverlaySubtitle: { color: colors.mutedForeground, fontSize: 11, textAlign: "center", lineHeight: 18, marginTop: 4 },
-  cctvInput: { backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", width: "80%", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 12, marginTop: 16, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  
-  toggleRow: { flexDirection: "row", marginTop: 16, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" },
-  toggleBtn: { paddingVertical: 6, paddingHorizontal: 12 },
-  toggleBtnActive: { backgroundColor: colors.accent },
-  toggleText: { color: colors.mutedForeground, fontSize: 12, fontWeight: "600" },
-  toggleTextActive: { color: "#fff", fontWeight: "700" },
-  
-  warningText: { color: "#FCD34D", fontSize: 11, fontWeight: "600", marginTop: 10 },
+  // Manual Marking Modal Styles
+  manualMarkBtn: { backgroundColor: colors.muted, paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  manualMarkBtnText: { color: colors.foreground, fontSize: 12, fontWeight: "700" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modalContent: { backgroundColor: colors.background, borderRadius: 20, width: "100%", maxHeight: "85%", overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 10 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
+  modalTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
+  modalSubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 4 },
+  modalStatsRow: { flexDirection: "row", padding: 20, gap: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  modalStatCard: { flex: 1, padding: 12, borderRadius: 12, borderWidth: 1, alignItems: "center" },
+  modalStatLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 0.5, marginBottom: 4 },
+  modalStatValue: { fontSize: 20, fontWeight: "900" },
+  modalScroll: { padding: 20 },
+  modalSection: { marginBottom: 24 },
+  modalSectionTitle: { fontSize: 11, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 0.5, marginBottom: 12 },
+  modalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, backgroundColor: colors.muted, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
+  modalRowName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  modalRowEmail: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
+  modalBadgeAi: { backgroundColor: "rgba(15,164,175,0.1)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  modalBadgeAiText: { fontSize: 11, fontWeight: "700", color: colors.accent },
+  modalBadgeManual: { backgroundColor: "rgba(16,185,129,0.1)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  modalBadgeManualText: { fontSize: 11, fontWeight: "700", color: "#059669" },
+  modalUndoBtn: { backgroundColor: "rgba(239,68,68,0.1)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" },
+  modalUndoBtnText: { fontSize: 11, fontWeight: "700", color: "#dc2626" },
+  modalMarkBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.accent, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  modalMarkBtnText: { fontSize: 12, fontWeight: "700", color: "#fff" },
+  modalFooter: { padding: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },
+  modalDoneBtn: { backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  modalDoneBtnText: { color: "#fff", fontSize: 14, fontWeight: "800" },
 
   startBtn: { flexDirection: "row", backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   startBtnText: { color: colors.primaryForeground, fontSize: 15, fontWeight: "700" },
@@ -915,8 +883,7 @@ const createStyles = (colors) => StyleSheet.create({
   resumeBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
   stopBtn: { flex: 1, flexDirection: "row", backgroundColor: colors.background, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(239,68,68,0.3)" },
   stopBtnText: { color: colors.danger, fontSize: 12, fontWeight: "700" },
-  manualCaptureBtn: { flex: 2, flexDirection: "row", backgroundColor: colors.primaryDark, paddingVertical: 11, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  manualCaptureBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
+
 
   resultsCard: { backgroundColor: colors.background, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.border },
   resultsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },

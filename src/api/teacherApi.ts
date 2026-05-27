@@ -188,3 +188,32 @@ export async function submitSessionAttendance(
   }, TEACHER_URL);
   return await res.json();
 }
+
+// ─── Active Session Sync (live sync between website & mobile) ────
+
+// Poll the backend for the current active session state
+export async function getActiveSession(courseId: string): Promise<any> {
+  const res = await apiFetch(
+    `/teacher/attendance/active-session?course_id=${courseId}`,
+    {},
+    TEACHER_URL
+  );
+  return await res.json();
+}
+
+// Toggle a manual mark in the active session store
+export async function updateManualMark(
+  courseId: string,
+  studentId: string,
+  isPresent: boolean
+): Promise<any> {
+  const res = await apiFetch("/teacher/attendance/active-session/manual", {
+    method: "POST",
+    body: JSON.stringify({
+      course_id: courseId,
+      student_id: studentId,
+      is_present: isPresent,
+    }),
+  }, TEACHER_URL);
+  return await res.json();
+}

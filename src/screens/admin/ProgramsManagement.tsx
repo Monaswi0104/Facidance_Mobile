@@ -95,7 +95,7 @@ export default function ProgramsManagement() {
             id: c.id, name: c.name, code: c.code || "—",
             teacher: c.teacher_name || c.teacher?.user?.name || "—",
             semester: c.semester_name || c.semester?.name || "—",
-            students: c.student_count || c.students_count || c._count?.students || courseStudentCount || 0,
+            students: courseStudentCount,
           };
         }),
         teachers: Array.from(teacherSet),
