@@ -4,14 +4,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Alert, TouchableOpacity, Text, View, StyleSheet, Image, ScrollView, StatusBar, Platform, Dimensions, BackHandler } from "react-native";
 import { clearAuth } from "../api/authStorage";
 import { useTheme } from "../theme/Theme";
-import { LayoutDashboard, BookOpen, Users, Camera, BarChart2, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
+import { LayoutDashboard, BookOpen, Users, Cpu, BarChart2, LogOut, Sun, Moon, Monitor } from "lucide-react-native";
 import haptic from "../utils/haptics";
 
 import TeacherDashboard from "../screens/teacher/TeacherDashboard";
 import MyCourses from "../screens/teacher/MyCourses";
 import CourseDetails from "../screens/teacher/CourseDetails";
 import AttendanceCamera from "../screens/teacher/AttendanceCamera";
-import AttendanceSession from "../screens/teacher/AttendanceSession";
+
 import StudentEnrollment from "../screens/teacher/StudentEnrollment";
 import AttendanceReport from "../screens/teacher/AttendanceReport";
 
@@ -24,7 +24,7 @@ const AttendanceStackNav = createNativeStackNavigator<TeacherAttendanceStackPara
 const TAB_CONFIG = [
   { name: "TeacherDashboard", label: "Overview", Icon: LayoutDashboard },
   { name: "MyCourses", label: "Courses", Icon: BookOpen },
-  { name: "AttendanceCamera", label: "Attendance", Icon: Camera },
+  { name: "AttendanceCamera", label: "Training", Icon: Cpu },
   { name: "StudentEnrollment", label: "Students", Icon: Users },
   { name: "AttendanceReport", label: "Reports", Icon: BarChart2 },
 ];
@@ -44,7 +44,6 @@ function AttendanceStack() {
   return (
     <AttendanceStackNav.Navigator id="AttendanceStack" screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 250 }}>
       <AttendanceStackNav.Screen name="AttendanceCamera" component={AttendanceCamera} />
-      <AttendanceStackNav.Screen name="AttendanceSession" component={AttendanceSession} options={{ animation: "fade_from_bottom", animationDuration: 300 }} />
     </AttendanceStackNav.Navigator>
   );
 }

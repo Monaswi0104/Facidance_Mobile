@@ -9,7 +9,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import {
   BookOpen, Users, Calendar, CheckCircle, AlertTriangle,
-  Mail, TrendingUp, Clock, ArrowUpRight,
+  Mail, TrendingUp, Clock, ArrowUpRight, Cpu,
   ScanLine, BarChart2, UserPlus, BookMarked
 } from "lucide-react-native";
 import { StatCardSkeleton, SectionCardSkeleton } from "../../components/SkeletonLoader";
@@ -219,8 +219,8 @@ export default function TeacherDashboard({ navigation }) {
               <Text style={[styles.headerBtnText, { color: colors.textBody }]}>Export Report</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.headerBtnFilled, { backgroundColor: colors.primaryDark }]} onPress={() => navigation.navigate("AttendanceCamera")} activeOpacity={0.7}>
-              <CheckCircle size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-              <Text style={[styles.headerBtnFilledText, { color: colors.primaryForeground }]}>New Attendance</Text>
+              <Cpu size={13} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+              <Text style={[styles.headerBtnFilledText, { color: colors.primaryForeground }]}>Train Model</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -398,7 +398,7 @@ export default function TeacherDashboard({ navigation }) {
             {/* Quick Actions Grid */}
             <View style={styles.quickGrid}>
               {[
-                { title: "Take Attendance", desc: "Start a new session", screen: "AttendanceCamera", icon: <ScanLine size={22} color={colors.primaryDark} /> },
+                { title: "Train Model", desc: "Update face encodings", screen: "AttendanceCamera", icon: <Cpu size={22} color={colors.primaryDark} /> },
                 { title: "My Courses", desc: "Browse & manage", screen: "MyCourses", icon: <BookMarked size={22} color={colors.primaryDark} /> },
                 { title: "Students", desc: "Import & manage", screen: "StudentEnrollment", icon: <UserPlus size={22} color={colors.primaryDark} /> },
                 { title: "Reports", desc: "Export & analyze", screen: "AttendanceReport", icon: <BarChart2 size={22} color={colors.primaryDark} /> },

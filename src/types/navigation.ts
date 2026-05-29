@@ -61,12 +61,6 @@ export type TeacherCoursesStackParamList = {
 
 export type TeacherAttendanceStackParamList = {
   AttendanceCamera: undefined;
-  AttendanceSession: {
-    course: Course;
-    studentCount: number;
-    trainedCount: number;
-    notTrainedCount: number;
-  };
 };
 
 export type TeacherTabScreenProps<T extends keyof TeacherTabParamList> =

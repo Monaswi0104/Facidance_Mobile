@@ -51,8 +51,7 @@ export default function RootNavigator(){
                 AttendanceCamera: {
                   path: 'teacher/attendance',
                   screens: {
-                    AttendanceCamera: '',
-                    AttendanceSession: 'session/:courseId'
+                    AttendanceCamera: ''
                   }
                 }
               }

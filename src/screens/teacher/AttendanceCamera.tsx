@@ -101,8 +101,8 @@ export default function AttendanceCamera({ navigation }) {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Attendance Management</Text>
-            <Text style={styles.subtitle}>Select a course, train the face recognition model, then capture live attendance.</Text>
+            <Text style={styles.title}>Model Training</Text>
+            <Text style={styles.subtitle}>Select a course to train the face recognition model for your students.</Text>
           </View>
 
           {/* Select Course Card */}
@@ -154,8 +154,8 @@ export default function AttendanceCamera({ navigation }) {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Attendance Management</Text>
-          <Text style={styles.subtitle}>Select a course, train the face recognition model, then capture live attendance.</Text>
+          <Text style={styles.title}>Model Training</Text>
+          <Text style={styles.subtitle}>Review enrollment and train the face recognition model.</Text>
         </View>
 
         {/* Selected Course Banner */}
@@ -236,31 +236,18 @@ export default function AttendanceCamera({ navigation }) {
             {/* Action Buttons Row */}
             <View style={styles.actionRow}>
               <TouchableOpacity
-                style={[styles.trainBtnOutline, isTraining && { opacity: 0.6 }]}
+                style={[styles.trainBtn, isTraining && { opacity: 0.6 }]}
                 onPress={trainModel}
                 disabled={isTraining}
                 activeOpacity={0.8}>
                 {isTraining ? (
-                  <ActivityIndicator size="small" color={colors.accent} />
+                  <ActivityIndicator size="small" color={colors.primaryForeground} />
                 ) : (
                   <>
-                    <Cpu size={14} color={colors.accent} style={{ marginRight: 6 }} />
-                    <Text style={styles.trainBtnOutlineText}>Train Recognition Model</Text>
+                    <Cpu size={16} color={colors.primaryForeground} style={{ marginRight: 8 }} />
+                    <Text style={styles.trainBtnText}>Train Recognition Model</Text>
                   </>
                 )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.captureBtn}
-                onPress={() => navigation.navigate("AttendanceSession", {
-                  course: selectedCourse,
-                  studentCount: students.length,
-                  trainedCount: trained,
-                  notTrainedCount: notTrained,
-                })}
-                activeOpacity={0.8}>
-                <Play size={14} color={colors.primaryForeground} style={{ marginRight: 6 }} />
-                <Text style={styles.captureBtnText}>Capture Attendance</Text>
               </TouchableOpacity>
             </View>
 
@@ -321,12 +308,10 @@ export default function AttendanceCamera({ navigation }) {
                 <Info size={14} color={colors.accent} style={{ marginRight: 6 }} />
                 <Text style={styles.infoTitle}>How cumulative attendance works</Text>
               </View>
-              <Text style={styles.infoStep}>• Face recognition runs centrally via CCTV/webcam</Text>
-              <Text style={styles.infoStep}>• Auto-captures every 2 minutes thereafter</Text>
-              <Text style={styles.infoStep}>• Once recognized, students stay marked present</Text>
-              <Text style={styles.infoStep}>• Submit at end to save the session record</Text>
+              <Text style={styles.infoStep}>• Train the model whenever a new student uploads photos</Text>
+              <Text style={styles.infoStep}>• Wait for the training process to complete successfully</Text>
               <View style={styles.infoHighlight}>
-                <Text style={styles.infoHighlightText}>Students only need to be detected once — no need to stay in frame!</Text>
+                <Text style={styles.infoHighlightText}>Centralized CCTV/webcam handles real-time capture later!</Text>
               </View>
             </View>
           </>
@@ -423,28 +408,16 @@ const createStyles = (colors) => StyleSheet.create({
     gap: 10,
     marginBottom: 18,
   },
-  trainBtnOutline: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: colors.background,
-    paddingVertical: 13,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.accent,
-  },
-  trainBtnOutlineText: { color: colors.accent, fontSize: 11, fontWeight: "700" },
-  captureBtn: {
+  trainBtn: {
     flex: 1,
     flexDirection: "row",
     backgroundColor: colors.primaryDark,
-    paddingVertical: 13,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  captureBtnText: { color: colors.primaryForeground, fontSize: 12, fontWeight: "700" },
+  trainBtnText: { color: colors.primaryForeground, fontSize: 13, fontWeight: "700" },
 
   // Table
   tableCard: { backgroundColor: colors.background, borderRadius: 14, padding: 16, marginBottom: 16, shadowColor: colors.foreground, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: colors.border },
