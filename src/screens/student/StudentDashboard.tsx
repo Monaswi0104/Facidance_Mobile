@@ -501,7 +501,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   gradStatLabel: { fontSize: 9, fontWeight: "800", color: colors.mutedForeground, textAlign: "center" },
   gradBtn: {
     flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark,
-    paddingVertical: 14, paddingHorizontal: 28, borderRadius: 12,
     shadowColor: colors.primaryDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
   gradBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },

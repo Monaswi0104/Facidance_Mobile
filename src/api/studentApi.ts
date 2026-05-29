@@ -38,6 +38,12 @@ export async function getCourseAttendance(courseId: string): Promise<any> {
   return await res.json();
 }
 
+// AI Suggestions
+export async function getAISuggestions(): Promise<any> {
+  const res = await apiFetch("/student/ai-suggestions", {}, STUDENT_URL);
+  return await res.json();
+}
+
 // Check if photos are uploaded
 export async function checkPhotos(): Promise<any> {
   const res = await apiFetch("/student/check-photos", {}, STUDENT_URL);
