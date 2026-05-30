@@ -1,0 +1,30 @@
+diff --git a/node_modules/react-native/.DS_Store b/node_modules/react-native/.DS_Store
+new file mode 100644
+index 0000000..22048c2
+Binary files /dev/null and b/node_modules/react-native/.DS_Store differ
+diff --git a/node_modules/react-native/Libraries/Network/RCTHTTPRequestHandler.mm b/node_modules/react-native/Libraries/Network/RCTHTTPRequestHandler.mm
+index 0303970..b784f09 100644
+--- a/node_modules/react-native/Libraries/Network/RCTHTTPRequestHandler.mm
++++ b/node_modules/react-native/Libraries/Network/RCTHTTPRequestHandler.mm
+@@ -116,6 +116,21 @@ - (void)cancelRequest:(NSURLSessionDataTask *)task
+ 
+ #pragma mark - NSURLSession delegate
+ 
++- (void)URLSession:(NSURLSession *)session
++              task:(NSURLSessionTask *)task
++didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
++ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
++{
++    if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
++        SecTrustRef trust = challenge.protectionSpace.serverTrust;
++        if (trust != NULL) {
++            completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:trust]);
++            return;
++        }
++    }
++    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
++}
++
+ - (void)URLSession:(NSURLSession *)session
+                         task:(NSURLSessionTask *)task
+              didSendBodyData:(int64_t)bytesSent
