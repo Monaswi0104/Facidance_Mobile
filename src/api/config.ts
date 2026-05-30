@@ -1,40 +1,24 @@
-// Auto-detect the host machine for local backend calls during development.
-import { NativeModules, Platform } from "react-native";
-import DeviceInfo from "react-native-device-info";
 import { getToken, clearAuth } from "./authStorage";
 
-const isEmulator = DeviceInfo.isEmulatorSync();
+// ─── Production URLs (hardcoded for release builds) ──────────────────────────
+export const BASE_URL = "https://facidance.xyz/api-auth";
+export const AUTH_URL = "https://facidance.xyz/api-auth";
+export const ADMIN_URL = "https://facidance.xyz/admin-api";
+export const TEACHER_URL = "https://facidance.xyz/teacher-api";
+export const STUDENT_URL = "https://facidance.xyz/student-api";
+export const WEB_URL = "https://facidance.xyz";
 
-function getDevServerHost(): string {
-  const scriptURL = NativeModules.SourceCode?.scriptURL;
-  const match = scriptURL?.match(/\/\/([^:/]+)(?::\d+)?\//);
-  const host = match?.[1];
-
-  if (host && host !== "localhost" && host !== "127.0.0.1") {
-    return host;
-  }
-
-  // Fallback to localhost if we're on the iOS Simulator, otherwise try to guess the IP.
-  return "127.0.0.1";
-}
-
-// Android emulator needs 10.0.2.2 to reach the host machine.
-// iOS simulator works perfectly with 127.0.0.1
-// Physical devices should be handled dynamically by the SourceCode scriptURL.
-export const HOST: string = (Platform.OS === "android" && isEmulator) 
-  ? "10.0.2.2" 
-  : (Platform.OS === "ios" && isEmulator)
-    ? "127.0.0.1"
-    : getDevServerHost();
-
-// Service-specific base URLs (Local Backend Configuration)
-const PROD_URL = "https://facidance.online"; // Keeping for reference if needed later
-export const BASE_URL = `http://${HOST}:8000`;       // Auth Service
-export const AUTH_URL = `http://${HOST}:8000`;       // Auth Service
-export const ADMIN_URL = `http://${HOST}:8001`;      // Admin Service
-export const TEACHER_URL = `http://${HOST}:8002`;    // Teacher Service
-export const STUDENT_URL = `http://${HOST}:8003`;    // Student Service
-export const WEB_URL = `http://${HOST}:3000`;        // Next.js Frontend
+// To switch back to local dev, comment above and uncomment below:
+// import { NativeModules, Platform } from "react-native";
+// const DeviceInfo = require("react-native-device-info");
+// const isEmu = DeviceInfo.isEmulatorSync();
+// const HOST = (Platform.OS === "android" && isEmu) ? "10.0.2.2" : "127.0.0.1";
+// export const BASE_URL = `http://${HOST}:8000`;
+// export const AUTH_URL = `http://${HOST}:8000`;
+// export const ADMIN_URL = `http://${HOST}:8001`;
+// export const TEACHER_URL = `http://${HOST}:8002`;
+// export const STUDENT_URL = `http://${HOST}:8003`;
+// export const WEB_URL = `http://${HOST}:3000`;
 
 // ─── Response Cache ────────────────────────────────────────────────────────────
 interface CachedResponse {
