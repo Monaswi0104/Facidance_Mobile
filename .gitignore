@@ -75,3 +75,5 @@ yarn-error.log
 !.yarn/versions
 venv/
 adb.txtoutputs/
+
+outputs/
