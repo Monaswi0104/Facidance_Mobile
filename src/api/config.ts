@@ -1,7 +1,22 @@
 import { getToken, clearAuth } from "./authStorage";
 
 // ─── Production URLs (hardcoded for release builds) ──────────────────────────
-export const BASE_URL = "https://facidance.xyz/api-auth";
+export const FALLBACK_URLS = [
+  "https://facidance.xyz/api-auth",
+  "https://facidance.online/api-auth"
+];
+
+// Start with the first URL
+export let BASE_URL = FALLBACK_URLS[0];
+
+// Switch to the next fallback URL
+export function switchBaseUrl() {
+  const currentIndex = FALLBACK_URLS.indexOf(BASE_URL);
+  const nextIndex = (currentIndex + 1) % FALLBACK_URLS.length;
+  BASE_URL = FALLBACK_URLS[nextIndex];
+  console.log(`[Network] Switched BASE_URL to: ${BASE_URL}`);
+  return BASE_URL;
+}
 export const AUTH_URL = "https://facidance.xyz/api-auth";
 export const ADMIN_URL = "https://facidance.xyz/admin-api";
 export const TEACHER_URL = "https://facidance.xyz/teacher-api";
@@ -217,7 +232,8 @@ export async function apiFetch(
             try {
               return JSON.parse(text);
             } catch (e) {
-              return { error: text || `HTTP Error ${response.status}` };
+              const isHtml = text.trim().startsWith("<");
+              return { error: isHtml ? `Server returned an invalid HTML response (Status ${response.status}).` : (text || `HTTP Error ${response.status}`) };
             }
           }
         };
@@ -259,6 +275,12 @@ export async function apiFetch(
 
       if (attempt < retries) {
         console.warn(`[API RETRY ${attempt + 1}/${retries}] ${reqOptions.method || 'GET'} ${reqEndpoint} failed (${(err as Error).message}). Retrying in ${backoffDelay}ms...`);
+        
+        // Switch fallback URL if we hit a network error or 5xx server error
+        if (reqBaseUrl === BASE_URL) {
+          reqBaseUrl = switchBaseUrl();
+        }
+
         await new Promise<void>(res => setTimeout(() => res(), backoffDelay));
         backoffDelay *= 2; // Exponential backoff
         continue;
