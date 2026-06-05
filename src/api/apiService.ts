@@ -24,6 +24,9 @@ const API: AxiosInstance = axios.create({
 API.interceptors.request.use(
   async (config: any) => {
     try {
+      // 0. Fallback URL support
+      config.baseURL = BASE_URL;
+
       // 1. JWT / Auth Token Authentication
       const token = await AsyncStorage.getItem("authToken");
       if (token) {

@@ -147,7 +147,27 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
     ];
   }, [attendanceHistory, colors]);
 
-  if (!isLoading && isGraduated) {
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          <View style={styles.welcomeSection}>
+            <View style={{ flex: 1 }}>
+              <StatCardSkeleton />
+            </View>
+          </View>
+          <View style={styles.statsRow}>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </View>
+          <SectionCardSkeleton rows={5} />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (isGraduated) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.graduatedContainer} showsVerticalScrollIndicator={false}>
@@ -500,7 +520,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   gradStatNumber: { fontSize: 22, fontWeight: "900", color: colors.foreground, marginBottom: 4 },
   gradStatLabel: { fontSize: 9, fontWeight: "800", color: colors.mutedForeground, textAlign: "center" },
   gradBtn: {
-    flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryDark,
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    backgroundColor: colors.primaryDark,
+    paddingHorizontal: 28, paddingVertical: 16, borderRadius: 14,
     shadowColor: colors.primaryDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
   gradBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
