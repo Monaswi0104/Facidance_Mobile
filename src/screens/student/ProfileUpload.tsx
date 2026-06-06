@@ -20,6 +20,7 @@ interface StudentInfo {
   name?: string;
   email?: string;
   student?: {
+    id?: string;
     user?: { name?: string; email?: string };
     joined_at?: string;
     created_at?: string;
@@ -29,6 +30,7 @@ interface StudentInfo {
     department_name?: string;
     face_embedding?: any;
     hasFaceEmbedding?: boolean;
+    status?: string;
   };
 }
 
@@ -86,7 +88,7 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
       return;
     }
 
-    const studentId = studentInfo?.id || studentInfo?.studentId;
+    const studentId = studentInfo?.student?.id || studentInfo?.studentId || studentInfo?.id;
     if (!studentId) return;
 
     setIsUploading(true);
@@ -103,9 +105,9 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
         haptic.error();
         Alert.alert("Upload Failed", result.error || "Server returned an error. Please try again later.");
       }
-    } catch (error) {
+    } catch (error: any) {
       haptic.error();
-      Alert.alert("Upload Failed", "Could not connect to the server. Please check your connection.");
+      Alert.alert("Upload Failed", error.message || "An unexpected error occurred during upload.");
     } finally {
       setIsUploading(false);
     }
@@ -353,7 +355,10 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
                 activeOpacity={0.8}
               >
                 {isUploading ? (
-                  <ActivityIndicator color={colors.primaryForeground} size="small" />
+                  <>
+                    <ActivityIndicator color={colors.primaryForeground} size="small" style={{ marginRight: 6 }} />
+                    <Text style={styles.submitBtnText}>Uploading...</Text>
+                  </>
                 ) : (
                   <>
                     {isUploaded ? (

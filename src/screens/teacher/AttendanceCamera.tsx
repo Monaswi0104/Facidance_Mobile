@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, ActivityIndicator, TextInput, Dimensions, Alert
 } from "react-native";
-import { getTeacherCourses, getCourseStudents, trainModel as trainModelApi } from "../../api/teacherApi";
+import { getTeacherCourses, getCourseDetails, trainModel as trainModelApi } from "../../api/teacherApi";
 import { useFocusEffect } from "@react-navigation/native";
 import { Theme, useTheme } from "../../theme/Theme";
 import { Search, BookOpen, Users, ScanFace, Camera, AlertCircle, Cpu, CheckCircle, XCircle, ArrowLeft, RefreshCw, Info, Play } from "lucide-react-native";
@@ -48,15 +48,15 @@ export default function AttendanceCamera({ navigation }) {
   const loadStudents = async (courseId) => {
     try {
       setIsLoadingStudents(true);
-      const data = await getCourseStudents(courseId);
-      const list = Array.isArray(data) ? data : [];
+      const data = await getCourseDetails(courseId);
+      const list = Array.isArray(data?.students) ? data.students : (Array.isArray(data) ? data : []);
       setStudents(list.map((s) => ({
         id: s.id,
         name: (s as any).user?.name || s.name || "Student",
         email: (s as any).user?.email || s.email || "—",
-        hasPhotos: !!(s as any).faceEmbedding || (s as any).photosUploaded || false,
+        hasPhotos: (s as any).hasPhotos || false,
         trained: !!(s as any).faceEmbedding,
-        photoCount: s.photoCount || 0,
+        photoCount: (s as any).photoCount || 0,
       })));
     } catch (e: any) { console.log(e); }
     finally { setIsLoadingStudents(false); }
@@ -290,6 +290,11 @@ export default function AttendanceCamera({ navigation }) {
                         <View style={styles.trainedBadge}>
                           <CheckCircle size={11} color={colors.success} style={{ marginRight: 2 }} />
                           <Text style={[styles.badgeText, { color: colors.success }]}>Trained</Text>
+                        </View>
+                      ) : s.hasPhotos ? (
+                        <View style={[styles.pendingBadge, { borderColor: "rgba(220, 38, 38, 0.3)", backgroundColor: "rgba(220, 38, 38, 0.08)" }]}>
+                          <AlertCircle size={11} color="#dc2626" style={{ marginRight: 2 }} />
+                          <Text style={[styles.badgeText, { color: "#dc2626" }]}>Not Trained</Text>
                         </View>
                       ) : (
                         <View style={styles.pendingBadge}>

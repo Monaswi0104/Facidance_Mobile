@@ -71,13 +71,22 @@ export async function uploadFacePhotos(
     }
   }
 
-  const res = await apiFetch("/api/student/upload-photos", {
-    method: "POST",
-    body: formData,
-  }, WEB_URL);
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error || json.detail || "Failed to upload photos");
+  try {
+    const res = await apiFetch("/face-api/api/process-student", {
+      method: "POST",
+      body: formData,
+    }, WEB_URL);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`Upload failed. Status: ${res.status}. Body: ${text}`);
+      throw new Error(`Upload Failed (HTTP ${res.status}): ${text.substring(0, 50)}`);
+    }
+
+    const json = await res.json();
+    return json;
+  } catch (error: any) {
+    console.error("Network or API error in uploadFacePhotos:", error);
+    throw new Error(error.message || "Network request failed");
   }
-  return json;
 }
