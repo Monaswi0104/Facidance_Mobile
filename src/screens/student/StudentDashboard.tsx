@@ -178,7 +178,7 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
 
           {/* Subtitle / Title */}
           <Text style={styles.gradClassText}>CLASS OF {new Date().getFullYear()}</Text>
-          <Text style={styles.gradTitle}>Congratulations, {userName}! 🎓</Text>
+          <Text style={styles.gradTitle}>Congratulations, {userName}!</Text>
 
           {/* Description Card */}
           <View style={styles.gradDescCard}>
@@ -238,7 +238,7 @@ export default function StudentDashboard({ navigation }: StudentDashboardProps) 
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.welcomeTitle}>Welcome back 👋</Text>
+            <Text style={styles.welcomeTitle}>Welcome back</Text>
             <Text style={styles.welcomeName}>{userName}</Text>
             <Text style={styles.welcomeSubtitle}>Here's an overview of your attendance and courses.</Text>
           </View>

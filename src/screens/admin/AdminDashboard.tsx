@@ -162,7 +162,7 @@ export default function AdminDashboard({ navigation }: AdminDashboardProps) {
         {/* Header */}
         <View style={styles.headerSection}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Admin Dashboard 🏛</Text>
+            <Text style={styles.title}>Admin Dashboard</Text>
             <Text style={styles.subtitle}>Institution-wide overview — teachers, students, departments & analytics</Text>
           </View>
           <View style={styles.headerBtns}>

@@ -262,7 +262,7 @@ export default function StudentTabs({ navigation: rootNav }) {
                   {/* Safe Courses */}
                   {aiData.suggestions.safe_courses?.length > 0 && (
                     <View style={s.modalSection}>
-                      <Text style={s.modalSectionTitle}>✅ On Track</Text>
+                      <Text style={s.modalSectionTitle}>On Track</Text>
                       {aiData.suggestions.safe_courses.map((course: any, idx: number) => (
                         <View key={idx} style={s.safeCourseCard}>
                           <View style={s.courseCardHeader}>

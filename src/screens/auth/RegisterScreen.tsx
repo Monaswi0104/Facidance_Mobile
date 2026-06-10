@@ -67,7 +67,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       await registerTeacher(sanitizedName, sanitizedEmail, sanitizedPassword);
       haptic.success();
       Alert.alert(
-        "Registration Submitted ✅",
+        "Registration Submitted",
         "Your teacher account is pending admin approval. You'll be able to login once approved.",
         [{ text: "OK", onPress: () => navigation.navigate("Login") }]
       );
@@ -159,7 +159,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
 
         {/* Form */}
         <View style={styles.formSection}>
-          <Text style={styles.formTitle}>Faculty registration 👋</Text>
+          <Text style={styles.formTitle}>Faculty registration</Text>
           <Text style={styles.formSubtitle}>Create your faculty account — admin will approve it shortly.</Text>
 
           {/* Full Name */}

@@ -1,12 +1,12 @@
 import { getToken, clearAuth } from "./authStorage";
 
 // ─── Production URLs (hardcoded for release builds) ──────────────────────────
-export const BASE_URL = "https://facidance.xyz/api-auth";
-export const AUTH_URL = "https://facidance.xyz/api-auth";
-export const ADMIN_URL = "https://facidance.xyz/admin-api";
-export const TEACHER_URL = "https://facidance.xyz/teacher-api";
-export const STUDENT_URL = "https://facidance.xyz/student-api";
-export const WEB_URL = "https://facidance.xyz";
+export const BASE_URL = "https://facidance.online/auth";
+export const AUTH_URL = "https://facidance.online/auth";
+export const ADMIN_URL = "https://facidance.online/admin-api";
+export const TEACHER_URL = "https://facidance.online/teacher-api";
+export const STUDENT_URL = "https://facidance.online/student-api";
+export const WEB_URL = "https://facidance.online";
 
 // To switch back to local dev, comment above and uncomment below:
 // import { NativeModules, Platform } from "react-native";

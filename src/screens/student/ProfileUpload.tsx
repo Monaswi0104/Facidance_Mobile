@@ -229,7 +229,7 @@ export default function ProfileUpload({ navigation }: ProfileUploadProps) {
                 <Award size={16} color={colors.primaryForeground} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.faceCardTitle}>Graduated 🎓</Text>
+                <Text style={styles.faceCardTitle}>Graduated</Text>
                 <Text style={styles.faceCardSubtitle}>Your academic journey here is complete</Text>
               </View>
             </View>

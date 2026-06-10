@@ -209,7 +209,7 @@ export default function TeacherDashboard({ navigation }) {
         {/* Welcome Header */}
         <View style={styles.welcomeSection}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.welcomeGreeting, { color: colors.mutedForeground }]}>Welcome back 👋</Text>
+            <Text style={[styles.welcomeGreeting, { color: colors.mutedForeground }]}>Welcome back</Text>
             <Text style={[styles.welcomeName, { color: colors.foreground }]}>{userName}</Text>
             <Text style={[styles.welcomeDesc, { color: colors.mutedForeground }]}>Here's what's happening across your courses today.</Text>
           </View>

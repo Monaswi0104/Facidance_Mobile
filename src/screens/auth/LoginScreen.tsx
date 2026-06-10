@@ -8,7 +8,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loginUser } from "../../api/authApi";
 import { useTheme } from "../../theme/Theme";
-import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor } from "lucide-react-native";
+import { Eye, EyeOff, ArrowRight, Sparkles, Shield, BarChart3, Sun, Moon, Monitor, Info } from "lucide-react-native";
 import haptic from "../../utils/haptics";
 
 import type { RootStackScreenProps } from "../../types/navigation";
@@ -153,7 +153,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         {/* Form */}
         <View style={styles.formSection}>
-          <Text style={styles.formTitle}>Welcome back 👋</Text>
+          <Text style={styles.formTitle}>Welcome back</Text>
           <Text style={styles.formSubtitle}>Sign in to access your Facidance portal.</Text>
 
           {/* Email */}
@@ -201,6 +201,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Password Hint for Students */}
+          <View style={styles.passwordHint}>
+            <Info size={14} color={colors.accent} />
+            <Text style={styles.passwordHintText}>
+              For students, your password is your DOB in <Text style={{ fontWeight: "700" }}>YYYY/MM/DD</Text> format.
+            </Text>
           </View>
 
           {/* Sign In Button */}
@@ -441,6 +449,25 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.foreground,
   },
   eyeBtn: { paddingHorizontal: 14, paddingVertical: 12 },
+
+  // Password Hint
+  passwordHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.accentLight,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(15, 164, 175, 0.2)",
+    marginBottom: 6,
+  },
+  passwordHintText: {
+    fontSize: 11,
+    color: colors.accent,
+    marginLeft: 8,
+    flex: 1,
+  },
 
   // Button
   signInBtn: {
