@@ -18,6 +18,14 @@
 
 ---
 
+## 📱 Download App
+
+You can download the latest compiled Android APK directly from the GitHub Releases page:
+
+👉 **[Download Facidance Mobile APK](https://github.com/Monaswi0104/Facidance_Mobile/releases/latest)**
+
+---
+
 ## ✨ Overview
 
 **Facidance Mobile** is a cross-platform mobile application that brings AI-powered face recognition attendance to classrooms. Teachers can start live camera sessions that automatically capture and recognize students every 2 minutes using deep learning face embeddings. Students can view their attendance history, and admins can manage the entire institution from their phone.
