@@ -72,10 +72,10 @@ export async function uploadFacePhotos(
   }
 
   try {
-    const res = await apiFetch("/face-api/api/process-student", {
+    const res = await apiFetch("/student/upload-photos", {
       method: "POST",
       body: formData,
-    }, WEB_URL);
+    }, STUDENT_URL);
 
     if (!res.ok) {
       const text = await res.text();
