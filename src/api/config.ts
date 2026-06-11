@@ -8,17 +8,6 @@ export const TEACHER_URL = "https://facidance.online/teacher-api";
 export const STUDENT_URL = "https://facidance.online/student-api";
 export const WEB_URL = "https://facidance.online";
 
-// To switch back to local dev, comment above and uncomment below:
-// import { NativeModules, Platform } from "react-native";
-// const DeviceInfo = require("react-native-device-info");
-// const isEmu = DeviceInfo.isEmulatorSync();
-// const HOST = (Platform.OS === "android" && isEmu) ? "10.0.2.2" : "127.0.0.1";
-// export const BASE_URL = `http://${HOST}:8000`;
-// export const AUTH_URL = `http://${HOST}:8000`;
-// export const ADMIN_URL = `http://${HOST}:8001`;
-// export const TEACHER_URL = `http://${HOST}:8002`;
-// export const STUDENT_URL = `http://${HOST}:8003`;
-// export const WEB_URL = `http://${HOST}:3000`;
 
 // ─── Response Cache ────────────────────────────────────────────────────────────
 interface CachedResponse {

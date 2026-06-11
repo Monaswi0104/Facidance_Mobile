@@ -146,7 +146,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
                 <Text style={styles.statLabel}>Students</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>98.2%</Text>
+                <Text style={styles.statValue}>97.7%</Text>
                 <Text style={styles.statLabel}>Accuracy</Text>
               </View>
               <View style={styles.statItem}>
